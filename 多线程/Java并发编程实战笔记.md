@@ -274,3 +274,158 @@ public class ImprovedList<T> implements List<T> {
 ###同步策略文档化
 略
 
+##第五章 同步构建模块
+###同步容器类
+是由Collections.synchronizedXXX等工厂方法创建的。
+
+- 同步容器类的复合操作，如迭代、跳转、条件运算等，是线程安全的，但在其它线程并发地修改容器的情况下，仍可能会抛出异常。
+
+```
+public class HiddenIterator {  
+    private final Set<Integer> set = new HashSet<Integer>();  
+      
+    public synchronized void add(Integer i) {set.add(i);}  
+    public synchronized void remove(Integer i) {set.remove(i);}  
+      
+    public void addTenThings() {  
+        Random r = new Random();  
+        for (int i = 0; i < 10; i++) {  
+            add(r.nextInt());  
+            System.out.println("DEBUG:added ten elements to"+set);  
+        }  
+    }  
+} 
+```
+这段代码也可能抛出concurrentmodificationexception，因为toString方法有隐含的迭代器。
+
+###并发容器
+
+- ConcurrentHashMap:分段锁。迭代器不会抛出concurrentModificationException，但不保证返回最新的内容。size不一定准确。
+具有putIfAbsent、replaceIfEqual、removeIfEqual等功能。
+
+- CopyOnWriteArrayList
+
+###阻塞队列和生产者-消费者模式
+BlockingQueue提供了可阻塞的put和take方法。如果队列已经满了，那么put方法将阻塞到有空间可用；如果队列为空，那么take方法将会阻塞直到有元素可用。
+BlockingQueue是一个接口，具体实现有LinkedBlockingQueue和ArrayBlockingQueue等。
+
+```
+public class FileCrawler implements Runnable{  
+    private final BlockingQueue<File> fileQueue;  
+    private final FileFilter filter;  
+    private final File root;  
+      
+    public FileCrawler(BlockingQueue<File> queue, FileFilter filter, File root){  
+        this.fileQueue = queue;  
+        this.filter = filter;  
+        this.root = root;  
+    }  
+      
+    public void run(){  
+        try{  
+            crawl(root);  
+        }catch(InterruptedException e){  
+            Thread.currentThread().interrupt();  
+        }  
+    }  
+  
+    private void crawl(File root) throws InterruptedException{  
+        File[] files = root.listFiles(filter);  
+        if(files != null){  
+            for(File file : files){  
+                if(file.isDirectory()){  
+                    crawl(file);  
+                }else if(!alreadyIndexed(file)){  
+                    fileQueue.put(file);  
+                }  
+            }  
+        }  
+    }  
+}  
+  
+//建立索引，消费者  
+Public class Indexer implements Runnable{  
+    private final BlockingQueue<File> queue;  
+      
+    public Indexer(BlockingQueue<File> queue){  
+        this.queue = queue;  
+    }  
+    ......  
+    public void run(){  
+        try{  
+            while(true){  
+                indexFile(queue.take());  
+            }  
+        }catch(InterruptedException e){  
+            Thread.currentThread().interrupt();  
+        }  
+    }  
+}  
+  
+//开始搜索  
+public static void startIndexing(File[] roots){  
+    BlockingQueue<File> queue = new LinkedBlockingQueue<File>(BOUND);  
+    FileFilter filter = new FileFilter(){  
+        public boolean accept(File file){  
+            return true;  
+        }  
+    };  
+    for(File file : roots){  
+        new Thread(new FileCrawler(queue, filter, root)).start();  
+    }  
+    for(int i = 0; i < N_CONSUMERS; i++){  
+        new Thread(new Indexer(queue)).start();  
+    }  
+}  
+```
+
+- 双端队列这段暂时没看懂。
+
+###阻塞方法和中断方法
+阻塞操作和执行时间很长的普通操作的差别在于，被阻塞的线程必须等待某个不受它控制的事件发生后才能继续执行。
+当某方法抛出InterruptedException时，表示该方法是一个阻塞方法。而不抛出InterruptedException的方法并不一定不是阻塞方法，比如调用了阻塞方法的方法，就也是阻塞方法。
+
+###同步工具类
+
+- CountDownLatch：一个同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待。
+
+- FutureTask：
+
+```
+public class Preloader{
+	private final FutureTask<ProductInfo> future = 
+		new FutureTask<ProductInfo>(new Callable<ProductInfo>(){
+			public ProductInfo call() throws DataLoadException{
+				return loadProductInfo();
+			}
+		});
+	private final Thread thread = new Thread(future);
+	
+	public void start() {thread.start();}
+	
+	public ProductInfo get() throws DataLoadException, InterruptedException{
+		try {
+			return future.get();
+		} catch(ExecutionException e) {
+			Throwable cause = e.getCause();
+			if (cause instance of DataLoadException) {
+				throw (DataLoadException)cause;
+			} else {
+				throw launderThrowable(cause);
+			}
+		}
+	}
+}
+```
+
+- Semaphore: 管理着一组虚拟的许可，执行操作时需要首先获得许可。如果没有多余的，则阻塞直至获得许可。
+
+- Barrier：类似于CountDownLatch，能阻塞一组线程直到某个事件发生。
+
+
+
+
+
+
+
+
