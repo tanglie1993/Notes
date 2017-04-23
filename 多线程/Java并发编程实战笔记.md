@@ -95,11 +95,122 @@ public class Child extends Father
 
 - 在执行耗时较长的操作时，一定不要持有锁。
 
+##第三章 对象的共享
+###可见性
+确保当一个线程修改了对象状态后，其他线程能够看到发生的状态变化。
+```
+public class NoVisibility {  
+	private static boolean ready;  
+	private static int number;  
+	private static class ReaderThread extends Thread { 
+ 
+		public void run() {  
+			while (!ready)  
+			Thread.yield();  
+			System.out.println(number);  
+		}  
+	}  
+
+	public static void main(String[] args) {  
+		new ReaderThread().start();  
+		number = 42;  
+		ready = true;  
+	}  
+}  
+```
+NoVisibilty可能会永远循环下去，因为读线程可能永远都看不到ready的值。NoVisibilty也可能会输出0，因为读线程可能看到了写入ready的值，但却没有看到之后写入number的值。
 
 
+- Java内存模型要求，变量的读取操作和写入操作都必须是原子操作，但对于非volatile类型的long和double变量，JVM允许将64位的读操作或写操作分解为两个32位的操作。
 
+### 发布与逸出
+发布一个对象的意思是指，是对象能够在当前作用域之外的代码中使用。
+当某个不应该发布的对象被发布时，这种情况就被称为逸出。
 
+- 当从对象的构造函数中发布对象时，只是发布了一个尚未构造完成的对象。即使发布对象的语句位于构造函数的最后一行也是如此。
 
+```
+public class ThisEscape {  
+    public ThisEscape(EventSource source) {  
+        source.registerListener(  
+            new EventListener() {  
+                public void onEvent(Event e) {  
+                    doSomething(e);  
+                }  
+            });  
+    }  
+}  
+```
+如果在这里发布了EventListener，则其它类在使用EventListener时，ThisEscape未必已经构造完成。
+解决方案：使用工厂方法。
 
+```
+public class SafeListener {  
+    private final EventListener listener;  
+  
+    private SafeListener() {  
+        listener = new EventListener() {  
+            public void onEvent(Event e) {  
+                doSomething(e);  
+            }  
+        };  
+    }  
+  
+    public static SafeListener newInstance(EventSource source) {  
+        SafeListener safe = new SafeListener();  
+        source.registerListener(safe.listener);  
+        return safe;  
+    }  
+}
+```
 
+###线程封闭
+如果仅在单线程内访问数据，就不需要同步。这种技术被称为线程封闭。
+
+- Ad-hoc线程封闭：维护线程封闭性的职责完全由程序实现来承担。
+- 栈封闭：只能通过局部变量才能访问对象
+- ThreadLocal
+
+###不变性
+不可变对象一定是线程安全的。
+
+```
+@Immutable  
+class OneValueCache {  
+   private final BigInteger lastNumber;  
+   private final BigInteger[] lastFactors;  
+ 
+   public OneValueCache(BigInteger i,  
+                        BigInteger[] factors) {  
+       lastNumber  = i;  
+       lastFactors = Arrays.copyOf(factors, factors.length);  
+   }  
+ 
+   public BigInteger[] getFactors(BigInteger i) {  
+       if (lastNumber == null || !lastNumber.equals(i))  
+           return null;  
+       else  
+           return Arrays.copyOf(lastFactors, lastFactors.length);  
+   }  
+} 
+
+@ThreadSafe  
+public class VolatileCachedFactorizer implements Servlet {  
+   private volatile OneValueCache cache =  
+       new OneValueCache(null, null);  
+ 
+   public void service(ServletRequest req, ServletResponse resp) {  
+       BigInteger i = extractFromRequest(req);  
+       BigInteger[] factors = cache.getFactors(i);  
+       if (factors == null) {  
+           factorfactors = factor(i);  
+           cache = new OneValueCache(i, factors);  
+       }  
+       encodeIntoResponse(resp, factors);  
+   }  
+} 
+```
+
+###安全发布
+这一节的内容太繁琐了，暂且略过。
 
