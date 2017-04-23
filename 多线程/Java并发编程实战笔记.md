@@ -214,3 +214,63 @@ public class VolatileCachedFactorizer implements Servlet {
 ###安全发布
 这一节的内容太繁琐了，暂且略过。
 
+##第四章 对象的组合
+###设计线程安全的类
+- 找出构成对象状态的所有变量
+- 找出约束状态变量的不变性条件
+- 建立并发访问管理策略
+
+###实例封闭
+将数据封装在对象内部，可以将数据的访问限制在对象的方法上。（实例：Collections.synchronizedList）
+
+- Java监视器模式：把对象的所有可变状态都封装起来，并由对象自己的内置锁来保护
+
+```
+public class PrivateLock{
+    private final Object myLock=new Object();
+    @GuardedBy("myLock") Widget widget;
+    void someMethod()
+    { 
+            synchronized(myLock)
+            {
+                    //修改或访问Widget的状态
+            }
+    }
+}
+```
+
+###线程安全性的委托
+如果类中的各个组件都已经是线程安全的，是否需要再增加一个额外的线程安全层？答案是“视情况而定”。
+具体例子略。
+
+###在现有的线程安全类中添加功能
+最安全的方法就是修改原有的类，但这通常无法做到。另一种方法是扩展这个类，假定在设计这个类时考虑了可扩展性。扩展方法比直接将代码添加到类中更加脆弱，因为现在的同步策略实现被分布到多个单独维护的源代码文件中。
+更好的方法是组合：
+
+```
+@ThreadSafe 
+
+public class ImprovedList<T> implements List<T> { 
+
+	private final List<T> list; 
+
+	public ImprovedList(List<T> list) { 
+		this.list = list; 
+	} 
+
+	public synchronized boolean putIfAbsent(T x) { 
+		boolean contains = list.contains(x); 
+		if (contains) 
+			list.add(x); 
+		return !contains; 
+	} 
+
+	public synchronized void clear() { list.clear(); } 
+
+	// ... similarly delegate other List methods 
+}  
+```
+
+###同步策略文档化
+略
+
