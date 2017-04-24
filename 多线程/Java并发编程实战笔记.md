@@ -422,6 +422,90 @@ public class Preloader{
 
 - Barrier：类似于CountDownLatch，能阻塞一组线程直到某个事件发生。
 
+##第六章 任务执行
+###在线程中执行任务（略）
+
+###Executor框架
+```
+public interface Executor {
+	void execute(Runnable command);
+}
+```
+- SingleThreadExecutor分类：
+ - newSingleThreadExecutor：
+创建一个单线程的线程池。
+ - newFixedThreadPoolExecutor：
+创建固定大小的线程池。每次提交一个任务就创建一个线程，直到线程达到线程池的最大大小。
+ - newCachedThreadPoolExecutor：
+创建一个可缓存的线程池。如果线程池的大小超过了处理任务所需要的线程，那么就会回收部分空闲（60秒不执行任务）的线程，当任务数增加时，添加新线程来处理任务。线程数上限没有限制。
+ - newScheduledThreadPoolExecutor：
+创建一个大小无限的线程池。此线程池支持定时以及周期性执行任务的需求。
+
+- Executor的生命周期
+ - void shutDown();
+ - List<Runnable> shutdownNow();
+ - boolean isShutdown();
+ - boolean isTerminated();
+ - boolean awaitTermination(long timeout, TimeUnit unit)
+
+###找出可利用的并行性
+- Callable是一种对延迟计算的比Runnable更好的抽象：它认为主入口点将返回一个值，并可能抛出一个异常。
+- Future表示一个任务的生命周期。
+
+```
+public interface Callable<V> {
+    V call() throws Exception;
+}
+
+public interface Future<V> {
+    boolean cancel(boolean mayInterruptIfRunning);
+    boolean isCancelled();
+    boolean isDone();
+    V get() throws InterruptedException, ExecutionException;
+    V get(long timeout, TimeUnit unit)
+        throws InterruptedException, ExecutionException, TimeoutException;
+}
+```
+各种示例略。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
