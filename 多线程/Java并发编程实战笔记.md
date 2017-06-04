@@ -468,15 +468,70 @@ public interface Future<V> {
 ```
 各种示例略。
 
+##第七章 取消与关闭
+### 任务的取消
 
+```
+public class BrokenPrimeProducer extends Thread {
+    static int i = 1000;
 
+    private final BlockingQueue<BigInteger> queue;
 
+    private volatile boolean cancelled = false;
 
+    BrokenPrimeProducer(BlockingQueue<BigInteger> queue) {
+        this.queue = queue;
+    }
 
+    public void run() {
+        BigInteger p = BigInteger.ONE;
+        try {
+            while (!cancelled) {
+                p = p.nextProbablePrime();
+                queue.put(p);
+            }
+        } catch (InterruptedException cusumed) {
+        }
+    }
 
+    public void cancel() {
+        this.cancelled = false;
+    }
 
+    public static void main(String args[]) throws InterruptedException {
+        BlockingQueue<BigInteger> queue = new LinkedBlockingQueue<BigInteger>(
+                10);
+        BrokenPrimeProducer producer = new BrokenPrimeProducer(queue);
+        producer.start();
+        try {
+            while (needMorePrimes())
+                queue.take();
+        } finally {
+            producer.cancel();
+        }
+    }
 
+    public static boolean needMorePrimes() throws InterruptedException {
+        boolean result = true;
+        i--;
+        if (i == 0)
+            result = false;
+        return result;
+    }
+}
+```
+我们在main中通过queue.take来消费产生的素数（虽然仅仅是取出扔掉），我们只消费了1000个素数，然后尝试取消产生素数的任务，很遗憾，取消不了，因为产生素数的线程产生素数的速度大于我们消费的速度，我们在消费1000后就停止消费了，那么任务将被queue的put方法阻塞。
 
+- Java的API或语言规范并没有将中断与任何取消语意关联起来。但实际上，如果在取消之外的其它操作中使用中断，都是不合适的。
+
+- 调用interrupt并不意味着立即停止目标线程正在进行的工作，而只是传递了请求中断的消息。有些方法，例如wait、sleep和join等，将严格地处理这种请求。
+
+- 由于每个线程拥有各自的中断策略,因此除非你知道中断对该线程的含义,否则就不应该中断这个线程。
+
+- 有两种实用策略可用于处理InterruptedException：
+ - 抛出异常
+ - 调用interrupt恢复中断状态
+- 你不能屏蔽InterruptedException，例如在catch块中捕获到异常却不做任何处理，除非在你的代码中实现了线程的中断策略。
 
 
 
