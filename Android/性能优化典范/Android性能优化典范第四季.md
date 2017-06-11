@@ -7,6 +7,14 @@
 网络传输数据量的大小主要由两部分组成：图片与序列化的数据。
 ###减少图片大小
 ![](img/picture_quality.png)
+
 我们需要为不同的使用场景提供当前场景下最合适的图片大小，例如针对全屏显示的情况我们会需要一张清晰度比较高的图片，而如果只是显示为缩略图的形式，就只需要服务器提供一个相对清晰度低很多的图片即可。
 ###减少序列化数据的大小
 JSON与XML为了提高可读性，在文件中加入了大量的符号，空格等等字符，而这些字符对于程序来说是没有任何意义的。我们应该使用Protocal Buffers，Nano-Proto-Buffers，FlatBuffer来减小序列化的数据的大小。
+
+##Smaller Serialized Data
+![](img/smaller_serialized_data.png)
+
+假如相似数据间隔了32k的数据量，这样GZIP就无法进行更加有效的压缩：
+
+![](img/smaller_serialized_data1.png)
