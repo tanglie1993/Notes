@@ -23,6 +23,8 @@
 - Web-Struts module
 - Web-Portlet module
 
+![](framework.png)
+
 ##BeanFactory
 BeanFactory是工厂模式的一个实现，提供了控制反转功能。
 
@@ -51,6 +53,8 @@ ApplicationContext的主要实现有：
 
 ##依赖注入
 不用创建对象，而只需要描述它如何被创建。不在代码里直接组装你的组件和服务，但是要在配置文件里描述哪些组件需要哪些服务，之后一个容器（IOC容器）负责把他们组装起来。
+
+依赖注入和控制反转是对同一件事情的不同描述。
 
 - 构造器依赖注入：构造器依赖注入通过容器触发一个类的构造器来实现的，该类有一系列参数，每个参数代表一个对其他类的依赖。
 - Setter方法注入：Setter方法注入是容器通过调用无参构造器或无参static工厂 方法实例化bean之后，调用该bean的setter方法，即实现了基于setter的依赖注入。
@@ -84,3 +88,36 @@ Spring beans 是那些形成Spring应用的主干的java对象。它们被Spring
 ![](bean_life_cycle.png)
 
 ![](bean_life_cycle1.png)
+
+####注入集合
+- \<list>类型用于注入一列值，允许有相同的值。
+- \<set> 类型用于注入一组值，不允许有相同的值。
+- \<map> 类型用于注入一组键值对，键和值都可以为任意类型。
+- \<props>类型用于注入一组键值对，键和值都只能为String类型。
+
+####自动装配
+Spring 容器能够自动装配相互合作的bean，这意味着容器不需要<constructor-arg>和<property>配置，能通过Bean工厂自动处理bean之间的协作。
+
+有五种自动装配的方式：
+
+- no：默认的方式是不进行自动装配，通过显式设置ref 属性来进行装配。
+- byName：通过参数名 自动装配，Spring容器在配置文件中发现bean的autowire属性被设置成byname，之后容器试图匹配、装配和该bean的属性具有相同名字的bean。
+- byType:：通过参数类型自动装配，Spring容器在配置文件中发现bean的autowire属性被设置成byType，之后容器试图匹配、装配和该bean的属性具有相同类型的bean。如果有多个bean符合条件，则抛出错误。
+- constructor：这个方式类似于byType， 但是要提供给构造器参数，如果没有确定的带参数的构造器参数类型，将会抛出异常。
+- autodetect：首先尝试使用constructor来自动装配，如果无法工作，则使用byType方式。
+
+##注解
+基于Java的配置，允许你在少量的Java注解的帮助下，进行你的大部分Spring配置而非通过XML文件。
+
+- @Required注解
+
+	应用于 bean 属性的 setter 方法，它表明受影响的 bean 属性在配置时必须放在 XML 配置文件中，否则容器就会抛出一个 BeanInitializationException 异常。
+
+- @Autowired注解
+
+	Marks a constructor, field, setter method or config method as to be autowired by Spring's dependency injection facilities.
+
+- @Qualifier 注解
+
+	当有多个相同类型的bean却只有一个需要自动装配时，将@Qualifier 注解和@Autowire 注解结合使用以消除这种混淆，指定需要装配的确切的bean。
+
