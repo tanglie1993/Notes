@@ -65,7 +65,7 @@ observable.subscribe(observer);
 observable.subscribe(subscriber);
 ```
 
- subscribe() 这个方法有点怪：它看起来是『observalbe 订阅了 observer / subscriber』而不是『observer / subscriber 订阅了 observable』，这看起来就像『杂志订阅了读者』一样颠倒了对象关系。这让人读起来有点别扭，不过如果把 API 设计成 observer.subscribe(observable) / subscriber.subscribe(observable) ，虽然更加符合思维逻辑，但对流式 API 的设计就造成影响了，比较起来明显是得不偿失的。
+ subscribe() 这个方法有点怪：它看起来是『observable 订阅了 observer / subscriber』而不是『observer / subscriber 订阅了 observable』，这看起来就像『杂志订阅了读者』一样颠倒了对象关系。这让人读起来有点别扭，不过如果把 API 设计成 observer.subscribe(observable) / subscriber.subscribe(observable) ，虽然更加符合思维逻辑，但对流式 API 的设计就造成影响了，比较起来明显是得不偿失的。
 
 Observable.subscribe(Subscriber) 的内部实现是这样的（仅核心代码）：
 
