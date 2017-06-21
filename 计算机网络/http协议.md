@@ -1,4 +1,4 @@
-##http请求
+## http请求
 
 由三部分组成，分别是请求行、消息报头和请求正文。
 
@@ -6,14 +6,14 @@
 
 包含方法、URI和协议的版本。主要方法有：
 
-	- GET     请求获取Request-URI所标识的资源
-	- POST    在Request-URI所标识的资源后附加新的数据
-	- HEAD    请求获取由Request-URI所标识的资源的响应消息报头
-	- PUT     请求服务器存储一个资源，并用Request-URI作为其标识
-	- DELETE  请求服务器删除Request-URI所标识的资源
-	- TRACE   请求服务器回送收到的请求信息，主要用于测试或诊断
-	- CONNECT 保留将来使用
-	- OPTIONS 请求查询服务器的性能，或者查询与资源相关的选项和需求
+ - GET     请求获取Request-URI所标识的资源
+ - POST    在Request-URI所标识的资源后附加新的数据
+ - HEAD    请求获取由Request-URI所标识的资源的响应消息报头
+ - PUT     请求服务器存储一个资源，并用Request-URI作为其标识
+ - DELETE  请求服务器删除Request-URI所标识的资源
+ - TRACE   请求服务器回送收到的请求信息，主要用于测试或诊断
+ - CONNECT 保留将来使用
+ - OPTIONS 请求查询服务器的性能，或者查询与资源相关的选项和需求
 
 
 - 消息报头
