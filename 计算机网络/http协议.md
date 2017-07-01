@@ -26,20 +26,20 @@ HTTP消息报头包括普通报头、请求报头、响应报头、实体报头�
 
 **请求报头**主要内容有：
 
-	**Accept** 指定客户端接受哪些类型的信息。 
+	Accept：指定客户端接受哪些类型的信息。 
 	eg：Accept：image/gif、Accept：text/html
-	**Accept-Charset** 用于指定客户端接受的字符集。
-	**Accept-Language** 用于指定客户端接受的自然语言。
-	**Host**（发送请求时，该报头域是必需的） 用于指定被请求资源的Internet主机和端口号。
+	Accept-Charse：用于指定客户端接受的字符集。
+	Accept-Language：用于指定客户端接受的自然语言。
+	Host：（发送请求时，该报头域是必需的） 用于指定被请求资源的Internet主机和端口号。
     eg： http://www.guet.edu.cn/index.html 
     包含Host请求报头域：Host：www.guet.edu.cn（此处使用缺省端口号80）
-	**User-Agent** 表示客户端的操作系统、浏览器和其它属性。
+	User-Agent：表示客户端的操作系统、浏览器和其它属性。
 
 **响应报头**主要状态有：
 
-	**Location**
+	Location
 	Location响应报头域用于重定向接受者到一个新的位置。Location响应报头域常用在更换域名的时候。
-	**Server**
+	Server
 	Server响应报头域包含了服务器用来处理请求的软件信息。与User-Agent请求报头域是相对应的。例如：
 	Server：Apache-Coyote/1.1
 
