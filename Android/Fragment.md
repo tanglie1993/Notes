@@ -1,4 +1,4 @@
-##Fragment生命周期
+## Fragment生命周期
 
 
 
@@ -60,7 +60,7 @@
 
 
 
-##Fragment状态的持久化
+## Fragment状态的持久化
 
 
 
@@ -82,7 +82,7 @@
 
 	这个方法仅仅能够保存Fragment中的控件状态，比如说EditText中用户已经输入的文字（*注意！在这里，控件需要设置一个id，否则Android将不会为我们保存控件的状态*），而Fragment中需要持久化的变量依然会丢失。
 
-##FragmentTransaction
+## FragmentTransaction
 
 
 ```
