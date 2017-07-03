@@ -54,7 +54,7 @@
 	
 	* 当该方法执行完后，Fragment与Activity不再有关联。
 
-##Fragment与Activity之间的交互
+## Fragment与Activity之间的交互
 
 * Fragment与Activity之间的交互可以通过`Fragment.setArguments(Bundle args)`以及`Fragment.getArguments()`来实现。
 
