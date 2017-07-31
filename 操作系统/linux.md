@@ -126,3 +126,45 @@ cp file1 file2
   - -f:force，强制直接移动而不询问
   - -i:若目标文件(destination)已经存在，就会询问是否覆盖
   - -u:若目标文件已经存在，且源文件比较新，才会更新
+
+## 怎样从一个目录下所有文件中搜索关键字
+### 在某目录下查找名为“elm.cc”的文件
+
+find /home/lijiajia/ -name elm.cc
+
+### 查找文件名中包含某字符（如"elm"）的文件
+
+find /home/lijiajia/ -name '*elm*'
+find /home/lijiajia/ -name 'elm*'
+find /home/lijiajia/ -name '*elm'
+
+### 根据文件的特征进行查询
+
+find /home/lijiajia/ -amin -10        #查找在系统中最后10分钟访问的文件  
+find /home/lijiajia/ -atime -2        #查找在系统中最后48小时访问的文件  
+find /home/lijiajia/ -empty           #查找在系统中为空的文件或者文件夹  
+find /home/lijiajia/ -mmin -5         # 查找在系统中最后5 分钟里修改过的文件
+find /home/lijiajia/ -mtime -1        #查找在系统中最后24 小时里修改过的文件  
+find /home/lijiajia/ -nouser          #查找在系统中属于作废用户的文件  
+find /home/ftp/pub -user lijiajia     #查找在系统中属于lijiajia这个用户的文件  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
