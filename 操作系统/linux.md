@@ -148,17 +148,34 @@ find /home/lijiajia/ -mtime -1        #查找在系统中最后24 小时里修�
 find /home/lijiajia/ -nouser          #查找在系统中属于作废用户的文件  
 find /home/ftp/pub -user lijiajia     #查找在系统中属于lijiajia这个用户的文件  
 
+## 怎样安装软件
 
+通常Linux应用软件的安装包有三种：
+- tar包，如software-1.2.3-1.tar.gz。它是使用UNIX系统的打包工具tar打包的。
+- rpm包，如software-1.2.3-1.i386.rpm。它是RedHat Linux提供的一种包封装格式。
+- dpkg包，如software-1.2.3-1.deb。它是Debain Linux提供的一种包封装格式。
 
+整个安装过程可以分为以下几步：
+- 取得应用软件：通过下载、购买光盘的方法获得；
+- 解压缩文件：一般tar包，都会再做一次压缩，如gzip、bz2等，所以你需要先解压。如果是最常见的gz格式，则可以执行：“tar –xvzf 软件包名”，就可以一步完成解压与解包工作。如果不是，则先用解压软件，再执行“tar –xvf 解压后的tar包”进行解包；
+- 阅读附带的INSTALL文件、README文件；
+- 执行“./configure”命令为编译做好准备；
+- 执行“make”命令进行软件编译；
+- 执行“make install”完成安装；
+- 执行“make clean”删除安装时产生的临时文件。
 
+### 使用 rpm 安装
+rpm -ivh your-package.rpm
+ivh：安装显示安装进度--install--verbose--hash
 
-
-
-
-
-
-
-
+常用命令组合：
+－ivh：安装显示安装进度--install--verbose--hash
+－Uvh：升级软件包--Update；
+－qpl： 列出RPM软件包内的文件信息[Query Package list]；
+－qpi：列出RPM软件包的描述信息[Query Package install package(s)]；
+－qf：查找指定文件属于哪个RPM软件包[Query File]；
+－Va：校验所有的 RPM软件包，查找丢失的文件[View Lost]；
+－e：删除包
 
 
 
