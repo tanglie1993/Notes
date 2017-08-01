@@ -8,3 +8,7 @@
 - Git was developed for Linux kernel by Linus Torvalds; SVN was developed by CollabNet, Inc.
 - Git is distributed under GNU, and its maintenance overseen by Junio Hamano; Apache Subversion, or SVN, is distributed under the open source license.
 
+## 怎样配置用户名和邮箱
+$ git config --global user.name "username"
+$ git config --global user.email "email"
+
