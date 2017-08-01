@@ -32,3 +32,11 @@ tree，或者叫文件树，有以下几个特点：
 - 只存在于版本库。暂存区没有tree的概念，工作区也没有tree的概念，因为暂存区和工作区都只有一个当前版本，而git版本库则保存这每一个版本（或者叫每一个提交）时对应的文件树。
 
 其实可以把tree理解为一个文件夹，这个文件夹中包含了其他的文件和子文件夹，然后子文件夹有可以包含其他文件和子子文件夹，只是，这里面提到的所有文件，都是一个引用。如果我们再修改一下a.txt并提交，git会再生成一个新的文件树并关联到这个提交，这个树中的a.txt将会指向一个新的id，而b.txt文件由于没有修改，所有id不变，也就是还指向原来的文件位置。这样做可以优化存储空间。
+
+## HEAD是什么
+You can think of the HEAD as the "current branch". When you switch branches with git checkout, the HEAD revision changes to point to the tip of the new branch.
+
+It is possible for HEAD to refer to a specific revision that is not associated with a branch name. This situation is called a detached HEAD.
+
+
+
