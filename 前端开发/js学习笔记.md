@@ -118,3 +118,18 @@ There was an error on this page.
 Error description: adddlert is not defined
 Click OK to continue.
 ```
+
+```
+try{
+  var x=document.getElementById("demo").value;
+  if(x=="")    throw "empty";
+  if(isNaN(x)) throw "not a number";
+  if(x>10)     throw "too high";
+  if(x<5)      throw "too low";
+}catch(err){
+  var y=document.getElementById("mess");
+  y.innerHTML="Error: " + err + ".";
+  }
+}
+```
+
