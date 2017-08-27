@@ -9,6 +9,8 @@
 
 [Easy Clean architecture on Android](http://www.jianshu.com/p/3edcf85539a6?utm_source=androidweekly.cn&utm_medium=website)
 
+##Issue141
+[Android 开发者必知必会的权限管理知识](https://mp.weixin.qq.com/s/OQRHEufCUXBA3d3DMZXMKQ?utm_source=androidweekly.cn&utm_medium=website)
 
 
 
