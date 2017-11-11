@@ -50,6 +50,18 @@ undefined
 []
 {}
 ```
+#### 基本数据类型
+字符串、数字、布尔、数组、对象、Null、Undefined
+
+#### JavaScript 函数语法
+```
+function myFunction(name,job)
+{
+    alert("Welcome " + name + ", the " + job);
+}
+
+<button onclick="myFunction('Bill Gates','CEO')">点击这里</button>
+```
 
 #### 局部 JavaScript 变量
 在 JavaScript 函数内部声明的变量（使用 var）是局部变量，所以只能在函数内部访问它。（该变量的作用域是局部的）。  
