@@ -110,6 +110,41 @@ inst.prop
 
 注意，如果静态方法包含this关键字，这个this指的是类，而不是实例。
 
+## Class 的静态属性和实例属性
+### 静态属性
+静态属性指的是 Class 本身的属性，即Class.propName，而不是定义在实例对象（this）上的属性。
+```
+class Foo {
+}
+
+Foo.prop = 1;
+Foo.prop // 1
+
+// 以下两种写法都无效
+class Foo {
+  // 写法一
+  prop: 2
+
+  // 写法二
+  static prop: 2
+}
+
+Foo.prop // undefined
+```
+目前，只有这种写法可行，因为 ES6 明确规定，Class 内部只有静态方法，没有静态属性。
+```
+// 以下两种写法都无效
+class Foo {
+  // 写法一
+  prop: 2
+
+  // 写法二
+  static prop: 2
+}
+
+Foo.prop // undefined
+```
+
 
 
 
