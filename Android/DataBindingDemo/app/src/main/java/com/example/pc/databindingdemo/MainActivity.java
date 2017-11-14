@@ -20,9 +20,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setUser(user);
-
-        ListView listView = (ListView) findViewById(R.id.listView);
-        listView.setAdapter(adapter);
+        binding.listView.setAdapter(adapter);
+        new Thread(){
+            @Override
+            public void run(){
+                user.firstName = "firstName";
+                user.lastName = "lastName";
+            }
+        }.start();
     }
 
     BaseAdapter adapter = new BaseAdapter() {
