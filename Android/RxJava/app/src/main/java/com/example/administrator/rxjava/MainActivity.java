@@ -61,6 +61,30 @@ public class MainActivity extends AppCompatActivity {
         students[1].courses[0] = "courseC";
         students[1].courses[1] = "courseD";
         Observable.from(students)
+                .lift(new Observable.Operator<Student, Student>() {
+
+                    @Override
+                    public Subscriber<? super Student> call(final Subscriber<? super Student> subscriber) {
+                        return new Subscriber<Student>() {
+                            @Override
+                            public void onCompleted() {
+                                subscriber.onCompleted();
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                subscriber.onError(e);
+                            }
+
+                            @Override
+                            public void onNext(Student student) {
+                                student.courses[0] += " lifted";
+                                student.courses[1] += " lifted";
+                                subscriber.onNext(student);
+                            }
+                        };
+                    }
+                })
                 .flatMap(new Func1<Student, Observable<String>>() {
                     @Override
                     public Observable<String> call(Student student) {
