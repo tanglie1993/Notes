@@ -1,5 +1,6 @@
 package com.example.administrator.rxjava;
 
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
@@ -43,6 +45,50 @@ public class MainActivity extends AppCompatActivity {
         errorDemo();
         actionsDemo();
         schedulerDemo();
+        mapDemo();
+        flatMapDemo();
+    }
+
+    private void flatMapDemo() {
+        class Student{
+            String[] courses = new String[2];
+        };
+        Student[] students = new Student[2];
+        students[0] = new Student();
+        students[0].courses[0] = "courseA";
+        students[0].courses[1] = "courseB";
+        students[1] = new Student();
+        students[1].courses[0] = "courseC";
+        students[1].courses[1] = "courseD";
+        Observable.from(students)
+                .flatMap(new Func1<Student, Observable<String>>() {
+                    @Override
+                    public Observable<String> call(Student student) {
+                        return Observable.from(student.courses);
+                    }
+                })
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String string) {
+                        Log.i(TAG, "string: " + string);
+                    }
+                });
+    }
+
+    private void mapDemo() {
+        Observable.just(1) // 输入类型 String
+                .map(new Func1<Integer, String>() {
+                    @Override
+                    public String call(Integer i) { // 参数类型 String
+                        return "" + i; // 返回类型 Bitmap
+                    }
+                })
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String string) { // 参数类型 Bitmap
+                        Log.i(TAG, "string: " + string);
+                    }
+                });
     }
 
     private void schedulerDemo() {
