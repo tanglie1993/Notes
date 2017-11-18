@@ -187,6 +187,12 @@ public class MainActivity extends AppCompatActivity {
         Observable.just(1, 2, 3, 4)
                 .subscribeOn(Schedulers.io()) // 指定 subscribe() 发生在 IO 线程
                 .observeOn(AndroidSchedulers.mainThread()) // 指定 Subscriber 的回调发生在主线程
+                .doOnSubscribe(new Action0() {
+                    @Override
+                    public void call() {
+                        Log.i(TAG, "doOnSubscribe");
+                    }
+                })
                 .subscribe(new Action1<Integer>() {
                     @Override
                     public void call(Integer number) {
