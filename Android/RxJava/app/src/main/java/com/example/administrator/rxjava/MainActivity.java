@@ -8,8 +8,10 @@ import android.util.Log;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onNext(String s) {
-            Log.i(TAG, s);
+                Log.i(TAG, s);
         }
     };
 
@@ -40,6 +42,20 @@ public class MainActivity extends AppCompatActivity {
         simpleDemo();
         errorDemo();
         actionsDemo();
+        schedulerDemo();
+    }
+
+    private void schedulerDemo() {
+        Observable.just(1, 2, 3, 4)
+                .subscribeOn(Schedulers.io()) // 指定 subscribe() 发生在 IO 线程
+                .observeOn(AndroidSchedulers.mainThread()) // 指定 Subscriber 的回调发生在主线程
+                .subscribe(new Action1<Integer>() {
+                    @Override
+                    public void call(Integer number) {
+                      Log.i(TAG, Thread.currentThread().getName());
+                      Log.i(TAG, "number:" + number);
+                    }
+                });
     }
 
     private void actionsDemo() {
