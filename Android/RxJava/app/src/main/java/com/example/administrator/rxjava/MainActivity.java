@@ -19,6 +19,12 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getCanonicalName();
 
+    class Student{
+        String[] courses = new String[2];
+    };
+    Student[] students = new Student[2];
+
+
     Observer<String> observer = new Observer<String>() {
 
         @Override
@@ -41,25 +47,71 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        simpleDemo();
-        errorDemo();
-        actionsDemo();
-        schedulerDemo();
-        mapDemo();
-        flatMapDemo();
-    }
 
-    private void flatMapDemo() {
-        class Student{
-            String[] courses = new String[2];
-        };
-        Student[] students = new Student[2];
         students[0] = new Student();
         students[0].courses[0] = "courseA";
         students[0].courses[1] = "courseB";
         students[1] = new Student();
         students[1].courses[0] = "courseC";
         students[1].courses[1] = "courseD";
+
+        simpleDemo();
+        errorDemo();
+        actionsDemo();
+        schedulerDemo();
+        mapDemo();
+        flatMapDemo();
+        liftDemo();
+        composeDemo();
+    }
+
+    private void composeDemo() {
+        Observable.from(students)
+                .compose(new Observable.Transformer<Student, Student>() {
+                    @Override
+                    public Observable<Student> call(Observable<Student> studentObservable) {
+                        return studentObservable.lift(new Observable.Operator<Student, Student>() {
+
+                            @Override
+                            public Subscriber<? super Student> call(final Subscriber<? super Student> subscriber) {
+                                return new Subscriber<Student>() {
+                                    @Override
+                                    public void onCompleted() {
+                                        subscriber.onCompleted();
+                                    }
+
+                                    @Override
+                                    public void onError(Throwable e) {
+                                        subscriber.onError(e);
+                                    }
+
+                                    @Override
+                                    public void onNext(Student student) {
+                                        student.courses[0] += " lifted";
+                                        student.courses[1] += " lifted";
+                                        subscriber.onNext(student);
+                                    }
+                                };
+                            }
+                        });
+                    }
+                })
+                .flatMap(new Func1<Student, Observable<String>>() {
+                    @Override
+                    public Observable<String> call(Student student) {
+                        return Observable.from(student.courses);
+                    }
+                })
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String string) {
+                        Log.i(TAG, "string: " + string);
+                    }
+                });
+    }
+
+    private void liftDemo() {
+
         Observable.from(students)
                 .lift(new Observable.Operator<Student, Student>() {
 
@@ -85,6 +137,22 @@ public class MainActivity extends AppCompatActivity {
                         };
                     }
                 })
+                .flatMap(new Func1<Student, Observable<String>>() {
+                    @Override
+                    public Observable<String> call(Student student) {
+                        return Observable.from(student.courses);
+                    }
+                })
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String string) {
+                        Log.i(TAG, "string: " + string);
+                    }
+                });
+    }
+
+    private void flatMapDemo() {
+        Observable.from(students)
                 .flatMap(new Func1<Student, Observable<String>>() {
                     @Override
                     public Observable<String> call(Student student) {
