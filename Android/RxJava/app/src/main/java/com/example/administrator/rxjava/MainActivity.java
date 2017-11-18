@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(Throwable e) {
-                Log.i(TAG, "Error");
+                Log.i(TAG, "Error: " + e);
             }
 
             @Override
@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
             public void call(Subscriber<? super String> subscriber) {
                 subscriber.onNext("Hello");
                 subscriber.onNext("World");
+                subscriber = null;
                 subscriber.onCompleted();
             }
         });
