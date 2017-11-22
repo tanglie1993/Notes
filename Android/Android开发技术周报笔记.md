@@ -5,8 +5,7 @@
 
 
 ## Issue147
-[ConstraintLayout入门指南]
-(https://mp.weixin.qq.com/s/X01KpEbegR47Qnl9TmUd5w?utm_source=androidweekly.cn&utm_medium=website)
+[ConstraintLayout入门指南](https://mp.weixin.qq.com/s/X01KpEbegR47Qnl9TmUd5w?utm_source=androidweekly.cn&utm_medium=website)
 
 ## Issue146
 [Android 屏幕完美适配方案](https://mp.weixin.qq.com/s/e26d6s3hpWJOmhA4AUqRbQ?utm_source=androidweekly.cn&utm_medium=website)
@@ -19,8 +18,7 @@
 
 
 ## Issue143
-[分享一下我所了解的字符编码知识]
-(http://www.jianshu.com/p/2d4ad873b39f?utm_source=androidweekly.cn&utm_medium=website)
+[分享一下我所了解的字符编码知识](http://www.jianshu.com/p/2d4ad873b39f?utm_source=androidweekly.cn&utm_medium=website)
 
 ## Issue142
 [HenCoder Android 开发进阶：自定义 View 1-5 绘制顺序](http://hencoder.com/ui-1-5/?utm_source=androidweekly.cn&utm_medium=website)
@@ -37,43 +35,33 @@
 
 [Android中为什么主线程不会因为Looper.loop()里的死循环卡死？](https://www.zhihu.com/question/34652589/answer/90344494?utm_source=androidweekly.cn&utm_medium=website)
 
-[动态图片技术 — 历史、格式与性能]
-(https://mp.weixin.qq.com/s/nl8SXjEycRTMfa2aMzmxSg?utm_source=androidweekly.cn&utm_medium=website)
+[动态图片技术 — 历史、格式与性能](https://mp.weixin.qq.com/s/nl8SXjEycRTMfa2aMzmxSg?utm_source=androidweekly.cn&utm_medium=website)
 
 ## Issue139
-[Android彻底组件化方案实践]
-(http://www.jianshu.com/p/1b1d77f58e84?utm_source=androidweekly.cn&utm_medium=website)
+[Android彻底组件化方案实践](http://www.jianshu.com/p/1b1d77f58e84?utm_source=androidweekly.cn&utm_medium=website)
 
 ## Issue138
-[手把手教你使用Systrace（二）——锁优化]
-(https://zhuanlan.zhihu.com/p/27535205?utm_source=androidweekly.cn&utm_medium=website)
+[手把手教你使用Systrace（二）——锁优化](https://zhuanlan.zhihu.com/p/27535205?utm_source=androidweekly.cn&utm_medium=website)
 
-[全面剖析SharedPreferences]
-(http://gityuan.com/2017/06/18/SharedPreferences/?utm_source=androidweekly.cn&utm_medium=website)
+[全面剖析SharedPreferences](http://gityuan.com/2017/06/18/SharedPreferences/?utm_source=androidweekly.cn&utm_medium=website)
 
 ## Issue137
-[Android O新特性和行为变更总结]
-(https://mp.weixin.qq.com/s/Ezfm-Xaz3fzsaSm0TU5LMw?utm_source=androidweekly.cn&utm_medium=website)
+[Android O新特性和行为变更总结](https://mp.weixin.qq.com/s/Ezfm-Xaz3fzsaSm0TU5LMw?utm_source=androidweekly.cn&utm_medium=website)
 
 
-[PhysicsBasedAnimation学习]
-(http://rkhcy.github.io/2017/07/07/PhysicsBasedAnimation%E5%AD%A6%E4%B9%A0/?utm_source=androidweekly.cn&utm_medium=website)
+[PhysicsBasedAnimation学习](http://rkhcy.github.io/2017/07/07/PhysicsBasedAnimation%E5%AD%A6%E4%B9%A0/?utm_source=androidweekly.cn&utm_medium=website)
 
 ## Issue136
-[深入理解 Android 控件]
-(https://pqpo.me/2017/07/01/learn-android-view/?utm_source=androidweekly.cn&utm_medium=website)
+[深入理解 Android 控件](https://pqpo.me/2017/07/01/learn-android-view/?utm_source=androidweekly.cn&utm_medium=website)
 
-[微信Android模块化架构重构实践]
-(https://mp.weixin.qq.com/s/6Q818XA5FaHd7jJMFBG60w?utm_source=androidweekly.cn&utm_medium=website)
+[微信Android模块化架构重构实践](https://mp.weixin.qq.com/s/6Q818XA5FaHd7jJMFBG60w?utm_source=androidweekly.cn&utm_medium=website)
 
 ## Issue135
 
 ## Issue134
-[H5 和移动端 WebView 缓存机制解析与实战]
-https://mp.weixin.qq.com/s/qHm_dJBhVbv0pJs8Crp77w?utm_source=androidweekly.cn&utm_medium=website
+[H5 和移动端 WebView 缓存机制解析与实战](https://mp.weixin.qq.com/s/qHm_dJBhVbv0pJs8Crp77w?utm_source=androidweekly.cn&utm_medium=website)
 
-[WebView性能、体验分析与优化]
-https://tech.meituan.com/WebViewPerf.html?utm_source=androidweekly.cn&utm_medium=website?utm_source=androidweekly.cn&utm_medium=website
+[WebView性能、体验分析与优化](https://tech.meituan.com/WebViewPerf.html?utm_source=androidweekly.cn&utm_medium=website?utm_source=androidweekly.cn&utm_medium=website)
 
 ## Issue133
 
