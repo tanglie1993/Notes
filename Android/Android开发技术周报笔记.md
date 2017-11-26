@@ -76,7 +76,7 @@ https://mp.weixin.qq.com/s/qHm_dJBhVbv0pJs8Crp77w?utm_source=androidweekly.cn&ut
 https://tech.meituan.com/WebViewPerf.html?utm_source=androidweekly.cn&utm_medium=website?utm_source=androidweekly.cn&utm_medium=website
 
 ##Issue133
-
+[微店 Android 插件化实践](https://mp.weixin.qq.com/s/p8-ABKDpMLm6T4lJdK8Y3Q?utm_source=androidweekly.cn&utm_medium=website)
 
 
 
