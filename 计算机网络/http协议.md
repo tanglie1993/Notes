@@ -28,7 +28,7 @@ HTTP消息报头包括普通报头、请求报头、响应报头、实体报头�
 
 	Accept：指定客户端接受哪些类型的信息。 
 	eg：Accept：image/gif、Accept：text/html
-	Accept-Charse：用于指定客户端接受的字符集。
+	Accept-Charset：用于指定客户端接受的字符集。
 	Accept-Language：用于指定客户端接受的自然语言。
 	Host：（发送请求时，该报头域是必需的） 用于指定被请求资源的Internet主机和端口号。
     eg： http://www.guet.edu.cn/index.html 
@@ -52,7 +52,6 @@ HTTP消息报头包括普通报头、请求报头、响应报头、实体报头�
 	Content-Encoding
 	Content-Language
 	Content-Length
-	Content-Type
 	Content-Type
 	Last-Modified
 
