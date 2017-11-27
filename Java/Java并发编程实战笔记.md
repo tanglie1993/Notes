@@ -101,6 +101,7 @@ public class Child extends Father
 ## 第三章 对象的共享
 ### 可见性
 确保当一个线程修改了对象状态后，其他线程能够看到发生的状态变化。
+
 ```
 public class NoVisibility {  
 	private static boolean ready;  
