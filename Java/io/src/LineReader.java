@@ -23,7 +23,7 @@ public class LineReader {
             try {
                 String s;
                 while((s = in.readLine()) != null) {
-                    texts.add(s);
+                    texts.add(s.toUpperCase());
                 }
             } finally {
                 in.close();
