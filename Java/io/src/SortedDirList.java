@@ -25,6 +25,10 @@ public class SortedDirList {
         for(String string : new SortedDirList(path).list("G.+y.*")){
             System.out.println(string);
         }
+        System.out.println("----------------");
+        for(String string : new SortedDirList(path).list(".*")){
+            System.out.println(string);
+        }
     }
 
     private String directory;
@@ -43,12 +47,16 @@ public class SortedDirList {
             return new String[0];
         }
         List<String> result = new ArrayList<>();
+        int totalSize = 0;
         for(String fileName : list){
             if(Pattern.matches(pattern, fileName)){
                 result.add(fileName);
+                File file = new File(directory + "\\" + fileName);
+                totalSize += file.length();
             }
         }
         String[] strings = new String[result.size()];
+        System.out.println("totalSize: " + totalSize);
         return result.toArray(strings);
     }
 }
