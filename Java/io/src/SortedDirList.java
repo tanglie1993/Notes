@@ -29,6 +29,10 @@ public class SortedDirList {
         for(String string : new SortedDirList(path).list(".*")){
             System.out.println(string);
         }
+        System.out.println("----------------");
+        for(String string : new SortedDirList(path + "长干行二首/").list(1512222020000L)){
+            System.out.println(string);
+        }
     }
 
     private String directory;
@@ -57,6 +61,22 @@ public class SortedDirList {
         }
         String[] strings = new String[result.size()];
         System.out.println("totalSize: " + totalSize);
+        return result.toArray(strings);
+    }
+
+    public String[] list(long modifyTimeStamp){
+        String[] list = new File(directory).list();
+        if(list == null){
+            return new String[0];
+        }
+        List<String> result = new ArrayList<>();
+        for(String fileName : list){
+            File file = new File(directory + "\\" + fileName);
+            if(file.exists() && file.lastModified() > modifyTimeStamp){
+                result.add(fileName);
+            }
+        }
+        String[] strings = new String[result.size()];
         return result.toArray(strings);
     }
 }
