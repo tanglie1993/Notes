@@ -11,10 +11,10 @@ import java.util.List;
 public class LineReader {
 
     public static void main(String[] args) {
-        read("D:/workspace/Notes/Java/io/files/Gettysburg Address.txt");
+        read("D:/workspace/Notes/Java/io/files/Gettysburg Address.txt", "equal");
     }
 
-    public static String read(String fileName) {
+    public static String read(String fileName, String searchContent) {
         StringBuilder sb = new StringBuilder();
         List<String> texts = new LinkedList<>();
         try {
@@ -23,7 +23,9 @@ public class LineReader {
             try {
                 String s;
                 while((s = in.readLine()) != null) {
-                    texts.add(s.toUpperCase());
+                    if(s.contains(searchContent)){
+                        texts.add(s.toUpperCase());
+                    }
                 }
             } finally {
                 in.close();
