@@ -4,11 +4,11 @@ import java.io.*;
  * Created by pc on 2017/12/3.
  */
 public class Person implements Serializable {
-    private String userName;
+    private Name userName;
     private String password;
 
     public Person(String userName, String password) {
-        this.userName = userName;
+        this.userName = new Name(userName);
         this.password = password;
     }
 
