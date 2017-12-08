@@ -1,3 +1,5 @@
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * Created by pc on 2017/12/8.
  */
@@ -91,6 +93,49 @@ public class SyncObjectDemo {
         }
     }
 
+    static class SyncReentrantLock{
+        static final ReentrantLock lock = new ReentrantLock();
+
+        private void sync1(){
+            lock.lock();
+            for(int i = 0; i < 10; i++){
+                System.out.println("SyncReentrantLock sync1 " + i);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            lock.unlock();
+        }
+
+        private void sync2(){
+            lock.lock();
+            for(int i = 0; i < 10; i++){
+                System.out.println("SyncReentrantLock sync2 " + i);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            lock.unlock();
+        }
+
+        private void sync3(){
+            lock.lock();
+            for(int i = 0; i < 10; i++){
+                System.out.println("SyncReentrantLock sync3 " + i);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            lock.unlock();
+        }
+    }
+
     public static void main(String[] args) throws InterruptedException {
         SyncOnSameObject syncOnSameObject = new SyncOnSameObject();
         new Thread(syncOnSameObject::sync1).start();
@@ -100,5 +145,9 @@ public class SyncObjectDemo {
         new Thread(syncOnDifferentObject::sync1).start();
         new Thread(syncOnDifferentObject::sync2).start();
         new Thread(syncOnDifferentObject::sync3).start();
+        SyncReentrantLock syncReentrantLock = new SyncReentrantLock();
+        new Thread(syncReentrantLock::sync1).start();
+        new Thread(syncReentrantLock::sync2).start();
+        new Thread(syncReentrantLock::sync3).start();
     }
 }
