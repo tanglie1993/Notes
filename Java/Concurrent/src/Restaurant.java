@@ -19,13 +19,44 @@ class WaitPerson implements Runnable {
                         wait(); // ... for the chef to produce a meal
                 }
                 System.out.println("Waitperson got " + restaurant.meal);
+                synchronized(restaurant.busBoy) {
+                    restaurant.busBoy.notifyAll();
+                }
+                synchronized(this) {
+                    while(!restaurant.isCleaned)
+                        wait(); // ... for the chef to produce a meal
+                }
                 synchronized(restaurant.chef) {
                     restaurant.meal = null;
                     restaurant.chef.notifyAll(); // Ready for another
                 }
+
             }
         } catch(InterruptedException e) {
             System.out.println("WaitPerson interrupted");
+        }
+    }
+}
+
+class BusBoy implements Runnable {
+    private Restaurant restaurant;
+    public BusBoy(Restaurant r) { restaurant = r; }
+    public void run() {
+        try {
+            while(!Thread.interrupted()) {
+                synchronized(this) {
+                    while(restaurant.isCleaned)
+//                        System.out.println("BusBoy wait");
+                        wait(); // ... for the chef to produce a meal
+                }
+                System.out.println("BusBoy clean " + restaurant.meal);
+                restaurant.isCleaned = true;
+                synchronized(restaurant.waitPerson) {
+                    restaurant.waitPerson.notifyAll(); // Ready for another
+                }
+            }
+        } catch(InterruptedException e) {
+            System.out.println("BusBoy interrupted");
         }
     }
 }
@@ -48,6 +79,7 @@ class Chef implements Runnable {
                 System.out.println("Order up! ");
                 synchronized(restaurant.waitPerson) {
                     restaurant.meal = new Meal(count);
+                    restaurant.isCleaned = false;
                     restaurant.waitPerson.notifyAll();
                 }
                 TimeUnit.MILLISECONDS.sleep(100);
@@ -60,12 +92,15 @@ class Chef implements Runnable {
 
 public class Restaurant {
     Meal meal;
+    boolean isCleaned = true;
     ExecutorService exec = Executors.newCachedThreadPool();
     final WaitPerson waitPerson = new WaitPerson(this);
     final Chef chef = new Chef(this);
+    final BusBoy busBoy = new BusBoy(this);
     public Restaurant() {
         exec.execute(chef);
         exec.execute(waitPerson);
+        exec.execute(busBoy);
     }
     public static void main(String[] args) {
         new Restaurant();
