@@ -98,8 +98,6 @@ class Consumer implements Runnable {
 
 public class ProducerConsumer {
 
-
-
     public static void main(String[] args) {
         Storage storage = new Storage();
         new Thread(new Producer(storage)).start();
