@@ -1,0 +1,152 @@
+<html>
+<head>
+  <title>设计模式问答（2） - ImportNew</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1296"/>
+<h1>设计模式问答（2） - ImportNew</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>设计模式问答（2）</h1><div><div></div></div></div>
+	
+	
+	
+	<div>
+	
+		<p>2015/01/05 | 分类： <a href="http://www.importnew.com/cat/basic" target="_blank" title="查看 基础技术 中的全部文章">基础技术</a> | <a href="http://www.importnew.com/14347.html#comments" target="_blank" title="《设计模式问答（2）》上的评论">2  条评论</a>
+
+		 | 标签： <a href="http://www.importnew.com/tag/%e8%ae%be%e8%ae%a1%e6%a8%a1%e5%bc%8f" target="_blank">设计模式</a></p>
+
+
+
+
+
+	</div>
+	
+
+	
+	
+
+        
+		
+<h3><strong>介绍</strong></h3>
+<p>这是<a href="http://www.amazon.cn/gp/product/B001130JN8/ref=as_li_qf_sp_asin_il_tl?ie=UTF8&amp;tag=importnew-23&amp;linkCode=as2&amp;camp=536&amp;creative=3200&amp;creativeASIN=B001130JN8" target="_blank" title="设计模式:可复用面向对象软件的基础">设计模式</a>问答1的连载。在这个系列，我们将覆盖到解释器、迭代器、调停者、备忘录和观察者模式。</p>
+<p>如果你还没有阅读过我之前的系列，你可以随时从下面开始</p>
+
+<h4><strong>什么是解释器模式？</strong></h4>
+<p>解释器模式允许我们将语法解释为代码解决方案。好了，这意味着什么？语法会被映射到类，并形成解决方案。 举个例子，7 – 2能够被映射到“clsMinus”类。一句话，解释器模式为我们提供了一种解决方案，这个方案指导如何编写一个解析语法并执行代码的解释器。下面是一个 解释器的简单例子，它能够按照我们提供的日期格式语法，将日期解释为对应的代码，并输入正确的结果。</p>
+<div><a href="http://www.importnew.com/14347.html/dategrammar" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/665ee71720aa8a72d2cd880dc552502c.jpg" type="image/jpeg" data-filename="665ee71720aa8a72d2cd880dc552502c.jpg" height="216" title="DateGrammar" width="478"/></div></a>
+
+</div>
+<p>让我们开始做图“日期语法”中所示的日期格式的解释器。在开始之前，我们要先理解一下解释器模式中不同的组件，然后再来处理映射。上下文部分包含数据，而逻辑部分包含将上下文中数据转换成可读格式的转换逻辑。</p>
+<div><a href="http://www.importnew.com/14347.html/contextlogic" target="_blank"><img src="设计模式问答（2） - ImportNew_files/f3c37347925f9e1900c5f02cce76ca18.jpg" type="image/jpeg" data-filename="f3c37347925f9e1900c5f02cce76ca18.jpg" height="109" title="ContextLogic" width="274"/></a>
+<p>上下文和逻辑</p>
+</div>
+<p>让我们看一下日期格式的语法是怎么定义的。定义任何语法的第一步，是把语法分解成小的逻辑组件。图“语法映射与类 的映射”展示了怎么识别这些组件，以及怎么映射到处理这部分语法的逻辑类上面。我们已经把日期格式打断成了4个组件，分别是月、日、年和分隔符。对这4个 组件，我们将分别定义包含图中展示的逻辑的类。然后，我们将为日期格式的不同组件创建不同的类。</p>
+<div><a href="http://www.importnew.com/14347.html/grammarmapped" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/a7d882126e7ab4a38a77f451b68e7263.jpg" type="image/jpeg" data-filename="a7d882126e7ab4a38a77f451b68e7263.jpg" height="211" title="Grammarmapped" width="240"/></div></a>
+<p>语法映射与类的映射</p>
+</div>
+<p>前 面说过，有两种类，一种是包含逻辑的表达式类，另一种是包含数据的上下文类，如图“表达式和上下文类”中所示。我们定义了不同类中的表达式解析算法，这些 类都从公共接口“ClsAbstractExpression”派生，并实现了“Evaluate”方法。“Evaluate”方法接收包含数据的上下文 类作为参数；它根据表达式逻辑来解析数据。“ClsYearExpression”实例将“YYYY”替换成年份值，而 “ClsMonthExpression”将“MM”替换成月份值，以此类推。</p>
+<div><a href="http://www.importnew.com/14347.html/classdiagram" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/a589b8b83d5a0fbc1679adeaf128484f.jpg" type="image/jpeg" data-filename="a589b8b83d5a0fbc1679adeaf128484f.jpg" height="317" title="Classdiagram" width="576"/></div></a>
+<p>解释器类图</p>
+</div>
+<div><a href="http://www.importnew.com/14347.html/expressioncontext" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/d6abbd1a6e1e076230ccddf15cdc3e95.jpg" type="image/jpeg" data-filename="d6abbd1a6e1e076230ccddf15cdc3e95.jpg" height="427" title="ExpressionContext" width="576"/></div></a>
+<p>表达式和上下文类</p>
+</div>
+<p>现在，我们有了单独的表达式解析逻辑类，然后我们来看看客户端会如何使用这个逻辑。客户端首先把日期语法格式传递给 上下文类。依据日期格式，我们依次向集合中添加表达式实例。如果我们找到了“DD”，我们就添加一个“ClsDayExpression”实例；如果我们 找到了“MM”，就添加一个“ClsMonthExpression”实例，等等。最后，我们只需要遍历集合，并调用“Evaluate”函数。所有的 “Evaluate”函数执行完之后，我们就显示结果。</p>
+<div><a href="http://www.importnew.com/14347.html/clientinterpreter" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/0c8c936f0e190214362c4407b9b777b9.jpg" type="image/jpeg" data-filename="0c8c936f0e190214362c4407b9b777b9.jpg" height="285" title="ClientInterpreter" width="576"/></div></a>
+<p>客户端解释器逻辑</p>
+</div>
+<h4><strong>你能解释迭代器模式吗？</strong></h4>
+<p>迭代器模式允许在不暴露内部代码实现的情况下，顺序访问每个元素。让我们来理解一下。假设你有一个记录集合，你需要顺序遍历 每条记录，并且需要保持当前访问的位置，那么你需要的正是迭代器模式。这是最普通的设计模式，你会在不知不觉中用到它。在某些程度上，当你使用 “foreach”（它允许我们逐个元素地访问一个集合）时，你就已经在使用迭代器模式了。</p>
+<div><a href="http://www.importnew.com/14347.html/iteratorbusiness" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/bcf0cef5739c84210a5cfe0451ac0d2b.jpg" type="image/jpeg" data-filename="bcf0cef5739c84210a5cfe0451ac0d2b.jpg" height="340" title="Iteratorbusiness" width="576"/></div></a>
+<p>迭代器业务逻辑</p>
+</div>
+<p>在图“迭代器业务逻辑”中，我们使用 “clsIterator”类来存放顾客类的集合。我们在“clsIterator”类内部，定义了一个数组，和一个名称为“FillObjects”的 方法，这个方法用来加载数组的内容。顾客集合数组是私有的，顾客的数据可以通过数组的下标来访问。因此我们定义了一组公有函数，包含 “getByIndex”（通过指定下表来访问），“Prev”（得到集合中前一个顾客数据），“Next”（得到集合中下一个顾客数 据），“getFirst”（得到集合中第一个顾客数据），“getLast”（得到集合中最后一个顾客数据）。</p>
+<p>我们只对客户端暴露这些函数。这些函数小心的顺序遍历集合，并能够记忆当前遍历的索引。</p>
+<p>下面的图“客户遍历逻辑”说明了该如何使用类“clsIterator”的实例“ObjIterator”，显示下一个、前一个、最后一个、第一个，以及通过索引显示顾客数据。</p>
+<div><a href="http://www.importnew.com/14347.html/clientiterator" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/7ada0fc2d1c8748467356dc3815491a7.jpg" type="image/jpeg" data-filename="7ada0fc2d1c8748467356dc3815491a7.jpg" height="313" title="ClientIterator" width="576"/></div></a>
+<p>客户遍历逻辑</p>
+</div>
+<h4><strong>你能解释调停者模式吗？</strong></h4>
+<p>大多数时候，项目中组件间的通讯都很复杂。因此组件间的逻辑关系也变得异常复杂。调停者模式帮助对象间用不互相关联的方式来通讯，从而使复杂度最小化。</p>
+<div><a href="http://www.importnew.com/14347.html/mementopractical" target="_blank"><img src="设计模式问答（2） - ImportNew_files/542bbeffa194624c1a64804e080d66d1.jpg" type="image/jpeg" data-filename="542bbeffa194624c1a64804e080d66d1.jpg" height="160" title="Mementopractical" width="249"/></a>
+<p>调停者模式示例</p>
+</div>
+<p>让我们考虑图“调停者模式示例”，它描述了一个需要使用调停者模式的真实场景。它是一个非常用户友好的接口。它有3个典型的场景。</p>
+<p>场景1：当用户在文本框中输入时，应该使添加和清除按钮可用。一旦当文本框中没有文字时，应该禁用添加和清除按钮。</p>
+<div><a href="http://www.importnew.com/14347.html/scenario1" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/9c8977bb4ad17918a312f43373d73f6e.jpg" type="image/jpeg" data-filename="9c8977bb4ad17918a312f43373d73f6e.jpg" height="257" title="Scenario1" width="333"/></div></a>
+
+</div>
+<p>场景2：当用户点击添加按钮时，文本框内的数据应该被输入到列表框内。一旦数据被输入到列表框，它应该清空文本框的内容，并禁用添加和清除按钮。</p>
+<div><a href="http://www.importnew.com/14347.html/scenario2" target="_blank"><img src="设计模式问答（2） - ImportNew_files/909a5214eef649129b5c64780f57da6d.jpg" type="image/jpeg" data-filename="909a5214eef649129b5c64780f57da6d.jpg" height="243" title="Scenario2" width="194"/></a>
+
+</div>
+<p>场景3：- 当用户点击清除按钮时，名字文本框内的内容被清空，并禁用添加和清除按钮。</p>
+<div><a href="http://www.importnew.com/14347.html/scenario3" target="_blank"><img src="设计模式问答（2） - ImportNew_files/19d93ca1338c15088632d56e0a725fa6.jpg" type="image/jpeg" data-filename="19d93ca1338c15088632d56e0a725fa6.jpg" height="176" title="Scenario3" width="183"/></a>
+
+</div>
+<p>现在从界面上来看上面几个场景，我们可以推断这些界面之间的交互是多么复杂。下图“组件间复杂交互”显示出了逻辑复杂性。</p>
+<div><a href="http://www.importnew.com/14347.html/complexinteractions" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/2dd207779d564a218dfab38a62e602d9.jpg" type="image/jpeg" data-filename="2dd207779d564a218dfab38a62e602d9.jpg" height="363" title="Complexinteractions" width="495"/></div></a>
+<p>组件间复杂交互</p>
+</div>
+<p>好了，让我给你们看一个好看的图，即下图“通过调停者简化”。与其组件之间直接通讯，不如通过一个作为调停者的中心组件通讯，调停者组件管理着发送给其他组件的消息，这样逻辑更加优雅和清晰。</p>
+<div><a href="http://www.importnew.com/14347.html/simplifyingusing" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/ece752a294849362c27065df8cf1ab0f.jpg" type="image/jpeg" data-filename="ece752a294849362c27065df8cf1ab0f.jpg" height="204" title="Simplifyingusing" width="370"/></div></a>
+<p>通过调停者简化</p>
+</div>
+<p>现在我们来看看代码会是什么样子。我们将使用C#，但是你可以很轻松的把这种思想应用在Java或其他语言上。下图“调停者类”展示了一个调停者类完整的代码概述。</p>
+<p>调停者类做的第一件事，是保存拥有复杂通讯的类的引用。因此，我们 对外暴露了3个重载的方法“Register”。“Register”方法接收文本框对象和按钮对象为参数。交互场景集中在 “ClickAddButton”，“TextChange”和“ClickClearButton”三个方法上。将根据场景不同，这些方法将管理UI组 件的可用与禁用。</p>
+<div><a href="http://www.importnew.com/14347.html/mediatorclass" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/5abe061f9e21a734620914cfec2b5ebf.jpg" type="image/jpeg" data-filename="5abe061f9e21a734620914cfec2b5ebf.jpg" height="332" title="Mediatorclass" width="576"/></div></a>
+
+</div>
+<p>现在的客户逻辑非常优雅、非常酷。在构造函数中，我们首先将 参与复杂通讯的所有组件注册到调停者对象中。然后在每个场景中，我们只需要调用调停者对象的函数。简单地说，当有文本变化时，我们调用调停者对象的 “TextChange”函数；当用户点击添加按钮时，我们调用“ClickAddButton”；当点击清除按钮时，调用 “ClickClearButton”函数。</p>
+<div><a href="http://www.importnew.com/14347.html/mediatorclient" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/2d015c502fabe0c74a19feed40a386da.jpg" type="image/jpeg" data-filename="2d015c502fabe0c74a19feed40a386da.jpg" height="391" title="Mediatorclient" width="576"/></div></a>
+<p>调停者模式的客户逻辑</p>
+</div>
+<h4><strong>你能解释备忘录模式吗？</strong></h4>
+<p>备忘录模式能够在不破坏封装原则的前提下，获取对象内部状态。备忘录模式帮助我们存储一个对象的快照，它可 以在任意时间被恢复。让我们通过实例来理解。考虑图“备忘录示例”，它展示了一个顾客的界面。假设用户开始编辑一条顾客记录，并做了一些修改。然后用户觉 得有错误，希望能够恢复到原始的数据。这时备忘录模式就登场了。它帮助我们存储数据的一个备份，并且当用户点击“取消”按钮时，对象能够恢复到它的原始状 态。</p>
+<div><a href="http://www.importnew.com/14347.html/mementopractical" target="_blank"><img src="设计模式问答（2） - ImportNew_files/542bbeffa194624c1a64804e080d66d1 [1].jpg" type="image/jpeg" data-filename="542bbeffa194624c1a64804e080d66d1.jpg" height="160" title="Mementopractical" width="249"/></a>
+<p>备忘录示例</p>
+</div>
+<p>让我们尝试用C#来实现刚才所讲的顾客界面。下图是顾客类 “clsCustomer”，它聚合了一个备忘录类“clsCustomerMemento”。备忘录类将保存数据的快照，它是顾客类 “clsCustomer”的精确的复制品（除了方法）。当顾客类“clsCustomer”初始化时，备忘录类也将被初始化。当顾客类数据变化时，备忘 录类的快照不变化。“Revert”函数把备忘录的数据写回到主类。</p>
+<div><a href="http://www.importnew.com/14347.html/customerclass" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/ae5e49c7bd96cbc5b35cc89a3bf06bf9.jpg" type="image/jpeg" data-filename="ae5e49c7bd96cbc5b35cc89a3bf06bf9.jpg" height="547" title="Customerclass" width="576"/></div></a>
+<p>顾客类的备忘录</p>
+</div>
+<p>客户端的代码相当简单。我们创建一个顾客类。一旦遇到问题，我们点击“取消”按钮，调用“Revert”函数，将修改过的数据恢复到备忘录快照的原始数据。图“备忘录客户端代码”形象地展示了这个过程。</p>
+<div><a href="http://www.importnew.com/14347.html/mementoclient" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/c1f2d0815ac0425480621575ab72c9e0.jpg" type="image/jpeg" data-filename="c1f2d0815ac0425480621575ab72c9e0.jpg" height="324" title="Mementoclient" width="576"/></div></a>
+<p>备忘录客户端代码</p>
+</div>
+<h4><strong>你能解释观察者模式吗？</strong></h4>
+<p>观察者模式帮助我们与父类，关联类或者依赖类之间进行通讯。观察者模式中，有两个重要的概念，分别是“主体”和“观察者”。主体发 送通知，如果观察者已经注册到主体的话，观察者会收到通知。下图“主体和观察者”展示了应用程序（主体）是如何给所有观察者（邮件，事件日志，短消息服 务）发送通知的。你可以把这个例子对应到发布者与订阅者模型。发布者就是应用程序，而订阅者是邮件，事件日志和短消息服务。</p>
+<div><a href="http://www.importnew.com/14347.html/subjectobservers" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/761005ed8e0fcfd58abc2e2abe39b8e8.jpg" type="image/jpeg" data-filename="761005ed8e0fcfd58abc2e2abe39b8e8.jpg" height="199" title="SubjectObservers" width="474"/></div></a>
+<p>主体和观察者</p>
+</div>
+<p>让我们尝试对前面定义的示例进行编码。 首先我们看一下订阅者/通知者类。图“订阅者类”做了一个直观地展示。对所有的订阅者，我们有一个公共的接口，“INotification”，它有一个 “notify”方法。所有需要接收通知的类，都需要实现这个“INotification”接口。所有需要接收通知的类，定义各自的响应方法。对当前场 景，我们只打印一个消息，表明特定的通知被执行了。</p>
+<div><a href="http://www.importnew.com/14347.html/subscriberclasses" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/7f763e3659244792c67ecdde5e572e42.jpg" type="image/jpeg" data-filename="7f763e3659244792c67ecdde5e572e42.jpg" height="414" title="Subscriberclasses" width="576"/></div></a>
+
+</div>
+<p>前面说过，观察者模式中，有两个部分，一个是我们前面说过的观察者/订阅者，另一个就是发布者，或者叫主体。</p>
+<p>发布者有一个所有对接收通知感兴趣的订阅者的集合列表。通过“addNotification”和“removeNotification”，我们可以在列表中增加或者删除订阅者。“NotifyAll”方法遍历所有的订阅者，并发送通知。</p>
+<div><a href="http://www.importnew.com/14347.html/publisher" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/0f531344d32b3df07684f97885815a0a.jpg" type="image/jpeg" data-filename="0f531344d32b3df07684f97885815a0a.jpg" height="332" title="Publisher" width="576"/></div></a>
+<p>发布者类、主体类</p>
+</div>
+<p>现在，我们已经有了发布者和订阅者类。我们来动手编写一下客户端代码。下面是观察者模式客户端的代码片段。首先我们创建一个拥有订阅者集合的通知者对象。然后我们向集合中添加需要被通知的订阅者。</p>
+<p>现在，如果客户端输入的顾客代码超过10个字符，就需要通知所有的订阅者。</p>
+<div><a href="http://www.importnew.com/14347.html/observerclient" target="_blank"><div><img src="设计模式问答（2） - ImportNew_files/42466dd6284ebec1a64b1d3c6c0dbafb.jpg" type="image/jpeg" data-filename="42466dd6284ebec1a64b1d3c6c0dbafb.jpg" height="343" title="Observerclient" width="576"/></div></a>
+<p>观察者模式客户端代码</p>
+</div>
+<p>如果你没有学习过设计模式，或者不愿完全阅读本文，请收看我们的免费视频<a href="http://www.questpond.com/DP/Design-Pattern-Training-and-Interview-Questions-and-Answers.html" target="_blank">设计模式培训和问答</a>。</p>
+<h3><strong>许可</strong></h3>
+<p>本文，以及相关的代码和文件，通过 <a href="http://www.codeproject.com/info/cpol10.aspx" target="_blank">The Code Project Open License (CPOL)</a> 协议授权。</p>
+
+        
+        原文链接： <a href="http://www.codeproject.com/Articles/28359/Design-pattern-FAQ-Part-Design-pattern-training" target="_blank">codeproject</a>    翻译： <a href="http://www.importnew.com/" target="_blank"> ImportNew.com </a> - <a href="http://www.importnew.com/author/shenggordon" target="_blank">shenggordon</a><br/>译文链接： <a href="http://www.importnew.com/14347.html" target="_blank">http://www.importnew.com/14347.html</a><br/>[ <b>转载请保留原文出处、译者和译文链接。</b>]<br/><br/></div></div></div><br/></div></span>
+</div></body></html> 

@@ -1,0 +1,259 @@
+<html>
+<head>
+  <title>分享一下我所了解的字符编码知识</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2877"/>
+<h1>分享一下我所了解的字符编码知识</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>分享一下我所了解的字符编码知识</h1><div><div></div></div></div>
+
+        
+        <div>
+                    <div>
+            
+            
+            <a target="_blank"><span>关注</span></a>
+            
+            <div>
+              
+                
+              <span>字数 3809</span>
+            <span>评论 4</span></div>
+          </div>
+          
+        </div>
+        
+
+        
+        
+          <h1>前言</h1>
+<p>也许除了英语国家的程序员以外, 几乎每个程序员在编程开始的初期都会遇到乱码问题, 这个时候我们往往被教导: 统一用UTF-8. 然后所有的乱码都消失了, 世界重归和平.<br/>
+之后再遇到乱码问题, 我们第一反应依然是&quot;统一使用UTF-8&quot;.<br/>
+UTF-8全称 <em>8-bit Unicode Transformation Format</em>, 这里面有一个我们经常听到的名词Unicode, Unicode和UTF-8又是什么关系? 经常听到的UTF-16和UTF-8有什么区别? 一个汉字真的占2字节吗? JNI所涉及的Modified UTF-8又是什么东西? Unicode代理区是什么?<br/>
+字符编码这东西很基础, 但是几乎所有的编程书籍都是一笔带过, 乱码的阴云一直盘绕在头顶. 这里简单分享一下自己对字符编码的了解, 了解之后, 再遇到一些问题, 至少不至于一脸懵逼.</p>
+<h1>ASCII</h1>
+<p>程序员里面无人不知无人不晓的编码方案, 全称 <em>American Standard Code for Information Interchange</em>, 这个就不用多解释了, 一个字节编码一个字符, 虽然实际上只是用了7位就把128个字符给编进去了. 后来又出了个EASCII(Extended ASCII)把8位全用上了, 一共256了字符, 相比ASCII多了一些奇奇怪怪的字符. ASCII应该是研发最先知道的最简单的编码方案, 这里也不做过多介绍了.</p>
+<h1>传统编码方案</h1>
+<p>ASCII提出的时候, 并没有考虑到其他国家如中日韩的字符. 仅凭一个字节, 只能编码256个字符, 很多国家的字符都没有. 随着计算机的普及, 各个国家都提出了自己的编码方案, 这些方案大同小异, 基本套路就是兼容ASCII, 且用两个字节来编码其他字符, 比如GB2312, BIG5这类编码方案, 但这些方案都有一个很明显的问题: 各自为战. 也就是说他们兼容ASCII, 编了本国语言, 其他的语言不管, 因此这些编码方案只能容许电脑处理双语环境(拉丁字母+本国语言), 不支持多语环境(多种语言混合), 比如GB2312就没有对阿拉伯语的支持, 如果一行字符里有中文, 英文和阿拉伯文, GB2312肯定编码不了.<br/>
+Unicode就是为了解决传统编码方案的局限性而产生的, 在说Unicode之前, 首先需要了解的是现代编码模型.</p>
+<h1>现代编码模型</h1>
+<p>现代编码模型将字符编码的概念分为了几个层次.</p>
+<h2>抽象字符表(Abstract character repertoire)</h2>
+<p>即一个系统支持的所有抽象字符的集合, 这个集合中包含了所有的抽象字符, 比如&quot;中&quot;是一个字符, 但是这个字到底是黑体还是宋体, 字号多少, 抽象字符表并不管, 有些字符甚至不可打印, 比如我们常见的&quot;\n&quot;. 抽象字符表只描述这个系统支持的抽象字符.<br/>
+字符表可以是封闭的, 即不允许添加新符号, 如ASCII的字符表, 而Unicode的字符表则是开放的字符表, 允许添加新的符号.</p>
+<h2>编码字符集(Coded Character Set)</h2>
+<p>将字符集中的每一个字符映射到一个坐标或者一个非负整数, 字符集加上映射关系称为编码字符集, Unicode就是一个编码字符集. 既然是将字符集中的字符映射到另一个东西上, 那么就产生了编码空间的概念, 编码空间简单来讲就是包含所有字符的表的维度, 可以用整数, 坐标或者行, 列, 面等方式描述. 编码空间中的一个位置称为码位(code point)</p>
+<h2>字符编码表(Character Encoding Form)</h2>
+<p>将编码字符集的码位转换成有限比特长度的整型值(码元code units)的序列, 这对于定长编码如UCS-2来说是个到自身的映射, 但对于变长编码如UTF-8来说, 该映射比较复杂, 把一些码位映射到一个码元, 把另外一些码位映射到由多个码元组成的序列. 最简单的字符编码表就是单纯地选择足够大的单位, 以保证编码字符集中的所有数值能够直接编码(一个码位对应一个码值). 这对于能够用使用8 bit组来表示的编码字符集是合理的, 对于能够使用16 bit来表示的编码字符集(如早期版本的Unicode)来说也足够合理. 但是, 随着编码字符集的大小增加(现在的Unicode的字符集至少需要21位才能全部表示), 这种直接表示法变得越来越没有效率, 并且很难让现有计算机系统适应更大的码值.</p>
+<h2>字符编码方案(Character Encoding Scheme)</h2>
+<p>将code units映射到8位字节序列, 以便编码后的数据的文件存储或网络传输. 在使用Unicode的场合, 使用一个简单的字符来指定字节顺序是大端序或者小端序(但对于UTF-8来说并不需要专门指明字节序).</p>
+<h2>传输编码语法(transfer encoding syntax)</h2>
+<p>用于处理上一层次的字符编码方案提供的字节序列. 一般其功能包括两种: 一是把字节序列的值映射到一套更受限制的值域内, 以满足传输环境的限制, 例如Email传输时Base64, 都是把8位的字节编码为7位长的数据；另一是压缩字节序列的值，如LZW或者进程长度编码)等无损压缩技术.</p>
+<h1>Unicode</h1>
+<p>Unicode在最初提出的时候, 认为只需要2字节就能容纳全部现代字符, 然而实际上编码了许多稀奇古怪的字符, 所以现在的Unicode编码空间为0x0-0x10FFFF, 至少需要21位来描述, 略小于3个字节.<br/>
+我偶尔会看到&quot;一个Unicode字符占用4字节的言论&quot;, 实际上Unicode作为一个编码字符集, 它没有一个字符占用多少字节这种概念, 因为它的作用是将字符映射到码位值, 这些码位值分布在0x0-0x10FFFF里, 它所占用的字节数, 和Unicode无关, 只和实际使用的字符编码方案有关. 例如UCS-4中一个字符占用4字节.<br/>
+Unicode将编码空间划分为17个平面(plane), 从0到16. 0号平面称为基本多文种平面(BMP), 其他的16个平面可以统称为辅助平面(Supplementary Plane, SP).</p>
+<table>
+<thead>
+<tr>
+<th>平面</th>
+<th>范围</th>
+<th>中文名称</th>
+<th>英文名称</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0号平面</td>
+<td>U+0000 - U+FFFF</td>
+<td>基本多文种平面</td>
+<td>Basic Multilingual Plane, 简称BMP</td>
+</tr>
+<tr>
+<td>1号平面</td>
+<td>U+10000 - U+1FFFF</td>
+<td>多文种补充平面</td>
+<td>Supplementary Multilingual Plane, 简称SMP</td>
+</tr>
+<tr>
+<td>2号平面</td>
+<td>U+20000 - U+2FFFF</td>
+<td>表意文字补充平面</td>
+<td>Supplementary Ideographic Plane, 简称SIP</td>
+</tr>
+<tr>
+<td>3号平面</td>
+<td>U+30000 - U+3FFFF</td>
+<td>表意文字第三平面(未正式使用)</td>
+<td>Tertiary Ideographic Plane, 简称TIP</td>
+</tr>
+<tr>
+<td>4号平面 至 13号平面</td>
+<td>U+40000 - U+DFFFF</td>
+<td>尚未使用</td>
+<td></td>
+</tr>
+<tr>
+<td>14号平面</td>
+<td>U+E0000 - U+EFFFF</td>
+<td>特别用途补充平面</td>
+<td>Supplementary Special-purpose Plane, 简称SSP</td>
+</tr>
+<tr>
+<td>15号平面</td>
+<td>U+F0000 - U+FFFFF</td>
+<td>保留作为私人使用区(A区)</td>
+<td>Private Use Area-A, 简称PUA-A</td>
+</tr>
+<tr>
+<td>16号平面</td>
+<td>U+100000 - U+10FFFF</td>
+<td>保留作为私人使用区(B区)</td>
+<td>Private Use Area-B, 简称PUA-B</td>
+</tr>
+</tbody>
+</table>
+<p>虽说Unicode的BMP只有2^16=65536个码位, 看起来很少, 实际上绝大部分文字都是落在BMP里, 许多奇怪的语言, 比如印度的一些小语种, 还有从右往左书写的阿拉伯语, 即便是这些我们觉得像鬼画符一般的语言, 也都是落在BMP里的.</p>
+<p>Unicode定义了UTF(Unicode Transformation Format)编码和UCS(Universal Coded Character Set)编码两种映射方法.<br/>
+其中最常用的是UTF-8和UTF-16, UCS-2是UTF-16的前身, 而UTF-32和UCS-4在功能上是等价的.</p>
+<h1>UCS-2</h1>
+<p>先介绍一个简单的编码: UCS-2. 它实际上是一个字符编码表. UCS-2码元定长16位, 其实就是把BMP里的码位直接映射成16位的码元, 数值等价于对应的码位, 这也决定了UCS-2不能编码辅助平面内的字符.</p>
+<h1>UCS-4 / UTF-32</h1>
+<p>既然UCS-2不能编码全部的Unicode字符, 最简单的方法是直接把码元扩增到32位, 然后把Unicode里的码位直接映射过来, UTF-32这种编码方式简单粗暴, 最消耗空间, 我都不知道有谁用它.</p>
+<h1>UTF-16</h1>
+<p>Windows上的记事本, 保存文本文件的时候可以选编码, 其中有个叫Unicode的, 实际上就是UTF-16.<br/>
+UTF-16的码元和UCS-2一样, 是16位. 做Android/Java开发的人可能以为UTF-16离自己很遥远, 其实不然, Java里的String, 在虚拟机内部表示, 使用的是UTF-16编码. 什么证据可以佐证这一点? Java里的char类型, 长度为2字节, 我以前一直奇怪为什么char能存储汉字, 为什么char是2字节. 现在知道, 我们调用String.charAt实际上获取的是一个UTF-16码元. 既然UTF-16的码元和UCS-2一样是16位, 为什么可以编码Unicode字符集呢?<br/>
+有两点.<br/>
+一是UTF-16是变长编码.<br/>
+二是BMP里的一段特殊区域: 代理区. Unicode标准规定U+D800 - U+DFFF的值不对应于任何字符.</p>
+<p>对于BMP(U+0000 - U+FFFF), UTF-16的编码方式和UCS-2一样, 直接将码位映射成16位码元.<br/>
+对于SP(U+010000 - U+10FFFF)的码位, 取码位值按如下方式计算:<br/>
+首先减去0x010000, 剩下20位(0x00000~0xFFFFF)<br/>
+高10位(范围0x0000~0x03FF)加上0xD800, 得到第一个16位的码元, 范围0xD800~0xDBFF，也称为前导代理(leading surrogate).<br/>
+低10位(范围同样是0x0000~0x03FF)加上0xDC00, 得到第二个16位的码元, 范围0xDC00~0xFFF, 称为后尾代理(trailing surrogate).<br/>
+前导代理和后尾代理组成的代理对表示SP里的一个码位.</p>
+<p>可以发现, 前导代理和后尾代理连在一块恰好就是BMP里代理区的范围U+D800 - U+DFFF. 同时我们会发现, BMP里的有效字符对应的码位, 前导代理, 后尾代理三者范围互不重叠, 因此, 在UTF-16编码数据中, 我们看到一个16位的数据, 看它的值就能明确知道它到底是三者中的哪一个.</p>
+<p>如果你看不懂这个算法在干嘛, 可以这么理解:<br/>
+SP中一共有0x10FFFF - 0x010000 + 0x1 = 0x0F0000 = 2^20个码位.<br/>
+我将这2^20个码位完整映射到一个坐标里, 横纵坐标均需要有2^10 = 1024个值.<br/>
+前导代理0xD800~0xDBFF区间里恰好是1024个码位, 后尾代理0xDC00~0xFFF区间里恰好也是1024个码位. 这样就通过一个坐标<code>(前导代理, 后尾代理)</code>编码了SP里的码位.</p>
+<p>因此Android/Java开发者在使用String.charAt的时候, 需要注意你可能拿到一个前导代理, 也可能拿到一个后尾代理, 并不一定就是BMP里的一个有效字符.<br/>
+对于UTF-16来说, 不仅是汉字, 所有BMP里的字符都占用两个字节.</p>
+<p>JNI方法里, 一些字符串操作, 名字不带UTF的, 基本都是用的UTF-16, 比如:<br/>
+<code>const jchar * GetStringChars(JNIEnv *env, jstring string, jboolean *isCopy);</code>获取jstring的UTF-16编码的字节流.<br/>
+<code>jstring NewString(JNIEnv *env, const jchar *unicodeChars, jsize len);</code>使用UTF-16编码的jchar流构造jstring.</p>
+<h1>UTF-8</h1>
+<p>UTF-8码元8位, 变长编码, 这个也很简单, 直接按下面这个表套就可以了.</p>
+<table>
+<thead>
+<tr>
+<th>Bits for code points</th>
+<th>code point范围</th>
+<th>Byte 1</th>
+<th>Byte 2</th>
+<th>Byte 3</th>
+<th>Byte 4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7</td>
+<td>U+0000 - U+007F</td>
+<td>0xxxxxxx</td>
+</tr>
+<tr>
+<td>11</td>
+<td>U+0080 - U+07FF</td>
+<td>110xxxxx</td>
+<td>10xxxxxx</td>
+</tr>
+<tr>
+<td>16</td>
+<td>U+0800 - U+FFFF</td>
+<td>1110xxxx</td>
+<td>10xxxxxx</td>
+<td>10xxxxxx</td>
+</tr>
+<tr>
+<td>21</td>
+<td>U+10000 - U+10FFFF</td>
+<td>11110xxx</td>
+<td>10xxxxxx</td>
+<td>10xxxxxx</td>
+<td>10xxxxxx</td>
+</tr>
+</tbody>
+</table>
+<p>在UTF-8里, 我们常用的那些汉字, 至少我见过的, 都是占3个字节的, 因为那些汉字都是落在U+0800 - U+FFFF区间.</p>
+<h1>BOM</h1>
+<p>BOM(字节顺序标记, byte-order mark)也是我们常见到的名词, 比如我们的代码文件都要求使用<code>UTF-8无BOM</code>形式保存, 不然有可能编译不过, 或者出现一些诡异的事情.<br/>
+BOM实际上是位于码位U+FEFF的Unicode字符的名称.<br/>
+对于UTF-16, UCS-2, UTF-32 / UCS-4这类码元不是8位的编码方式来说, 编码后的数据要存储/传输时, 必然会有字节序的问题, BOM出现在字节流的开头, 则用于标识该字节流的字节序. 各编码方案按自己的方式对U+FEFF进行编码, 放在头部即可标志编码该字节流时使用的字节序.<br/>
+比如, 当我们知道即将读取的字节流以UTF-16编码, 字节序未知, 读到的前两个字节是0xFF, 0xFE, Unicode中U+FFFE则不映射到字符, 而这两个字节必定是编码的U+FEFF, 因此可以判断当前字节流使用小端序, 即<code>UTF-16 LE</code></p>
+<p>对于UTF-8, 由于它使用的是8位的码元, 不存在字节序的问题, 也不建议在头部添加BOM, 因为可能影响到一些工具, 因此使用无BOM的UTF-8成了主流.</p>
+<p>不同编码的字节序标记表示:</p>
+<table>
+<thead>
+<tr>
+<th>编码(BE: 大端; LE: 小端)</th>
+<th>十六进制表示</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UTF-8</td>
+<td>EF BB BF</td>
+</tr>
+<tr>
+<td>UTF-16 BE</td>
+<td>FE FF</td>
+</tr>
+<tr>
+<td>UTF-16 LE</td>
+<td>FF FE</td>
+</tr>
+<tr>
+<td>UTF-32 BE</td>
+<td>00 00 FE FF</td>
+</tr>
+<tr>
+<td>UTF-32 LE</td>
+<td>FF FE 00 00</td>
+</tr>
+</tbody>
+</table>
+<h1>Modified UTF-8</h1>
+<p>如果你的Android App里用了C++代码去处理一些字符, 可能会遇到崩溃<code>input is not valid Modified UTF-8</code>. 这个崩溃的原因在于编码不一致. 外部往往使用的是标准UTF-8编码, JNI里相关方法处理的是变种UTF-8编码, 虽说他俩名字上都有UTF-8, 但是本质上还是两种编码方式, 尽管他们有一部分是兼容的.<br/>
+JNI里, 凡是和String相关的方法, 名字带有UTF的, 基本都是使用的MUTF-8(变种UTF-8, Modified UTF-8).<br/>
+比如<br/>
+<code>jstring NewStringUTF(JNIEnv *env, const char *bytes);</code>是使用MUTF-8的字节流构造jstring.<br/>
+<code>const char * GetStringUTFChars(JNIEnv *env, jstring string, jboolean *isCopy);</code>获取jstring以MUTF-8编码的字节数组.</p>
+<p>但是Java里, 凡是和UTF-8相关的字符串操作, 都是使用标准UTF-8.<br/>
+<code>String.getBytes(&quot;UTF-8&quot;)</code>拿到的字符串的标准UTF-8编码的字节数组<br/>
+<code>new String(bytes, &quot;UTF-8&quot;)</code>是使用标准UTF-8的字节流构造String.</p>
+<p>许多研发并不知道UTF-8在Java层和JNI层的差异, 所以一旦遇到这种不同编码方式导致的问题, 会很懵逼.</p>
+<p>MUTF-8和标准UTF-8的区别有两点.<br/>
+一是空字符(&quot;\0&quot;)在MUTF-8里被编码为两个字节: 0xC080(即1100000010000000). 它在标准UTF-8里编码为0x00.<br/>
+二是SP内的字符, 首先以UTF-16的编码方式编为一个前导代理和一个后尾代理, 然后再用标准UTF-8分别编码这两个代理.<br/>
+BMP内的字符, 除了<code>\0</code>, 其他的MUTF-8和UTF-8编码方式相同.<br/>
+由于SP范围是U+10000 - U+10FFFF, 标准UTF-8将SP内的码位编码为4字节, 而代理区U+D800 - U+DFFF中的码位在标准UTF-8中被编为3字节. 因此MUTF-8对SP内的码位进行编码需要3+3 = 6字节, 比标准UTF-8多2字节. dex里的字符串以MUTF-8编码.</p>
+<h1>参考资料</h1>
+<p><a href="https://link.jianshu.com/?t=https://zh.wikipedia.org/wiki/ASCII" target="_blank">https://zh.wikipedia.org/wiki/ASCII</a><br/>
+<a href="https://link.jianshu.com/?t=https://wenku.baidu.com/view/cb9fe505cc17552707220865.html" target="_blank">https://wenku.baidu.com/view/cb9fe505cc17552707220865.html</a><br/>
+<a href="https://link.jianshu.com/?t=https://zh.wikipedia.org/wiki/UTF-8" target="_blank">https://zh.wikipedia.org/wiki/UTF-8</a><br/>
+<a href="https://link.jianshu.com/?t=https://en.wikipedia.org/wiki/Unicode" target="_blank">https://en.wikipedia.org/wiki/Unicode</a><br/>
+<a href="https://link.jianshu.com/?t=https://zh.wikipedia.org/wiki/UTF-16" target="_blank">https://zh.wikipedia.org/wiki/UTF-16</a><br/>
+<a href="https://link.jianshu.com/?t=https://zh.wikipedia.org/wiki/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81" target="_blank">https://zh.wikipedia.org/wiki/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81</a></p>
+
+        </div></div></div><br/></div></span>
+</div></body></html> 
