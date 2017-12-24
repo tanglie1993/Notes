@@ -1,0 +1,241 @@
+<html>
+<head>
+  <title>Android8.0运行时权限策略变化和适配方案 - 严振杰 - CSDN博客</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2874"/>
+<h1>Android8.0运行时权限策略变化和适配方案 - 严振杰 - CSDN博客</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>Android8.0运行时权限策略变化和适配方案</h1><div><div></div></div></div>
+            <p><i>发表于</i><em>2017/8/5 15:04:14   </em><i>59576</i></p>
+            <p>
+                    分类：
+                        <span>【Android】所有</span>
+            </p>
+             
+
+        <blockquote>
+  <p>版权声明：转载必须注明本文转自严振杰的博客：<a href="http://blog.yanzhenjie.com/" target="_blank">http://blog.yanzhenjie.com</a></p>
+</blockquote>
+
+<p>Android8.0也就是Android O即将要发布了，有很多新特性，目前我们可以通过AndroidStudio3.0 Canary版本下载Android O最新的系统映像的Developer Preview 4版本，Developer Preview 4是Android O正式版推出前的最后一个预览版本，所以它是Android O的候选版本，我们可以使用它来完成开发和测试，让我们的应用平稳过度到Android O。</p>
+
+<p>后期会计划出一篇Android O行为变化和兼容方案的文章，本篇文章主要讲Android O行为变化的其中一点——<strong>系统运行时权限的策略变化和适配方案</strong>。</p>
+
+<p>Android系统的运行时权限是从Android 6.0（Android M）开始加入的，如果你还不知道Android运行时权限，你可以看<strong>Android 6.0 运行时权限管理最佳实践</strong>： <br/>
+<a href="http://blog.csdn.net/yanzhenjie1003/article/details/52503533" target="_blank">http://blog.csdn.net/yanzhenjie1003/article/details/52503533</a>  </p>
+
+<p>针对运行时权限管理，有很多开源的管理库，16年9月份时本人也开源了一个运行权限管理方案，它最大程度上兼容了国产机，当然也兼容了Android 8.0： <br/>
+<a href="https://github.com/yanzhenjie/AndPermission" target="_blank">https://github.com/yanzhenjie/AndPermission</a>  </p>
+
+<p>在正式开始之前，先纠正一个问题，在网上看到有项目可以做到自定义申请授权的系统Dialog，<strong>首先要纠正</strong>就目前来看是绝对不行的，最多在调用申请的代码之前弹一个自己的Dialog提示用户要申请授权了。我快速拜读了下那个项目源码，果然如我想象的一样，在绕了一个圈子后最终还是调用了系统申请授权的代码。</p>
+
+<hr/>
+
+
+
+<h1>Android O的运行时权限策略变化</h1>
+
+<p>如果你喜欢看Google官网的文章，你可以看这里： <br/>
+<a href="https://developer.android.com/preview/behavior-changes.html#rmp" target="_blank">https://developer.android.com/preview/behavior-changes.html#rmp</a></p>
+
+<p>在 Android O 之前，如果应用在运行时请求权限并且被授予该权限，系统会错误地将属于同一权限组并且在清单中注册的其他权限也一起授予应用。</p>
+
+<p>对于针对Android O的应用，此行为已被纠正。系统只会授予应用明确请求的权限。然而一旦用户为应用授予某个权限，则所有后续对该权限组中权限的请求都将被自动批准。</p>
+
+<p>例如，假设某个应用在其清单中列出<code>READ_EXTERNAL_STORAGE</code>和<code>WRITE_EXTERNAL_STORAGE</code>。应用请求<code>READ_EXTERNAL_STORAGE</code>，并且用户授予了该权限，如果该应用针对的是API级别24或更低级别，系统还会同时授予<code>WRITE_EXTERNAL_STORAGE</code>，因为该权限也属于<code>STORAGE</code>权限组并且也在清单中注册过。如果该应用针对的是<code>Android O</code>，则系统此时仅会授予<code>READ_EXTERNAL_STORAGE</code>，不过在该应用以后申请<code>WRITE_EXTERNAL_STORAGE</code>权限时，系统会立即授予该权限，而不会提示用户。（有人私下跟我讲这跟原来没区别，明眼人应该看得出来，本组没申请的权限的状态应该是拒绝的，那么直接使用拒绝状态的权限会怎么样呢。）</p>
+
+<p>下面我们还是以<code>READ_EXTERNAL_STORAGE</code>和<code>WRITE_EXTERNAL_STORAGE</code>为例来具体分析一下，这对我们现有的代码有什么影响。</p>
+
+<p>正式开始之前，我们先约定两个方法：</p>
+
+<pre><code>/**
+ * 拿到没有被授权的权限。
+ */
+getDeinedPermission(String... permissions);
+/**
+ * 请求几个权限。
+ */
+requestPermission(String... deinedPermissions);</code><ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li></ul></pre>
+
+<p>权限的常量在<code>Manifest.permission</code>类中，而<code>READ_EXTERNAL_STORAGE</code>权限是在API 16之后才添加的，所以在<strong>在Android M</strong>出来后为了适配更低版本的系统，我们一般是这样申请权限的（伪代码）：</p>
+
+
+
+<pre><code>// 需要申请的权限。
+String[] permissions = {
+    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    Manifest.permission.READ_SMS,
+    ...
+};
+
+String[] deniedPermissions = getDeinedPermission(permissions);
+
+if(deniedPermissions.length &lt;= 0) {
+    // TODO do something...
+} else {
+    requestPermission(deniedPermissions, callback);
+}</code><ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li><li>9</li><li>10</li><li>11</li><li>12</li><li>13</li><li>14</li></ul></pre>
+
+<p>逻辑非常简单清晰，其中的callback是申请权限的回调，这里我们申请了<code>WRITE_EXTERNAL_STORAGE</code>权限，在Android O之前，我们同时会得到<code>READ_EXTERNAL_STORAGE</code>权限，我们在其它地方涉及到读取<strong>存储卡</strong>的操作时只需要判断有<code>WRITE_EXTERNAL_STORAGE</code>权限就去读取了。</p>
+
+<p><strong>霸特</strong>，此时应用如果安装在<code>Android O</code>的系统中我们会发现，判断了有<code>WRITE_EXTERNAL_STORAGE</code>权限后去读取<code>存储卡</code>内容时应用崩溃了，<strong>原因就是</strong>我们没有申请<code>READ_EXTERNAL_STORAGE</code>权限。</p>
+
+
+
+<h1>对Android O运行时权限策略变化的应对方案</h1>
+
+<p>针对Android O的运行时权限策略的特点，为了适配各个版本的系统，我们的代码会变成如下方式（伪代码）：</p>
+
+
+
+<pre><code>// 需要申请的权限。
+String[] permissions = {
+    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    Manifest.permission.READ_EXTERNAL_STORAGE,
+    Manifest.permission.READ_SMS,
+    ...
+};
+
+String[] deniedPermissions = getDeinedPermission(permissions);
+
+if(deniedPermissions.length &lt;= 0) {
+    // TODO do something...
+} else {
+    requestPermission(deniedPermissions, callback);
+}</code><ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li><li>9</li><li>10</li><li>11</li><li>12</li><li>13</li><li>14</li><li>15</li></ul></pre>
+
+<p>但是这样会存在两个问题，一是有的权限组权限比较多，开发者难易全部记住；二是<code>READ_EXTERNAL_STORAGE</code>这个权限常量是在API 16时才被添加到SDK中，类似这样的权限常量还有好几个，有的甚至在Android M时才被添加到SDK中。如果我们强制写了，当APP运行在低版本的系统中时，还是会崩溃。<strong>有人就说了，我们在申请之前判断系统版本不就好啦？</strong>当然，如果你不嫌麻烦，这是完全可以的。</p>
+
+
+
+<h2>升级方案</h2>
+
+<p><strong>因此我们总结出一个更优的方案</strong>，归根结底就是申请权限时要申请权限组，而不是单一的某个权限。所以我们按照系统权限组分类，把一个组的常量放到一个数组中，并根据系统版本为这个数组赋值，于是乎产生了这样一个类：</p>
+
+
+
+<pre><code>public final class Permission {
+
+    public static final String[] CALENDAR;   // 读写日历。
+    public static final String[] CAMERA;     // 相机。
+    public static final String[] CONTACTS;   // 读写联系人。
+    public static final String[] LOCATION;   // 读位置信息。
+    public static final String[] MICROPHONE; // 使用麦克风。
+    public static final String[] PHONE;      // 读电话状态、打电话、读写电话记录。
+    public static final String[] SENSORS;    // 传感器。
+    public static final String[] SMS;        // 读写短信、收发短信。
+    public static final String[] STORAGE;    // 读写存储卡。
+
+    static {
+        if (Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.M) {
+            CALENDAR = new String[]{};
+            CAMERA = new String[]{};
+            CONTACTS = new String[]{};
+            LOCATION = new String[]{};
+            MICROPHONE = new String[]{};
+            PHONE = new String[]{};
+            SENSORS = new String[]{};
+            SMS = new String[]{};
+            STORAGE = new String[]{};
+        } else {
+            CALENDAR = new String[]{
+                    Manifest.permission.READ_CALENDAR,
+                    Manifest.permission.WRITE_CALENDAR};
+
+            CAMERA = new String[]{
+                    Manifest.permission.CAMERA};
+
+            CONTACTS = new String[]{
+                    Manifest.permission.READ_CONTACTS,
+                    Manifest.permission.WRITE_CONTACTS,
+                    Manifest.permission.GET_ACCOUNTS};
+
+            LOCATION = new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION};
+
+            MICROPHONE = new String[]{
+                    Manifest.permission.RECORD_AUDIO};
+
+            PHONE = new String[]{
+                    Manifest.permission.READ_PHONE_STATE,
+                    Manifest.permission.CALL_PHONE,
+                    Manifest.permission.READ_CALL_LOG,
+                    Manifest.permission.WRITE_CALL_LOG,
+                    Manifest.permission.USE_SIP,
+                    Manifest.permission.PROCESS_OUTGOING_CALLS};
+
+            SENSORS = new String[]{
+                    Manifest.permission.BODY_SENSORS};
+
+            SMS = new String[]{
+                    Manifest.permission.SEND_SMS,
+                    Manifest.permission.RECEIVE_SMS,
+                    Manifest.permission.READ_SMS,
+                    Manifest.permission.RECEIVE_WAP_PUSH,
+                    Manifest.permission.RECEIVE_MMS};
+
+            STORAGE = new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        }
+    }
+
+}</code><ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li><li>9</li><li>10</li><li>11</li><li>12</li><li>13</li><li>14</li><li>15</li><li>16</li><li>17</li><li>18</li><li>19</li><li>20</li><li>21</li><li>22</li><li>23</li><li>24</li><li>25</li><li>26</li><li>27</li><li>28</li><li>29</li><li>30</li><li>31</li><li>32</li><li>33</li><li>34</li><li>35</li><li>36</li><li>37</li><li>38</li><li>39</li><li>40</li><li>41</li><li>42</li><li>43</li><li>44</li><li>45</li><li>46</li><li>47</li><li>48</li><li>49</li><li>50</li><li>51</li><li>52</li><li>53</li><li>54</li><li>55</li><li>56</li><li>57</li><li>58</li><li>59</li><li>60</li><li>61</li><li>62</li><li>63</li><li>64</li><li>65</li><li>66</li><li>67</li><li>68</li></ul></pre>
+
+<p>在Android M以前使用某权限是不需要用户授权的，只要在Manifest中注册即可，在Android M之后需要注册并申请用户授权，所以我们根据系统版本在Android M以前用一个空数组作为权限组，在Android M以后用真实数组权限。 </p>
+
+<p>因为要传入多个权限组，所以我们约定的两个方法就不够用了，所以我们加两个方法：</p>
+
+
+
+<pre><code>/**
+ * 拿到没有被授权的权限。
+ */
+String[] getDeinedPermission(String... permissions);
+/**
+ * 请求几个权限。
+ */
+void requestPermission(String... deinedPermissions);
+/**
+ * 拿到没有被授权的权限。
+ */
+String[] getDeinedPermission(String[]... permissions);
+/**
+ * 请求几个权限。
+ */
+void requestPermission(String[]... deinedPermissions);</code><ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li><li>9</li><li>10</li><li>11</li><li>12</li><li>13</li><li>14</li><li>15</li><li>16</li></ul></pre>
+
+<p>于是我们申请权限的代码就简化成这样了：</p>
+
+
+
+<pre><code>// 这方法里面判断版本，返回空数组或者没有权限的数组。
+String[] deniedPermissions = getDeinedPermission(Permission.STORAGE， Permission.SMS);
+
+if(deniedPermissions.length &lt;= 0) {
+    // TODO do something...
+} else {
+    requestPermission(deniedPermissions, callback);
+}</code><ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li></ul></pre>
+
+<p>当然这不是最简化的，但是已经足以兼容到Android O的权限策略的变化了。</p>
+
+<p>关于Android O的运行时权限策略变化和应对方案的介绍到这里就结束了，如果还不理解的可以在博客下方留言。</p>
+
+<hr/>
+
+<blockquote>
+  <p>版权声明：转载必须注明本文转自严振杰的博客：<a href="http://blog.yanzhenjie.com/" target="_blank">http://blog.yanzhenjie.com</a></p>
+</blockquote></div></div></div><br/></div></span>
+</div></body></html> 
