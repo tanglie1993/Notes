@@ -1,0 +1,187 @@
+<html>
+<head>
+  <title>Glide 一个专注于平滑滚动的图片加载和缓存库</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3852"/>
+<h1>Glide 一个专注于平滑滚动的图片加载和缓存库</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:10px;-webkit-tap-highlight-color:transparent;"><div style="box-sizing:border-box;font-size:17px;line-height:1.42857;color:rgb(51, 51, 51);background-color:rgb(255, 255, 255);min-width:768px;font-family:-apple-system, &quot;SF UI Text&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;">
+        <h1 style="box-sizing:border-box;color:inherit;margin-top:20px;margin-bottom:10px;font-size:34px;margin:20px 0px 0px;font-family:-apple-system, &quot;SF UI Display&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;font-weight:700;line-height:1.3;word-break:break-word;">Glide 一个专注于平滑滚动的图片加载和缓存库</h1>
+
+        
+        <div style="box-sizing:border-box;margin:30px 0px 40px;">
+          <a href="https://www.jianshu.com/u/36b23cb5edb5" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 51, 51);text-decoration:none;cursor:pointer;width:48px;height:48px;display:inline-block;vertical-align:middle;">
+            <img src="Glide 一个专注于平滑滚动的图片加载和缓存库_files/96.png" type="image/png" data-filename="96.png" alt="96" height="46" style="box-sizing:border-box;vertical-align:middle;border:1px solid rgb(221, 221, 221);width:100%;height:100%;border-radius:50%;" width="46"/>
+</a>          <div style="box-sizing:border-box;vertical-align:middle;display:inline-block;margin-left:8px;">
+            <span style="box-sizing:border-box;margin-right:3px;font-size:16px;vertical-align:middle;"><a href="https://www.jianshu.com/u/36b23cb5edb5" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 51, 51);text-decoration:none;cursor:pointer;">倾城_之泪</a></span>
+            
+            <a style="cursor:pointer;background-color:rgb(66, 192, 46);color:rgb(255, 255, 255);text-decoration:none;display:inline-block;margin-bottom:0px;font-weight:400;text-align:center;vertical-align:middle;touch-action:manipulation;box-sizing:border-box;background-image:none;border:1px solid transparent;white-space:nowrap;user-select:none;border-radius:40px;line-height:normal;border-color:rgb(66, 192, 46);font-size:12px;padding:0px 7px 0px 5px;"><i style="box-sizing:border-box;font-size:inherit;font-style:normal;-webkit-font-smoothing:antialiased;font-family:iconfont;font-weight:400;"><span style="font-size:inherit;font-style:normal;font-family:iconfont;font-weight:400;"></span></i><span style="box-sizing:border-box;margin-left:2px;display:inline;">关注</span></a>
+            
+            <div style="box-sizing:border-box;margin-top:5px;font-size:12px;color:rgb(150, 150, 150);">
+              
+                <span style="box-sizing:border-box;padding-right:5px;" title="">2015.08.23 16:34*</span>
+              <span style="box-sizing:border-box;padding-right:5px;">字数 1369</span>
+            <span style="box-sizing:border-box;padding-right:5px;">阅读 103293</span><span style="box-sizing:border-box;padding-right:5px;">评论 49</span><span style="box-sizing:border-box;padding-right:5px;">喜欢 256</span><span style="box-sizing:border-box;padding-right:5px;">赞赏 1</span></div>
+          </div>
+          
+        </div>
+        
+
+        
+        <div style="box-sizing:border-box;color:rgb(47, 47, 47);font-size:16px;font-weight:400;line-height:1.7;word-break:break-word;">
+          <p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">在图片加载库烂大街的今天，选择一个适合自己使用的图片加载库已经成为了每一个Android开发者的必经之路。现在市面上知名的图片加载库有<a href="https://link.jianshu.com/?t=https://github.com/nostra13/Android-Universal-Image-Loader" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">UIL</a>,<a href="https://link.jianshu.com/?t=https://github.com/square/picasso" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Picasso</a>,<a href="https://link.jianshu.com/?t=https://android.googlesource.com/platform/frameworks/volley/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Volley ImageLoader</a>,<a href="https://link.jianshu.com/?t=https://github.com/facebook/fresco" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Fresco</a>以及我们今天的主角<a href="https://link.jianshu.com/?t=https://github.com/bumptech/glide" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Glide</a>。它们各有千秋，不能评定谁一定比谁好，只能说哪一个更适合你。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">我的理解</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">下面我来谈一下个人对这些图片加载库的理解，如有错误，还望指教。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">Universal Image Loader</strong>：一个强大的图片加载库，包含各种各样的配置，最老牌，使用也最广泛。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">Picasso</strong>: Square出品，必属精品。和OkHttp搭配起来更配呦！</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">Volley ImageLoader</strong>：Google官方出品，可惜不能加载本地图片~</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">Fresco</strong>：Facebook出的，天生骄傲！不是一般的强大。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">Glide</strong>：Google推荐的图片加载库，专注于流畅的滚动。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">更多详情请看stackoverflow上<a href="https://link.jianshu.com/?t=http://stackoverflow.com/questions/29363321/picasso-v-s-imageloader-v-s-fresco-vs-glide" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">这个问题</a>。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">初试Glide</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">下面进入今天的主题，相信之前很多同学都看到过<a href="https://link.jianshu.com/?t=http://inthecheesefactory.com/blog/get-to-know-glide-recommended-by-google/en" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">这篇</a>介绍Glide的文章,中文版在<a href="https://link.jianshu.com/?t=http://www.jcodecraeer.com/a/anzhuokaifa/androidkaifa/2015/0327/2650.html" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">这里</a>。文中从各个方面介绍和比较了Glide与Picasso，总体来说二者极为相似，有着近乎相同的API的使用风格。但Glide在缓存策略和加载GIF方面略胜一筹。最后作者也极力推荐了这个库。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">而且据说在Google新出的Photos应用中，到处可见Glide的踪迹。看到这里，你是不是已经迫不及待的想试一试这个库呢？就在你下定决心尝试一记的时候，你又听说Yelp app(据说是美国的大众点评)也在使用这个吊炸天的库。你的心中激动万分，发四一定要使用这个库。说干就干，打开Android Studio，在builde.gradle里面添加上</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">compile</span> <span style="box-sizing:border-box;color:rgb(42, 161, 152);">'com.github.bumptech.glide:glide:3.6.1'</span>
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">然后全局搜索图片加载的地方，全部换成了下面的代码：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">Glide.with(mContext)
+        .load(url)
+        .placeholder(R.drawable.loading_spinner)
+        .crossFade()
+        .into(myImageView);
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">在经过漫长的编译过程之后，再次打开APP，看到有着渐现效果的图片呈现在你的面前，你不禁叫道：“wocao,真TM帅！为什么我以前没有发现呢？”。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">不过在你使用了几天之后你会发现一些问题：</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">为什么</strong> 有的图片第一次加载的时候只显示占位图，第二次才显示正常的图片呢？</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">为什么</strong> 我总会得到类似You cannot start a load for a destroyed activity这样的异常呢？</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">为什么</strong> 我不能给加载的图片setTag()呢？</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">为什么？为什么？这么NB的库竟然会有这么多的问题。没错，这就是我今天要讲的重点。怎么避免上面的问题发生。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">一些解决方案</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">1.如果你刚好使用了这个圆形<a href="https://link.jianshu.com/?t=https://github.com/hdodenhof/CircleImageView" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Imageview库</a>或者其他的一些自定义的圆形Imageview，而你又刚好设置了占位的话，那么，你就会遇到第一个问题。如何解决呢？<br style="box-sizing:border-box;"/>
+方案一: 不设置占位；<br style="box-sizing:border-box;"/>
+方案二：使用Glide的Transformation API自定义圆形Bitmap的转换。这里是一个已有的<a href="https://link.jianshu.com/?t=http://stackoverflow.com/questions/25278821/how-do-rounded-image-with-glide-library" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">例子</a>；<br style="box-sizing:border-box;"/>
+方案三：使用下面的代码加载图片：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">Glide.with(mContext)
+    .load(url) 
+    .placeholder(R.drawable.loading_spinner)
+    .into(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> SimpleTarget&lt;Bitmap&gt;(width, height) {
+        <span style="box-sizing:border-box;">@Override</span> 
+        <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onResourceReady</span><span style="box-sizing:border-box;">(Bitmap bitmap, GlideAnimation anim)</span> </span>{
+            <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// setImageBitmap(bitmap) on CircleImageView </span>
+        } 
+    }); 
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">感谢<a href="https://www.jianshu.com/users/aeecc0d15a40" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">aeecc0d15a40</a>指出该方法在listview上复用有问题的bug,如果在listview中加载CircleImageView，请不要使用该方法。<br style="box-sizing:border-box;"/>
+方案四：不使用Glide的默认动画：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">Glide.with(mContext)
+    .load(url) 
+    .dontAnimate()
+    .placeholder(R.drawable.loading_spinner)
+    .into(circleImageview); 
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">2.至于第二个问题，请记住一句话：不要再非主线程里面使用Glide加载图片，如果真的使用了，请把context参数换成getApplicationContext。更多的细节请参考<a href="https://link.jianshu.com/?t=https://github.com/bumptech/glide/issues/138" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">这个issue</a>。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">3.为什么不能设置Tag，是因为你使用的姿势不对哦。如何为ImageView设置Tag呢？且听我细细道来。<br style="box-sizing:border-box;"/>
+方案一：使用setTag(int,object)方法设置tag,具体用法如下：<br style="box-sizing:border-box;"/>
+Java代码是酱紫的：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">Glide.with(context).load(urls.get(i).getUrl()).fitCenter().into(imageViewHolder.image);
+        imageViewHolder.image.setTag(R.id.image_tag, i);
+        imageViewHolder.image.setOnClickListener(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> View.OnClickListener() {
+            <span style="box-sizing:border-box;">@Override</span>
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> position = (<span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span>) v.getTag(R.id.image_tag);
+                Toast.makeText(context, urls.get(position).getWho(), Toast.LENGTH_SHORT).show();
+            }
+        });
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">同时在values文件夹下新建ids.xml，添加</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;">&lt;<span style="box-sizing:border-box;color:rgb(38, 139, 210);">item</span> <span style="box-sizing:border-box;">name</span>=<span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;image_tag&quot;</span> <span style="box-sizing:border-box;">type</span>=<span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;id&quot;</span>/&gt;</span>
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">大功告成!</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">方案二：从Glide的3.6.0之后，新添加了全局设置的方法。具体方法如下：<br style="box-sizing:border-box;"/>
+先实现GlideMoudle接口，全局设置ViewTaget的tagId:</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">MyGlideMoudle</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">implements</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">GlideModule</span></span>{
+    <span style="box-sizing:border-box;">@Override</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">applyOptions</span><span style="box-sizing:border-box;">(Context context, GlideBuilder builder)</span> </span>{
+        ViewTarget.setTagId(R.id.glide_tag_id);
+    }
+
+    <span style="box-sizing:border-box;">@Override</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">registerComponents</span><span style="box-sizing:border-box;">(Context context, Glide glide)</span> </span>{
+
+    }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">同样，也需要在ids.xml下添加id</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;">&lt;<span style="box-sizing:border-box;color:rgb(38, 139, 210);">item</span> <span style="box-sizing:border-box;">name</span>=<span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;glide_tag_id&quot;</span> <span style="box-sizing:border-box;">type</span>=<span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;id&quot;</span>/&gt;</span>
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">最后在AndroidManifest.xml文件里面添加</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;">&lt;<span style="box-sizing:border-box;color:rgb(38, 139, 210);">meta-data</span>
+    <span style="box-sizing:border-box;">android:name</span>=<span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;com.yourpackagename.MyGlideMoudle&quot;</span>
+    <span style="box-sizing:border-box;">android:value</span>=<span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;GlideModule&quot;</span> /&gt;</span>
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">又可以愉快的玩耍了，嘻嘻`(<em style="box-sizing:border-box;">∩_∩</em>)′。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">方案三：写一个继承自ImageViewTaget的类，复写它的get/setRequest方法。</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">Glide.with(context).load(urls.get(i).getUrl()).fitCenter().into(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> ImageViewTarget&lt;GlideDrawable&gt;(imageViewHolder.image) {
+            <span style="box-sizing:border-box;">@Override</span>
+            <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">setResource</span><span style="box-sizing:border-box;">(GlideDrawable resource)</span> </span>{
+                imageViewHolder.image.setImageDrawable(resource);
+            }
+
+            <span style="box-sizing:border-box;">@Override</span>
+            <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">setRequest</span><span style="box-sizing:border-box;">(Request request)</span> </span>{
+                imageViewHolder.image.setTag(i);
+                imageViewHolder.image.setTag(R.id.glide_tag_id,request);
+            }
+
+            <span style="box-sizing:border-box;">@Override</span>
+            <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> Request <span style="box-sizing:border-box;color:rgb(38, 139, 210);">getRequest</span><span style="box-sizing:border-box;">()</span> </span>{
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> (Request) imageViewHolder.image.getTag(R.id.glide_tag_id);
+            }
+        });
+
+        imageViewHolder.image.setOnClickListener(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> View.OnClickListener() {
+            <span style="box-sizing:border-box;">@Override</span>
+            <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onClick</span><span style="box-sizing:border-box;">(View v)</span> </span>{
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> position = (<span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span>) v.getTag();
+                Toast.makeText(context, urls.get(position).getWho(), Toast.LENGTH_SHORT).show();
+            }
+        });
+</code></pre>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">一些使用技巧</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">1.Glide.with(context).resumeRequests()和 Glide.with(context).pauseRequests()</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">当列表在滑动的时候，调用pauseRequests()取消请求，滑动停止时，调用resumeRequests()恢复请求。这样是不是会好些呢？</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">2.Glide.clear()</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">当你想清除掉所有的图片加载请求时，这个方法可以帮助到你。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">3.ListPreloader</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">如果你想让列表预加载的话，不妨试一下ListPreloader这个类。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">一些基于Glide的优秀库</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">1.<a href="https://link.jianshu.com/?t=https://github.com/wasabeef/glide-transformations" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">glide-transformations</a></p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">一个基于Glide的transformation库，拥有裁剪，着色，模糊，滤镜等多种转换效果，赞的不行不行的~~</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">2.<a href="https://link.jianshu.com/?t=https://github.com/florent37/GlidePalette" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">GlidePalette</a></p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">一个可以在Glide加载时很方便使用Palette的库。</p>
+
+        </div>
+        
+
+        <div style="box-sizing:border-box;margin:40px 0px 30px;">
+          <a href="https://www.jianshu.com/nb/1189756" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(155, 155, 155);font-size:12px;">
+            <i style="box-sizing:border-box;font-style:normal;-webkit-font-smoothing:antialiased;font-size:15px;margin-right:2px;font-family:iconfont;font-weight:400;"><span style="font-size:15px;font-style:normal;font-family:iconfont;font-weight:400;"></span></i>
+            <span style="box-sizing:border-box;">随笔</span>
+</a>          <div style="box-sizing:border-box;float:right;margin-top:5px;font-size:12px;line-height:1.7;color:rgb(155, 155, 155);">
+            © 著作权归作者所有
+          </div>
+          <div style="box-sizing:border-box;float:right;margin-top:5px;margin-right:20px;font-size:12px;line-height:1.7;">
+            <a style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(155, 155, 155);">举报文章</a>
+          </div>
+        </div>
+    </div></div></div></div></div></div><br/></div></span>
+</div></body></html> 
