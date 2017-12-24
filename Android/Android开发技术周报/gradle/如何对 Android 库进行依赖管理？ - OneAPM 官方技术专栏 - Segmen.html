@@ -1,0 +1,68 @@
+<html>
+<head>
+  <title>如何对 Android 库进行依赖管理？ - OneAPM 官方技术专栏 - SegmentFault</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1188"/>
+<h1>如何对 Android 库进行依赖管理？ - OneAPM 官方技术专栏 - SegmentFault</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>如何对 Android 库进行依赖管理？</h1><div><div></div></div></div>
+                    
+<p><strong>Android 开发人员为项目选择库的时候，考虑的因素不仅仅是功能、可用性、性能、文档丰富度和技术支持情况。他们还关心库的大小，以及要添加的方法数量。因为项目越大，依赖也越多，要把应用的方法数量控制在65k 以下，开发人员感觉很有压力。另外，对于非发行版项目而言，Proguard 使用起来效率太低，而且开发人员视 multidex 如瘟疫，避之唯恐不及。因此，编写库的作者必须特别注意项目的大小。</strong></p>
+<p>为了减少库的方法数量，最简单的途径就是不包含任何多余的依赖。因为你包含的所有依赖，都会被传递并添加至用户的项目里。举个例子，如果你只需要几个简单的工具方法，比如默默地关闭一个资源，那就没必要为此添加 <a href="https://github.com/google/guava%20%E3%80%8CGuava%E3%80%8D%20" target="_blank">Guava</a>。自己编写方法，或者从一个现有的库中提取（但是务必做出说明）就可以了。用户肯定会感激你去除了多余的14k方法。</p>
+<p>但是，这并不是说你不该使用外部库，而是你要做出明智的选择。比如，像 HTTP 客户端这样的库已经有了，你若再去重写一个，最终结果只能是浪费时间，倒不如用这些时间改进自己的库。 </p>
+<p>除了有选择地使用库以外，还有几个策略也可以帮助你保持库的精简。其中一个策略就是使用 provided scope（已提供范围）来声明依赖。 这是 gradle 中 Android build system（Android 构建系统）的一部分。与 compile scope（编译范围）不同，provided scope 仅在编译时包含依赖。这就意味着，用户在构建项目时，该依赖不会随着 APK 文件打包。如果想在运行时使用该依赖，用户需要在应用的 build.gradle 里显式声明。</p>
+<p><em>注意： 还有一种与 provided scope 相反的机制叫 package scope（包范围）。这种依赖会随 APK 文件打包，但是在编译时不可用。</em></p>
+<p>你可能还想在库中使用可选择性依赖。其中一个原因是，某些功能可能只有部分用户使用。例如 <a href="https://github.com/square/retrofit/tree/version-one%20%E3%80%8CRetrofit%201.x%E3%80%8D%20" target="_blank">Retrofit 1.x</a>，该库可以使用 REST 调用来响应，而不使用回调。那些想使用 RxJava 的用户可以添加之，而不想使用它的用户也可以不添加，以免加重负担。自从 Retrofit 使用 <a href="https://github.com/square/retrofit/blob/version-one/retrofit/pom.xml#L35%20%20" target="_blank">maven build system</a>（maven 构建系统）以后，其配置稍有更改，但理念还是相似的。</p>
+<p>在此笔者要提醒大家，如果你发现自己库中的某些功能只对少数用户有用，你应该认真考虑一下是否还要保留这些功能。关于这一点，后文中还会讲到。 </p>
+<p>在库里包含可选择性依赖的另一个原因，是Android 框架已经提供了一种解决方案，但是某个外部库提供的解决方案性能更好。如果用户本就依赖于该外部库，或者愿意增加方法数量以获得更好的性能，就可以添加可选择性依赖。 </p>
+<p>我最近看到的<a href="https://github.com/seatgeek/android-PlacesAutocompleteTextView%20" target="_blank">PlacesAutocompleteTextView</a>库，就属于这种情况。该库使用的内部 HTTP 客户端，既可以是 OkHttpClient，也可以是 HttpURLConnection。通常，前者的性能更好，但是需要添加 <a href="http://square.github.io/okhttp/%20" target="_blank">OkHttp</a> 作为依赖。 如果用户不想包含该依赖，可以自动从标准库回退到 HttpURLConnection。</p>
+<p>为此，需要一个「resolver」 类以确定运行时要使用的依赖。 例如，以下的类就用于选择 HTTP 客户端：</p>
+<pre><code>public final class PlacesHttpClientResolver {
+  public static final PlacesHttpClient PLACES_HTTP_CLIENT;
+
+  static {
+    boolean hasOkHttp;
+
+     {
+      Class.forName(&quot;com.squareup.okhttp.OkHttpClient&quot;);
+      hasOkHttp = ;
+    } catch (ClassNotFoundException e) {
+      hasOkHttp = false;
+    }
+
+    PlacesApiJsonParser parser = JsonParserResolver.JSON_PARSER;
+
+    PLACES_HTTP_CLIENT = hasOkHttp ?  OkHttpPlacesHttpClient(parser) :  HttpUrlConnectionMapsHttpClient(parser);
+  }
+
+  private PlacesHttpClientResolver {
+    throw  RuntimeException(&quot;No Instances!&quot;);
+  }
+} 
+</code></pre>
+<p>该类被加载时，会检查 OkHttpClient 的完全限定类名是否可用。如果抛出 ClassNotFoundException，我们就知道用户没有添加 OkHttp，于是回退到 HttpURLConnection。PlacesHttpClient 是包装以上两种实现方式的公共接口，因此在整个代码库中，这两种实现方式可以交换使用。JSON 解析也采用了同样的方法，<a href="https://github.com/google/gson%20" target="_blank">Gson</a> 可选择性地作为依赖包含在库中。 </p>
+<p>如果性能表现与库的大小之间的权衡系数很大，这个方法确实不错。但是，如果回退的实现方式比较困难（比如 JSON 解析就是这种情况），笔者建议你先使用外部库来节省时间，在后续的版本中再考虑添加回退实现。 </p>
+<p>笔者在前文中提到，你应该对库中包含的功能做出明智的选择。如果某个功能几乎所有用户都不需要，最好将其除去，而且这里也没有必要使用前面提到的第一种可选择性依赖。再次以 Retrofit 为例，在 <a href="http://square.github.io/retrofit/%20" target="_blank">2.x 版本</a> 中，使用 REST 调用来响应这个功能，不再作为核心库的一部分提供给用户，而是移到一个单独的模块上，并作为 Retrofit 的 maven 构件发布 。</p>
+<p>同样地，不同的响应转换器也被拆成了独立的依赖。例如，Retrofit 用户想要转换一个 JSON 响应，而且已经依赖于 Gson，他们可以在 build.gradle 文件中添加以下依赖：</p>
+<pre><code>dependencies {
+  compile 'com.squareup.retrofit:converter-gson:2.0.0-beta2'
+}
+</code></pre>
+<p>而那些使用其他 JSON 库（比如 <a href="http://wiki.fasterxml.com/JacksonHome%20" target="_blank">Jackson</a>）的用户，或者需要解析其他数据格式（比如 XML 或 protocol buffers）的用户，也可以采用这种方式添加自己需要的依赖，而且避免通用型依赖带来的额外负担。与此同时，核心库也不会被这些附加功能干扰，可以专注于需要解决的主要问题。</p>
+<p>总而言之，如果你正在编写的库有意给 Android 开发人员使用，在设计时务必记住以上几个策略。库的大小，不应该只当做属性，而应该视为一种特性予以考虑，你的用户绝对会因此而感激你！</p>
+<p><strong><a href="http://www.oneapm.com/mi/feature.html?utm_source=Community&amp;utm_medium=Article&amp;utm_term=%E5%A6%82%E4%BD%95%E5%AF%B9%20Android%20%E5%BA%93%E8%BF%9B%E8%A1%8C%E4%BE%9D%E8%B5%96%E7%AE%A1%E7%90%86%EF%BC%9F&amp;utm_campaign=MiAndroidArti&amp;from=jseafwmnjh" target="_blank">OneAPM Mobile Insight </a>以真实用户体验为度量标准进行 <a href="http://news.oneapm.com/tag/crash/" target="_blank">Crash 分析</a>，监控网络请求及网络错误，提升用户留存。访问 <a href="http://www.oneapm.com/index.html" target="_blank">OneAPM 官方网站</a>感受更多应用性能优化体验，想阅读更多技术文章，请访问 <a href="http://news.oneapm.com/?utm_source=Community&amp;utm_medium=Article&amp;utm_term=%E5%A6%82%E4%BD%95%E5%AF%B9%20Android%20%E5%BA%93%E8%BF%9B%E8%A1%8C%E4%BE%9D%E8%B5%96%E7%AE%A1%E7%90%86%EF%BC%9F&amp;utm_campaign=MiAndroidArti&amp;from=jseafwmnjh" target="_blank">OneAPM 官方技术博客</a>。</strong></p>
+<p><strong>本文转自 <a href="http://news.oneapm.com/" target="_blank">OneAPM 官方博客</a></strong></p>
+<p>原文地址：<a href="http://johnpetitto.com/android-lib-dependency-management/" target="_blank">http://johnpetitto.com/android-lib-dependency-management/</a></p>
+
+                </div></div></div><br/></div></span>
+</div></body></html> 
