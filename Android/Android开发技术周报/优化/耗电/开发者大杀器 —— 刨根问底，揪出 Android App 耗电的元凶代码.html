@@ -1,0 +1,205 @@
+<html>
+<head>
+  <title>开发者大杀器 —— 刨根问底，揪出 Android App 耗电的元凶代码</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2946"/>
+<h1>开发者大杀器 —— 刨根问底，揪出 Android App 耗电的元凶代码</h1>
+
+<div>
+<span><div style="-evernote-webclip:true"><br/><div><div><h1>0x00 这是啥？</h1><div><div></div></div></div>
+<div>
+<div>
+
+<div><div><img src="开发者大杀器 —— 刨根问底，揪出 Android App 耗电的元凶代码_files/268.png" type="image/png" data-filename="268.png"/><br/></div></div>
+</div>
+
+</div>
+<p>这是一篇讲述应用耗电的文章，围绕 Android 电量采集机制及第二代 <a href="https://link.jianshu.com/?t=https://github.com/google/battery-historian" target="_blank">Battery Historian</a> 分析工具讲述。文从数据采集、导出、环境搭建、解读报告的角度出发，从细节讲解整个流程。和大谈概念的文章不同，这里将进行实际操作及分析。</p>
+<p>写作动机来源于最近的工作需求，但分析过程中发现网上资料较为匮乏。在此执笔写作，以便日后回顾，亦作为分享的机会。</p>
+<h1>0x01 电量统计模块概述</h1>
+<p>Android 从两个层面统计电量的消耗，分别为 <strong>软件排行榜</strong> 及 <strong>硬件排行榜</strong>。它们各有自己的耗电榜单，软件排行榜为机器中每个 App 的耗电榜单，硬件排行榜则为各个硬件的耗电榜单。这两个排行榜的统计是互为独立，互不干扰的。</p>
+<p>** 此处主要讲述软件层面的统计。**</p>
+<p>具体的说，耗电信息在 <code>设置 -&gt; 电量</code> 中能够非常直观的看到。注意，<strong>Android 所有功耗统计都是通过代码估算，没有集成电路参与汇报</strong>。准确度取决于厂商 ROM 所提供的 <code>power_profile.xml</code> 文件。由于不同厂商 <code>power_profile.xml</code> 准确度及源码有差异，因此不同手机、不同版本的数据可能有较大差异。</p>
+<p><code>power_profile.xml</code> 直接影响统计的准确度，并且此文件无法通过应用修改。再次强调，Android 耗电估算没有硬件的参与，全靠代码估算。</p>
+<p><code>power_profile.xml</code>文件位于源码下的 <code>/framework/base/core/res/res/xml/power_profile.xml</code>，部分内容展示如下：</p>
+<pre><code>  &lt;item name=&quot;radio.scanning&quot;&gt;0.1&lt;/item&gt; &lt;!-- cellular radio scanning for signal, ~10mA --&gt;
+  &lt;item name=&quot;gps.on&quot;&gt;0.1&lt;/item&gt; &lt;!-- ~50mA --&gt;
+  &lt;!-- Current consumed by the radio at different signal strengths, when paging --&gt;
+  &lt;array name=&quot;radio.on&quot;&gt; &lt;!-- Strength 0 to BINS-1 --&gt;
+      &lt;value&gt;0.2&lt;/value&gt; &lt;!-- ~2mA --&gt;
+      &lt;value&gt;0.1&lt;/value&gt; &lt;!-- ~1mA --&gt;
+  &lt;/array&gt;
+  &lt;/array&gt;
+  &lt;!-- Different CPU speeds as reported in
+       /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state --&gt;
+  &lt;array name=&quot;cpu.speeds&quot;&gt;
+      &lt;value&gt;400000&lt;/value&gt; &lt;!-- 400 MHz CPU speed --&gt;
+  &lt;/array&gt;
+  &lt;!-- Current when CPU is idle --&gt;
+  &lt;item name=&quot;cpu.idle&quot;&gt;0.1&lt;/item&gt;
+  &lt;!-- Current at each CPU speed, as per 'cpu.speeds' --&gt;
+  &lt;array name=&quot;cpu.active&quot;&gt;
+      &lt;value&gt;0.1&lt;/value&gt;  &lt;!-- ~100mA --&gt;
+  &lt;/array&gt;
+  &lt;array name=&quot;wifi.batchedscan&quot;&gt; &lt;!-- mA --&gt;
+      &lt;value&gt;.0002&lt;/value&gt; &lt;!-- 1-8/hr --&gt;
+      &lt;value&gt;.002&lt;/value&gt;  &lt;!-- 9-64/hr --&gt;
+      &lt;value&gt;.02&lt;/value&gt;   &lt;!-- 65-512/hr --&gt;
+      &lt;value&gt;.2&lt;/value&gt;    &lt;!-- 513-4,096/hr --&gt;
+      &lt;value&gt;2&lt;/value&gt;    &lt;!-- 4097-/hr --&gt;
+  &lt;/array&gt;
+</code></pre>
+<p>这就是在硬件层面统计时，直接参与运算的参数。无论是软件耗电统计还是硬件耗电统计，都通过 <code>BatteryStatsHelper</code> 来进行汇总。<code>BatteryStatsHelper</code>位于<code>/framework/base/core/java/com/andorid/internal/os/BatteryStatsHelper.java</code>下。</p>
+<h1>0x02 软件耗电统计</h1>
+<p>在 <code>BatteryStatsHelper.java</code> 中，有这么一个方法：</p>
+<pre><code>
+    private void processAppUsage(SparseArray&lt;UserHandle&gt; asUsers) {
+        final boolean forAllUsers = (asUsers.get(UserHandle.USER_ALL) != null);
+        mStatsPeriod = mTypeBatteryRealtime;
+
+        BatterySipper osSipper = null;
+        final SparseArray&lt;? extends Uid&gt; uidStats = mStats.getUidStats();
+        final int NU = uidStats.size();
+        for (int iu = 0; iu &lt; NU; iu++) {
+            final Uid u = uidStats.valueAt(iu);
+            final BatterySipper app = new BatterySipper(BatterySipper.DrainType.APP, u, 0);
+
+            mCpuPowerCalculator.calculateApp(app, u, mRawRealtime, mRawUptime, mStatsType);
+            mWakelockPowerCalculator.calculateApp(app, u, mRawRealtime, mRawUptime, mStatsType);
+            mMobileRadioPowerCalculator.calculateApp(app, u, mRawRealtime, mRawUptime, mStatsType);
+            mWifiPowerCalculator.calculateApp(app, u, mRawRealtime, mRawUptime, mStatsType);
+            mBluetoothPowerCalculator.calculateApp(app, u, mRawRealtime, mRawUptime, mStatsType);
+            mSensorPowerCalculator.calculateApp(app, u, mRawRealtime, mRawUptime, mStatsType);
+            mCameraPowerCalculator.calculateApp(app, u, mRawRealtime, mRawUptime, mStatsType);
+            mFlashlightPowerCalculator.calculateApp(app, u, mRawRealtime, mRawUptime, mStatsType);
+
+            final double totalPower = app.sumPower();
+            if (DEBUG &amp;&amp; totalPower != 0) {
+                Log.d(TAG, String.format(&quot;UID %d: total power=%s&quot;, u.getUid(),
+                        makemAh(totalPower)));
+            }
+        }
+        ... // code
+    }
+</code></pre>
+<p><code>processAppUsage()</code>方法中，一个应用的总功耗在这里体现出来了：</p>
+<ul>
+<li>cpu</li>
+<li>Wakelock(保持唤醒锁)</li>
+<li>无线电(2G/3G/4G)</li>
+<li>WIFI</li>
+<li>蓝牙</li>
+<li>传感器</li>
+<li>相机</li>
+<li>闪光灯</li>
+</ul>
+<p><strong>这些数据，将决定着你的应用在耗电排行榜中的位置，以及是否给予用户警告高耗电。</strong>这些警告对于应用来说可能是致命的，用户可能因此而卸载应用。</p>
+<p>应用总功耗是上述八个统计值的和。这八个统计器同继承自 <code>PowerCalculator.java</code></p>
+<p>具体来说，这八个耗电计算器的算法分别如下：</p><p>
+	
+
+	
+		</p><div><p><img src="开发者大杀器 —— 刨根问底，揪出 Android App 耗电的元凶代码_files/Evernote Camera Roll 20171218 221751.png" type="image/png" data-filename="Evernote Camera Roll 20171218 221751.png"/><br/></p></div>
+
+<p>耗电统计概述就如上所述。总的来说并不复杂，通过聚合八种不同方式的消耗，来得出总的耗电量，并给予用户展示。</p>
+<h1>0x03 耗电数据的采集</h1>
+<p><strong>数据的采集是机器单方面的行为，不需要依赖第三方的辅助</strong>，因为这是 Android 系统级的功能。但在这之前，需要做一些准备。</p>
+<p>请事先打开开发者模式。USB 接入计算机。在终端中执行：</p>
+<pre><code>adb shell dumpsys batterystats --enable full-wake-history
+</code></pre>
+<p>默认情况下，唤醒（wake）数据是不会被采集的，因此我们需要将其启用。如果采集的不是全量 wake up 数据，在分析阶段则不能很好的观测数据。</p>
+<p>随后终端执行：</p>
+<pre><code>adb shell dumpsys batterystats --reset
+</code></pre>
+<p>此命令会清空历史采集的信息。</p>
+<p><strong>最后，拔出 USB。</strong><br/>
+<strong>最后，拔出 USB。</strong><br/>
+<strong>最后，拔出 USB。</strong></p>
+<p>重要的事说三遍！</p>
+<p>现在，耗电统计已经开始了。没错，耗电统计就是一直开着的，并且无法关闭：这是一个系统级别的功能。</p>
+<p>为什么要拔出 USB？因为如果你一直插着 USB ，如果电充满了，你的数据会被清空的。Batterystats 只会记录最后一次充满电后的记录，因此强烈建议先把电充满，完成以上操作后，拔出 USB 电源。</p>
+<p>接下来，就像日常使用手机一样，操作你想要统计的应用。耗电记录器会在后台统计整台机子所有的耗电情况。没错，不需要事先指定目标 App ，所有 App 都会被统计。这也说明，任何人都能够统计任何已安装的应用。因此，除了统计自家 App ，也能用于统计竞品。</p>
+<p>当你觉得操作得差不多了，连接到 USB，终端执行：</p>
+<pre><code>adb bugreport &gt; bugreport.txt
+</code></pre>
+<p><code>bugreport.txt</code> 就是记载着整台手机耗电信息的源数据。</p>
+<p>最后终端执行：</p>
+<pre><code>adb shell dumpsys batterystats --disable full-wake-history
+</code></pre>
+<p><strong>不要忘了关闭全量记录唤醒。</strong>保持开启会造成性能问题，除非在电量收集阶段，否则建议保持关闭。</p>
+<p>接下来，搭建分析环境：Battery Historian。</p>
+<h1>0x04 搭建 Battery Historian &amp; 上传 bugreport</h1>
+<p><a href="https://link.jianshu.com/?t=https://github.com/google/battery-historian" target="_blank">Battery Historian</a> ，是谷歌出品的耗电分析器。通过 Battery Historian，可将导出的 <code>bugreport</code> 文件可视化。在第一代的 Battery Historian 中，google 使用了 python 作为数据解析工具。拿到 <code>bugreport</code> 文件后，通过终端执行 python 来生成可视化的 html 文件。这种方法使用起来较为麻烦，而且无法部署到服务器。因此在第二代 Battery Historian，google 选择了使用 docker 容器。现在完全不推荐使用第一代 Battery Historian，已经许久没有维护了，而且功能过于简陋。</p>
+<p>我在此演示 Mac 环境的搭建，其他操作系统大同小异，可参考 Battery Historian 官方教程。</p>
+<p>首先下载 <a href="https://link.jianshu.com/?t=https://www.docker.com/" target="_blank">Docker</a> 并安装。</p>
+<p>启动 Docker。点击上方状态栏 Docker 图标，如图所示 &quot;Docker is running&quot; 则表示启动成功。</p>
+<div>
+
+<div>docker</div>
+</div>
+<p>下一步，启动终端，执行：</p>
+<pre><code>docker run -p 9998:9999 <a dir="ltr" href="http://gcr.io/android-battery-historian:2.1">gcr.io/android-battery-historian:2.1</a> --port 9999
+</code></pre>
+<p>如果您未曾运行过此 Docker 镜像，将会自动下载此镜像并安装。<code>9998</code> 端口指的是映射到你的本地端口，这意味着，当镜像执行后，可通过<code>127.0.0.1:9998</code>访问此镜像。你可以自行更改此端口。等待镜像下载完成，再次执行上一条命令。如果成功，将输出如下信息：</p>
+<pre><code>➜  ~ docker run -p 9998:9999 <a dir="ltr" href="http://gcr.io/android-battery-historian:2.1">gcr.io/android-battery-historian:2.1</a> --port 9999
+2017/06/04 10:24:13 Listening on port:  9999
+</code></pre>
+<p>镜像的<code>9999</code>端口已被监听，并映射到实体机器的<code>9998</code>端口。分析平台部署完成了，开始上传 <code>bugreport</code> 文件进行分析。</p>
+<p>现在，访问<code>127.0.0.1:9998</code>，成功打开 Battery Historian 分析平台：</p>
+
+<p>除了单一上传 <code>bugreport</code> 文件外，还支持更多的分析文件上传。此外，还能对比两份<code>bugreport</code>文件。这对比功能简直是神器。这里就不展开述说了，直接上传 <code>bugreport.txt</code>。</p>
+<p>上传后效果如下：</p>
+
+<p>现在一起来看看怎么使用 Battery Historian 分析 <code>bugreport</code>文件。</p>
+<h1>0x05 鸟瞰 Battery Historian</h1>
+<p>再次强调，<code>bugreport</code> 文件包含了整台手机运行状况，并非单一某个 app，因此<strong>查看图表时要特别注意，数据所展示的是当前选中的 app 数据还是全部 app 的叠加</strong>。</p>
+<p>现在，我用微信作为分析目标。选中 com.tencent.mm。</p>
+
+<p>现在，这张图表第一个坑爹的地方出现了。选中目标包名前后，图标数据会有些不一样的地方。选中前：</p>
+
+<p>选中后：</p>
+
+<p>注意到加粗的 Top app , Activity Manager proc , JobScheduler 了吗？这几个数据在选中后，图表数据会变为仅有当前选中 app 的数据，而其他数据仍然是整台机子的全量数据。一不小心，还能坑你很多次。此处是初次使用 Battery Historian 需要特别注意的地方。用鼠标指向图标，可粗略地观察数据的变化。</p>
+<p>数据分析分为三个 Tables，分别是 <strong>System Stats</strong> , <strong>History Stats</strong> , <strong>App Stats</strong>。System Stats 和 App Stats 是重点观测和分析对象。</p>
+<p>System Stats 包含了机子整体概况，包括整台机子在这段期间消耗了多少电量，所有 app 使用 Wakelocks、JobScheduler、CPU、Wifi、传感器等等一切的所有情况。</p>
+<p>接下来则是 App Stats，所有的优化都是为了此处的数据而努力。</p>
+<h1>0x06 读懂 App Stats</h1>
+<p>App Stats 所展示的都是所选定包名所产生的数据，不会受到外部因素的影响。</p>
+<p>Misc Summary 部分概述了所选定 app 在收集阶段的活动概况：</p>
+
+<p>如上所述，</p>
+<ul>
+<li>电量消耗占用了总消耗的3.94%；</li>
+<li>前台运行了 3 小时 34 分钟；</li>
+<li>震动了 8 次，共 225 毫秒；</li>
+<li>CPU 用户态时间 22 分 33 秒；</li>
+<li>Alarm 唤醒 40 次。</li>
+</ul>
+<p>来看一个具体的数据：查看 App Stats 下的 Wakelocks 数据区域：</p>
+
+<p>注意，显示为 WakerLock:xxxxxxx 是混淆导致。您自己的开发包不会存在此情况。</p>
+<p>你还记不记得 App 的耗电排行榜是如何计算的？上面这些数据都会影响文章开头所提到的耗能计算公式。</p>
+<p>举个例子，假如你一直持有一个 WakePowerLock，但你什么都没干 —— 这时候其实是不会产生真正耗电的，对吧。但因为你持有一个 Lock，公式就是这么算的：wakeLockTime * wakeLockPower。即使你啥也没干，Android 系统也认为你在耗电，这时候就很吃亏了。</p>
+<p>再来看看 Alarm 唤醒（App Stats 下的 Wakeup alarm info）：</p>
+
+<p>查看你自家的 app，可能会惊讶的发现有如此之多不必要的唤醒。<strong>Wakeup Alarm 和 Scheduled Job 可能被某些厂商用于检测频繁后台唤醒，并向用户展示该信息。</strong></p>
+<p>最后，再来看看 Sensor Use 部分：</p>
+
+<p>看看您自家的应用是否有过多的传感器调用？如非必要，能复用上一次的 GPS 数据吗？这些所有的资源消耗，都会被算入能耗当中。当您的 app 在耗电榜上屡次得冠，就离卸载不远了。</p>
+<h1>0x07 最后</h1>
+<p>大多数情况下，优化的效果会是惊人的。这当中可能会遇到一些阻碍，包括产品需求的冲突。尽管试着去协商，试着向传达能耗所带来的代价。</p>
+<p>最后的最后，所带来的满满的成就感，也许就是作为开发者最大的荣幸？ (&gt;_&lt;)</p>
+
+
+        </div><br/></div></span>
+</div></body></html> 
