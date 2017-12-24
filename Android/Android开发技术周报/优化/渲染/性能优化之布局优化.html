@@ -1,0 +1,270 @@
+<html>
+<head>
+  <title>性能优化之布局优化</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1853"/>
+<h1>性能优化之布局优化</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>性能优化之布局优化</h1><div><div></div></div></div>
+
+	
+		<p>本文为Android性能优化的第二篇——布局优化，主要介绍<strong>使用抽象布局标签(include, viewstub, merge)、去除不必要的嵌套和View节点、减少不必要的infalte及其他Layout方面可调优点，顺带提及布局调优相关工具(hierarchy viewer和lint)</strong>。</p>
+<p>目前性能优化专题已完成以下部分：</p>
+<p><a href="http://www.trinea.cn/android/performance/" target="_blank" title="性能优化——性能问题及性能调优方式">性能优化总纲——性能问题及性能调优方式</a></p>
+<p><a href="http://www.trinea.cn/android/mobile-performance-optimization/" target="_blank" title="移动端网络优化">性能优化第四篇——移动网络优化</a></p>
+<p><a href="http://www.trinea.cn/android/java-android-performance/" target="_blank" title="性能优化——Java(Android)代码优化">性能优化第三篇——Java(Android)代码优化</a><br/>
+<a href="http://www.trinea.cn/android/layout-performance/" target="_blank" title="性能优化之布局优化">性能优化第二篇——布局优化</a><br/>
+<a href="http://www.trinea.cn/android/database-performance/" target="_blank" title="性能优化之数据库优化">性能优化第一篇——数据库性能优化</a></p>
+<p><a href="http://www.trinea.cn/android/android-performance-demo/" target="_blank" title="Android性能调优">性能优化实例</a></p>
+<p><strong>1、抽象布局标签</strong></p>
+<p><strong>(1) &lt;include&gt;标签</strong><br/>
+include标签常用于将布局中的公共部分提取出来供其他layout共用，以实现布局模块化，这在布局编写方便提供了大大的便利。<br/>
+下面以在一个布局main.xml中用include引入另一个布局foot.xml为例。main.mxl代码如下：</p>
+
+		<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>&lt;?version&quot;1.0&quot;encoding&quot;utf-8&quot;?&gt;</div><div>RelativeLayout xmlnsandroid&quot;http://schemas.android.com/apk/res/android&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;match_parent&quot;</div><div>ListView</div><div>android&quot;@+id/simple_list_view&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;match_parent&quot;</div><div>androidlayout_marginBottom&quot;@dimen/dp_80&quot;</div><div>include layout&quot;@layout/foot.xml&quot;</div><div>RelativeLayout</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>其中include引入的foot.xml为公用的页面底部，代码如下：</p>
+
+		<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>&lt;?version&quot;1.0&quot;encoding&quot;utf-8&quot;?&gt;</div><div>RelativeLayout xmlnsandroid&quot;http://schemas.android.com/apk/res/android&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;match_parent&quot;</div><div>Button</div><div>android&quot;@+id/button&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;@dimen/dp_40&quot;</div><div>androidlayout_above&quot;@+id/text&quot;</div><div>TextView</div><div>android&quot;@+id/text&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;@dimen/dp_40&quot;</div><div>androidlayout_alignParentBottom&quot;true&quot;</div><div>android&quot;@string/app_name&quot;</div><div>RelativeLayout</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>&lt;include&gt;标签唯一需要的属性是layout属性，指定需要包含的布局文件。可以定义android:id和android:layout_*属性来覆盖被引入布局根节点的对应属性值。注意重新定义android:id后，子布局的顶结点i就变化了。</p>
+<p><strong>(2) &lt;viewstub&gt;标签</strong><br/>
+viewstub标签同include标签一样可以用来引入一个外部布局，不同的是，viewstub引入的布局默认不会扩张，即既不会占用显示也不会占用位置，从而在解析layout时节省cpu和内存。<br/>
+viewstub常用来引入那些默认不会显示，只在特殊情况下显示的布局，如进度布局、网络失败显示的刷新布局、信息出错出现的提示布局等。<br/>
+下面以在一个布局main.xml中加入网络错误时的提示页面network_error.xml为例。main.mxl代码如下：</p>
+
+		<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>&lt;?version&quot;1.0&quot;encoding&quot;utf-8&quot;?&gt;</div><div>RelativeLayout xmlnsandroid&quot;http://schemas.android.com/apk/res/android&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;match_parent&quot;</div><div>ViewStub</div><div>android&quot;@+id/network_error_layout&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;match_parent&quot;</div><div>androidlayout&quot;@layout/network_error&quot;</div><div>RelativeLayout</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>其中network_error.xml为只有在网络错误时才需要显示的布局，默认不会被解析，示例代码如下：</p>
+
+		<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>&lt;?version&quot;1.0&quot;encoding&quot;utf-8&quot;?&gt;</div><div>RelativeLayout xmlnsandroid&quot;http://schemas.android.com/apk/res/android&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;match_parent&quot;</div><div>Button</div><div>android&quot;@+id/network_setting&quot;</div><div>androidlayout_width&quot;@dimen/dp_160&quot;</div><div>androidlayout_height&quot;wrap_content&quot;</div><div>androidlayout_centerHorizontal&quot;true&quot;</div><div>android&quot;@string/network_setting&quot;</div><div>Button</div><div>android&quot;@+id/network_refresh&quot;</div><div>androidlayout_width&quot;@dimen/dp_160&quot;</div><div>androidlayout_height&quot;wrap_content&quot;</div><div>androidlayout_below&quot;@+id/network_setting&quot;</div><div>androidlayout_centerHorizontal&quot;true&quot;</div><div>androidlayout_marginTop&quot;@dimen/dp_10&quot;</div><div>android&quot;@string/network_refresh&quot;</div><div>RelativeLayout</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>在java中通过(ViewStub)findViewById(id)找到ViewStub，通过stub.inflate()展开ViewStub，然后得到子View，如下：</p>
+
+		<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>privatenetworkErrorView</div><div>privateshowNetError</div><div>// not repeated infalte</div><div>networkErrorView</div><div>networkErrorViewsetVisibilityVISIBLE</div><div>return</div><div>ViewStub ViewStubfindViewByIdnetwork_error_layout</div><div>networkErrorViewinflate</div><div>Button networkSettingButtonnetworkErrorViewfindViewByIdnetwork_setting</div><div>Button refreshButtonfindViewByIdnetwork_refresh</div><div>privateshowNormal</div><div>networkErrorView</div><div>networkErrorViewsetVisibility</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>在上面showNetError()中展开了ViewStub，同时我们对networkErrorView进行了保存，这样下次不用继续inflate。这就是后面第三部分提到的减少不必要的infalte。</p>
+<p>viewstub标签大部分属性同include标签类似。</p>
+<p>上面展开ViewStub部分代码</p>
+
+		<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>ViewStub ViewStubfindViewByIdnetwork_error_layout</div><div>networkErrorViewinflate</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>也可以写成下面的形式</p>
+
+		<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>viewStubfindViewByIdnetwork_error_layout</div><div>viewStubsetVisibilityVISIBLE// ViewStub被展开后的布局所替换</div><div>networkErrorViewfindViewByIdnetwork_error_layout// 获取展开后的布局</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>效果一致，只是不用显示的转换为ViewStub。通过viewstub的原理我们可以知道将一个view设置为GONE不会被解析，从而提高layout解析速度，而VISIBLE和INVISIBLE这两个可见性属性会被正常解析。</p>
+<p><strong>(3) &lt;merge&gt;标签</strong><br/>
+在使用了include后可能导致布局嵌套过多，多余不必要的layout节点，从而导致解析变慢，不必要的节点和嵌套可通过hierarchy viewer(下面布局调优工具中有具体介绍)或设置-&gt;开发者选项-&gt;显示布局边界查看。</p>
+<p>merge标签可用于两种典型情况：<br/>
+a.  布局顶结点是FrameLayout且不需要设置background或padding等属性，可以用merge代替，因为Activity内容试图的parent view就是个FrameLayout，所以可以用merge消除只剩一个。<br/>
+b.  某布局作为子布局被其他布局include时，使用merge当作该布局的顶节点，这样在被引入时顶结点会自动被忽略，而将其子节点全部合并到主布局中。</p>
+<p>以(1) &lt;include&gt;标签的示例为例，用hierarchy viewer查看main.xml布局如下图：</p>
+<p></p><div><img src="性能优化之布局优化_files/9485060950_08b4bbfa96_o.jpg" type="image/jpeg" data-filename="9485060950_08b4bbfa96_o.jpg" alt="android include" height="323" width="576"/></div>
+可以发现多了一层没必要的RelativeLayout，将foot.xml中RelativeLayout改为merge，如下：<p></p>
+
+		<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>&lt;?version&quot;1.0&quot;encoding&quot;utf-8&quot;?&gt;</div><div>merge xmlnsandroid&quot;http://schemas.android.com/apk/res/android&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;match_parent&quot;</div><div>Button</div><div>android&quot;@+id/button&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;@dimen/dp_40&quot;</div><div>androidlayout_above&quot;@+id/text&quot;</div><div>TextView</div><div>android&quot;@+id/text&quot;</div><div>androidlayout_width&quot;match_parent&quot;</div><div>androidlayout_height&quot;@dimen/dp_40&quot;</div><div>androidlayout_alignParentBottom&quot;true&quot;</div><div>android&quot;@string/app_name&quot;</div><div>merge</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>运行后再次用hierarchy viewer查看main.xml布局如下图：</p>
+<p></p><div><img src="性能优化之布局优化_files/9485065682_fa5647b3c7_o.jpg" type="image/jpeg" data-filename="9485065682_fa5647b3c7_o.jpg" alt="android include2" height="433" width="510"/></div><p></p>
+<p>这样就不会有多余的RelativeLayout节点了。</p>
+<p><strong>2、去除不必要的嵌套和View节点</strong><br/>
+(1) 首次不需要使用的节点设置为GONE或使用viewstub<br/>
+(2) 使用RelativeLayout代替LinearLayout<br/>
+大约在Android4.0之前，新建工程的默认main.xml中顶节点是LinearLayout，而在之后已经改为RelativeLayout，因为RelativeLayout性能更优，且可以简单实现LinearLayout嵌套才能实现的布局。<br/>
+4.0及以上Android版本可通过设置-&gt;开发者选项-&gt;显示布局边界打开页面布局显示，看看是否有不必要的节点和嵌套。4.0以下版本可通过hierarchy viewer查看。</p>
+<p><strong>3、减少不必要的infalte</strong><br/>
+(1) 对于inflate的布局可以直接缓存，用全部变量代替局部变量，避免下次需再次inflate<br/>
+如上面ViewStub示例中的</p>
+
+		<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>networkErrorView</div><div>networkErrorViewsetVisibilityVISIBLE</div><div>return</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>(2) ListView提供了item缓存，adapter getView的标准写法，如下：</p>
+
+		<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>@Override</div><div>publicgetViewpositionconvertViewViewGroup parent</div><div>ViewHolder holder</div><div>convertView</div><div>convertViewinflaterinflatelayoutlist_item</div><div>holderViewHolder</div><div>convertViewsetTagholder</div><div>holderViewHolderconvertViewgetTag</div><div> * ViewHolder</div><div> * @author trinea@trinea.cn 2013-08-01</div><div>privatestaticclassViewHolder</div><div>ImageView appIcon</div><div>TextView  appName</div><div>TextView  appInfo</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>关于ListView缓存原理可见<a href="http://www.trinea.cn/android/android-listview%e6%bb%91%e5%8a%a8%e8%bf%87%e7%a8%8b%e4%b8%ad%e5%9b%be%e7%89%87%e6%98%be%e7%a4%ba%e9%87%8d%e5%a4%8d%e9%94%99%e4%b9%b1%e9%97%aa%e7%83%81%e9%97%ae%e9%a2%98%e8%a7%a3%e5%86%b3/" target="_blank" title="Android ListView缓存机制">Android ListView缓存机制</a>。</p>
+<p><strong>4、其他点</strong><br/>
+<strong>(1) 用SurfaceView或TextureView代替普通View</strong><br/>
+SurfaceView或TextureView可以通过将绘图操作移动到另一个单独线程上提高性能。<br/>
+普通View的绘制过程都是在主线程(UI线程)中完成，如果某些绘图操作影响性能就不好优化了，这时我们可以考虑使用SurfaceView和TextureView，他们的绘图操作发生在UI线程之外的另一个线程上。<br/>
+因为SurfaceView在常规视图系统之外，所以无法像常规试图一样移动、缩放或旋转一个SurfaceView。TextureView是Android4.0引入的，除了与SurfaceView一样在单独线程绘制外，还可以像常规视图一样被改变。</p>
+<p><strong>(2) 使用RenderJavascript</strong><br/>
+RenderScript是Adnroid3.0引进的用来在Android上写高性能代码的一种语言，语法给予C语言的C99标准，他的结构是独立的，所以不需要为不同的CPU或者GPU定制代码代码。</p>
+<p><strong>(3) 使用OpenGL绘图</strong><br/>
+Android支持使用OpenGL API的高性能绘图，这是Android可用的最高级的绘图机制，在游戏类对性能要求较高的应用中得到广泛使用。<br/>
+Android 4.3最大的改变，就是支持OpenGL ES 3.0。相比2.0，3.0有更多的缓冲区对象、增加了新的着色语言、增加多纹理支持等等，将为Android游戏带来更出色的视觉体验。</p>
+<p><strong>(4) 尽量为所有分辨率创建资源</strong></p>
+<p>减少不必要的硬件缩放，这会降低UI的绘制速度，可借助<a href="http://android-ui-utils.googlecode.com/hg/asset-studio/dist/index.html/" target="_blank" title="Android asset studio">Android asset studio</a></p>
+<p><strong>5、布局调优工具</strong><br/>
+<strong>(1) hierarchy viewer</strong><br/>
+hierarchy viewer可以方便的查看Activity的布局，各个View的属性、measure、layout、draw的时间，如果耗时较多会用红色标记，否则显示绿色。<br/>
+hierarchy viewer.bat位于&lt;sdk&gt;/tools/目录下。使用可见：<a href="http://developer.android.com/tools/debugging/debugging-ui.html" target="_blank" title="hierarchy viewer使用">Using Hierarchy Viewer </a>, 示例图如下：</p>
+<p></p><div><img src="性能优化之布局优化_files/9485061000_aba0991605_o.jpg" type="image/jpeg" data-filename="9485061000_aba0991605_o.jpg" alt="android hierarechy viewer" height="335" width="576"/></div><p></p>
+<p><strong>(2) layoutopt</strong><br/>
+layoutopt是一个可以提供layout及其层级优化提示的命令行，在sdk16以后已经被lint取代，在Windows-&gt;Show View-&gt;Other-&gt;Android-&gt;Lint Warnings查看lint优化提示，lint具体介绍可见<a href="http://developer.android.com/tools/debugging/improving-w-lint.html" target="_blank" title="lint介绍">Improving Your Code with lint</a>。</p>
+
+
+
+			</div></div></div><br/></div></span>
+</div></body></html> 
