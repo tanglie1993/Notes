@@ -1,0 +1,759 @@
+<html>
+<head>
+  <title>Android MVP 详解（下）</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3608"/>
+<h1>Android MVP 详解（下）</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:10px;-webkit-tap-highlight-color:transparent;"><div style="box-sizing:border-box;font-size:17px;line-height:1.42857;color:rgb(51, 51, 51);background-color:rgb(255, 255, 255);min-width:768px;font-family:-apple-system, &quot;SF UI Text&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;color:rgb(47, 47, 47);font-size:16px;font-weight:400;line-height:1.7;word-break:break-word;">
+          <h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">作者：<a href="https://link.jianshu.com/?t=https://github.com/DIY-green/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">李旺成</a>###</h3>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">时间：2016年4月3日###</h3>
+<hr style="border-left-color:initial;box-sizing:content-box;border-width:1px 0px 0px;border-right-style:initial;border-bottom-style:initial;border-left-style:initial;border-right-color:initial;border-bottom-color:initial;height:0px;border-image:initial;border-top-style:solid;margin-bottom:20px;margin-top:20px;border-top-color:rgb(238, 238, 238);border-top:1px solid rgb(221, 221, 221);margin:0px 0px 20px;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><a href="https://www.jianshu.com/p/9a6845b26856" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">上篇</a></p>
+<h1 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-size:26px;margin:0px 0px 15px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);text-rendering:optimizeLegibility;">5. 最佳实践#</h1>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">好了终于要点讲自己的东西了，有点小激动。下面这些仅表示个人观点，非一定之规，各位看官按需取用，有说的不对的，敬请谅解。关于命名规范可以参考我的另一篇文章“<a href="https://www.jianshu.com/p/0a984f999592#" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Android 编码规范</a>”。老规矩先上图：</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"></p><div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:347px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:49.63%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/700.png" type="image/png" data-filename="700.png" height="347" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">MVPBestPractice 思维导图</div>
+</div><br style="box-sizing:border-box;"/>
+在参考了 <a href="https://link.jianshu.com/?t=https://medium.com/@kenjuwagatsuma" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">kenjuwagatsuma</a> 的 <a href="https://link.jianshu.com/?t=https://medium.com/@kenjuwagatsuma/mvp-architecture-in-android-development-3d63cc32707a#.9fyw4pjdg" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">MVP Architecture in Android Development</a> 和 <a href="https://link.jianshu.com/?t=http://saulmm.github.io/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Saúl Molinero</a> 的 <a href="https://link.jianshu.com/?t=http://saulmm.github.io/2015/02/02/A-useful-stack-on-android-1,-architecture/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">A useful stack on android #1, architecture</a> 之后，我决定采用如下的分层方案来构建这个演示Demo，如下：<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:629px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:69.27%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/700 [1].png" type="image/png" data-filename="700.png" height="485" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">分层架构方案</div>
+</div><br style="box-sizing:border-box;"/>
+总体架构可以被分成四个部分 ：<br style="box-sizing:border-box;"/>
+<strong style="box-sizing:border-box;font-weight:700;">Presentation</strong>：负责展示图形界面，并填充数据，该层囊括了 View 和 Presenter （上图所示的Model我理解为 ViewModel -- 为 View 提供数据的 Model，或称之为 VO -- View Object）。<br style="box-sizing:border-box;"/>
+<strong style="box-sizing:border-box;font-weight:700;">Domain</strong>：负责实现app的业务逻辑，该层中由普通的Java对象组成，一般包括 Usecases 和 Business Logic。<br style="box-sizing:border-box;"/>
+<strong style="box-sizing:border-box;font-weight:700;">Data</strong>：负责提供数据，这里采用了 Repository 模式，Repository 是仓库管理员，Domain 需要什么东西只需告诉仓库管理员，由仓库管理员把东西拿给它，并不需要知道东西实际放在哪。Android 开发中常见的数据来源有，RestAPI、SQLite数据库、本地缓存等。<br style="box-sizing:border-box;"/>
+<strong style="box-sizing:border-box;font-weight:700;">Library</strong>：负责提供各种工具和管理第三方库，现在的开发一般离不开第三方库（当然可以自己实现，但是不要重复造轮子不是吗？），这里建议在统一的地方管理（那就是建一个单独的 module），尽量保证和 Presentation 层分开。<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:670px;max-height:229px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:34.18%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/670.png" type="image/png" data-filename="670.png" height="229" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="670"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">AndroidStudio 中构建项目</div>
+</div><p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"></p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.1. 关于包结构划分##</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">一个项目是否好扩展，灵活性是否够高，包结构的划分方式占了很大比重。很多项目里面喜欢采用按照特性分包（就是Activity、Service等都分别放到一个包下），在模块较少、页面不多的时候这没有任何问题；但是对于模块较多，团队合作开发的项目中，这样做会很不方便。所以，我的建议是按照模块划分包结构。其实这里主要是针对 Presentation 层了，这个演示 Demo 我打算分为四个模块：登录，首页，查询天气和我的（这里仅仅是为了演示需要，具体如何划分模块还得根据具体的项目，具体情况具体分析了）。划分好包之后如下图所示：</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:538px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:76.88000000000001%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/700 [2].png" type="image/png" data-filename="700.png" height="538" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">包结构划分</div>
+</div>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.2. 关于res拆分##</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">功能越来越多，项目越做越大，导致资源文件越来越多，虽然通过命名可以对其有效归类（如：通过添加模块名前缀），但文件多了终究不方便。得益于 Gradle，我们也可以对 res 目录进行拆分，先来看看拆分后的效果：<br style="box-sizing:border-box;"/>
+</p><div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:679px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:80.25999999999999%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/700 [3].png" type="image/png" data-filename="700.png" height="562" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">按模块拆分 res 目录</div>
+</div><br style="box-sizing:border-box;"/>
+<strong style="box-sizing:border-box;font-weight:700;">注意</strong>：resource 目录的命名纯粹是个人的命名偏好，该目录的作用是用来存放那些不需要分模块放置的资源。<br style="box-sizing:border-box;"/>
+res 目录的拆分步骤如下：<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"></p>
+<ol style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">
+<p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;">首先打开 module 的 build.gradle 文件</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;text-align:center;width:auto;margin-left:0px;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:306px;max-height:390px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:127.45%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/306.png" type="image/png" data-filename="306.png" height="390" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="306"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">res 拆分 Step1</div>
+</div>
+</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">
+<p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;">定位到 defaultConfig {} 与 buildTypes {} 之间</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;text-align:center;width:auto;margin-left:0px;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:333px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:46.77%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/700 [4].png" type="image/png" data-filename="700.png" height="279" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="598"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">res 拆分 Step2.png</div>
+</div>
+</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">在第二步定位处编辑输入 sourceSets {} 内容，具体内容如下：</li>
+</ol>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">sourceSets {
+    main {
+        manifest.srcFile <span style="box-sizing:border-box;color:rgb(42, 161, 152);">'src/main/AndroidManifest.xml'</span>
+        java.srcDirs = [<span style="box-sizing:border-box;color:rgb(42, 161, 152);">'src/main/java'</span>,<span style="box-sizing:border-box;color:rgb(42, 161, 152);">'.apt_generated'</span>]
+        aidl.srcDirs = [<span style="box-sizing:border-box;color:rgb(42, 161, 152);">'src/main/aidl'</span>,<span style="box-sizing:border-box;color:rgb(42, 161, 152);">'.apt_generated'</span>]
+        assets.srcDirs = [<span style="box-sizing:border-box;color:rgb(42, 161, 152);">'src/main/assets'</span>]
+        res.srcDirs =
+        [
+                <span style="box-sizing:border-box;color:rgb(42, 161, 152);">'src/main/res/home'</span>,
+                <span style="box-sizing:border-box;color:rgb(42, 161, 152);">'src/main/res/login'</span>,
+                <span style="box-sizing:border-box;color:rgb(42, 161, 152);">'src/main/res/mine'</span>,
+                <span style="box-sizing:border-box;color:rgb(42, 161, 152);">'src/main/res/weather'</span>,
+                <span style="box-sizing:border-box;color:rgb(42, 161, 152);">'src/main/res/resource'</span>,
+                <span style="box-sizing:border-box;color:rgb(42, 161, 152);">'src/main/res/'</span>
+
+        ]
+    }
+}```
+<span style="box-sizing:border-box;color:rgb(42, 161, 152);">4</span>) 在 res 目录下按照 sourceSets 中的配置建立相应的文件夹，将原来 res 下的所有文件（夹）都移动到 resource 目录下，并在各模块中建立 layout 等文件夹，并移入相应资源，最后 Sync Project 即可。
+##<span style="box-sizing:border-box;color:rgb(42, 161, 152);">5.3</span>. 怎么写 Model##
+这里的 Model 其实贯穿了我们项目中的三个层，Presentation、Domain 和 Data。暂且称之为 Model 吧，这也我将提供 Repository 功能的层称之为 Data Layer 的缘故（有些称这一层为 Model Layer）。
+
+**首先**，谈谈我对于 Model 是怎么理解的。应用都离不开数据，而这些数据来源有很多，如网络、SQLite、文件等等。一个应用对于数据的操作无非就是：获取数据、编辑（修改）数据、提交数据、展示数据这么几类。从分层的思想和 JavaEE 开发中积累的经验来看，我觉得 Model 中的类需要分类。从功能上来划分，可以分出这么几类：
+**VO（View Object）**：视图对象，用于展示层，它的作用是把某个指定页面（或组件）的所有数据封装起来。
+**DTO（Data Transfer Object）**：数据传输对象，这个概念来源于 JavaEE 的设计模式，原来的目的是为了 EJB 的分布式应用提供粗粒度的数据实体，以减少分布式调用的次数，从而提高分布式调用的性能和降低网络负载，但在这里，我泛指用于展示层与服务层之间的数据传输对象。
+**DO（Domain Object）**：领域对象，就是从现实世界中抽象出来的有形或无形的业务实体。
+**PO（Persistent Object）**：持久化对象，它跟持久层（通常是关系型数据库）的数据结构形成一一对应的映射关系，如果持久层是关系型数据库，那么，数据表中的每个字段（或若干个）就对应 PO 的一个（或若干个）属性。
+
+**注意**：关于vo、dto、<span style="box-sizing:border-box;color:rgb(133, 153, 0);">do</span>、po可以参考这篇文章-“[领域驱动设计系列文章——浅析VO、DTO、DO、PO的概念、区别和用处](http:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//www.cnblogs.com/qixuejia/p/4390086.html)”</span>
+
+当然这些不一定都存在，这里只是列举一下，可以有这么多分类，当然列举的也不全。
+
+**其次**，要搞清楚 Domain 层和 Data 层分别是用来做什么的，然后才知道哪些 Model 该往 Data 层中写，哪些该往 Domain 层中写。
+Data 层负责提供数据。
+Data 层不会知道任何关于 Domain 和 Presentation 的数据。它可以用来实现和数据源（数据库，REST API或者其他源）的连接或者接口。这个层面同时也实现了整个app所需要的实体类。
+Domain 层相对于 Presentation 层完全独立，它会实现应用的业务逻辑，并提供 Usecases。
+Presentation 从 Domain 层获取到的数据，我的理解就是 VO 了，VO 应该可以直接使用。
+
+&gt;注意：这里说的直接使用是指不需要经过各种转换，各种判断了，如 Activity 中某个控件的显示隐藏是根据 VO 中的 visibility 字段来决定，那么这个最好将 visibility 作为 <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> 型，而且，取值为VISIBLE/INVISIBLE/GONE，或者至少是 <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> 型的。
+
+**注意**：这里所谓的业务逻辑可能会于 Presenter 的功能概念上有点混淆。打个比方，假如 usecase 接收到的是一个 json 串，里面包含电影的列表，那么把这个 json 串转换成 json 以及包装成一个 ArrayList，这个应当是由 usecase 来完成。而假如 ArrayList 的 size 为<span style="box-sizing:border-box;color:rgb(42, 161, 152);">0</span>，即列表为空，需要显示缺省图，这个判断和控制应当是由 Presenter 完成的。（上述观点参考自：[Saúl Molinero](http:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//saulmm.github.io/)）</span>
+
+**最后**，就是关于 Data 层，采用的 Repository 模式，建议抽象出接口来，Domain 层需要感知数据是从哪里取出来的。
+##<span style="box-sizing:border-box;color:rgb(42, 161, 152);">5.4</span>. 怎么写 View##
+先区分一下Android View、View、界面的区别
+**Android View**： 指的是继承自android.view.View的Android组件。
+**View**：接口和实现类，接口部分用于由 Presenter 向 View 实现类通信，可以在 Android 组件中实现它。一般最好直接使用 Activity，Fragment 或自定义 View。
+**界面**：界面是面向用户的概念。比如要在手机上进行界面间切换时，我们在代码中可以通过多种方式实现，如 Activity 到 Activity 或一个 Activity 内部的 Fragment/View 进行切换。所以这个概念基于用户的视觉，包括了所有 View 中能看到的东西。
+
+那么该怎么写 View 呢？
+
+在 MVP 中 View 是很薄的一层，里面不应该有业务逻辑，所以一般只提供一些 getter 和 setter 方法，供 Presenter 操作。关于 View，我有如下建议：
+<span style="box-sizing:border-box;color:rgb(42, 161, 152);">1</span>. 简单的页面中直接使用 Activity/Fragment 作为 View 的实现类，然后抽取相应的接口
+<span style="box-sizing:border-box;color:rgb(42, 161, 152);">2</span>. 在一些有 Tab 的页面中，可以使用 Activity + Fragment ( + ViewPager) 的方式来实现，至于 ViewPager，视具体情况而定，当然也可以直接 Activity + ViewPager 或者其他的组合方式
+<span style="box-sizing:border-box;color:rgb(42, 161, 152);">3</span>. 在一些包含很多控件的复杂页面中，那么建议将界面拆分，抽取自定义 View，也就是一个 Activity/Fragment 包含多个 View（实现多个 View 接口）
+
+##<span style="box-sizing:border-box;color:rgb(42, 161, 152);">5.5</span>. 怎么写 Presenter##
+Presenter 是 Android MVP 实现中争论的焦点，上篇中介绍了多种“MVP 框架”，其实都是围绕着**Presenter应该怎么写**。有一篇专门介绍如何设计 Presenter 的文章（[Modeling my presentation layer](http:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//panavtec.me/modeling-presentation-layer)），个人感觉写得不错，这里借鉴了里面不少的观点，感兴趣的童鞋可以去看看。下面进入正题。</span>
+为什么写 Presenter 会这么纠结，我认为主要有以下几个问题：
+<span style="box-sizing:border-box;color:rgb(42, 161, 152);">1</span>. 我们将 Activity/Fragment 视为 View，那么 View 层的编写是简单了，但是这有一个问题，当手机的状态发生改变时（比如旋转手机）我们应该如何处理Presenter对象，那也就是说 Presenter 也存在生命周期，并且还要“手动维护”（别急，这是引起来的，下面会细说）
+<span style="box-sizing:border-box;color:rgb(42, 161, 152);">2</span>. Presenter 中应该没有 Android Framework 的代码，也就是不需要导 Framework 中的包，那么问题来了，页面跳转，显示对话框这些情况在 Presenter 中该如何完成
+<span style="box-sizing:border-box;color:rgb(42, 161, 152);">3</span>. 上面说 View 的时候提到复杂的页面建议通过抽取自定义 View 的方式，将页面拆分，那么这个时候要怎么建立对应的 Presenter 呢
+<span style="box-sizing:border-box;color:rgb(42, 161, 152);">4</span>. View 接口是可以有多个实现的，那我们的 Presenter 该怎么写呢
+
+好，现在我将针对上面这些问题一一给出建议。
+###<span style="box-sizing:border-box;color:rgb(42, 161, 152);">5.5</span>.1. 关于 Presenter 生命周期的问题
+先看图（更详细讲解可以看看这篇文章[Presenter surviving orientation changes with Loaders](https:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//medium.com/@czyrux/presenter-surviving-orientation-changes-with-loaders-6da6d86ffbbf)）</span>
+![Presenter生命周期](http:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//upload-images.jianshu.io/upload_images/1233754-a9a829de0250462f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</span>
+如上图所示，方案<span style="box-sizing:border-box;color:rgb(42, 161, 152);">1</span>和方案<span style="box-sizing:border-box;color:rgb(42, 161, 152);">2</span>都不够优雅（这也是很多“MVP 框架”采用的实现方案），而且并不完善，只适用于一些场景。而方案<span style="box-sizing:border-box;color:rgb(42, 161, 152);">3</span>，让人耳目一新，看了之后不禁想说 Loader 就是为 Presenter 准备的啊。这里我们抓住几个关键点就好了：
+* Loader 是 **Android 框架**中提供的
+* Loader 在手机状态改变时是**不会被销毁**的
+* Loader 的生命周期是是由**系统控制**的，会在Activity/Fragment不再被使用后**由系统回收**
+* Loader 与 Activity/Fragment 的生命周期绑定，所以**事件会自己分发**
+* 每一个 Activity/Fragment 持有**自己的 Loader 对象**的引用
+* 具体怎么用，在 [Antonio Gutierrez](https:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//medium.com/@czyrux) 的文章已经阐述的很明白，我就不再赘述了</span>
+
+&gt; 好吧，我有一点要补充，上面说的方案<span style="box-sizing:border-box;color:rgb(42, 161, 152);">1</span>和方案<span style="box-sizing:border-box;color:rgb(42, 161, 152);">2</span>不是说就没有用了，还是视具体情况而定，如果没有那么多复杂的场景，那么用更简单的方案也未尝不可。能解决问题就好，不要拘泥于这些条条框框...（话说，咱这不是为了追求完美吗，哈哈）
+
+###<span style="box-sizing:border-box;color:rgb(42, 161, 152);">5.5</span>.2. 关于页面跳转和显示Dialog###
+首先说说页面跳转，前一阵子忙着重构公司的项目，发现项目中很多地方使用 startActivity() 和使用 Intent 的 putExtra() 显得很乱；更重要的是从 Intent 中取数据的时候需要格外小心——类型要对应，key 要写对，不然轻则取不到数据，重则 Crash。还有一点，就是当前 Activity/Fragment 必须要知道目标 Activity 的类名，这里耦合的很严重，有没有。当时就在想这是不是应该封装一下啊，或者有更好的解决方案。于是，先在网上搜了一下，知乎上有类似的提问，有人建议写一个 Activity Router（Activity 路由表）。嗯，正好和我的思路类似，那就开干。
+
+我的思路很简单，在 util 包中定义一个 NavigationManager 类，在该类中按照模块使用注释先分好区块（为什么要分区块，去看看我的 “[Android 编码规范](http:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//www.jianshu.com/p/0a984f999592#)”）。然后为每个模块中的 Activity 该如何跳转，定义一个静态方法。</span>
+
+如果不需要传递数据的，那就很简单了，只要传入调用者的 Context，直接 <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> 出 Intent，调用该 Context 的 startActivity() 方法即可。代码如下：
+![导航管理类-跳转系统页面](http:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//upload-images.jianshu.io/upload_images/1233754-1729b46c1b2709d8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</span>
+![导航管理类-跳转不需要传递数据的页面](http:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//upload-images.jianshu.io/upload_images/1233754-e958031db7c46841.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</span>
+
+如果需要传递数据呢？刚才说了，使用 Bundle 或者 putExtra() 这种方式很不优雅，而且容易出错（那好，你个给优雅的来看看，哈哈）。确实，我没想到比较优雅的方案，在这里我提供一个粗糙的方案，仅供大家参考一下，如有你有更好的，那麻烦也和我分享下。
+
+我的方案是这样的，使用序列化对象来传递数据（建议使用 Parcelable，不要偷懒去用 Serializable，这个你懂的）。为需要传递数据的 Activity 新建一个实现了 Parcelable 接口的类，将要传递的字段都定义在该类中。其他页面需要跳转到该 Activity，那么就需要提供这个对象。在目标 Activity 中获取到该对象后，那就方便了，不需要去找对应的 key 来取数据了，反正只要对象中有的，你就能直接使用。
+
+&gt; 注意：这里我建议将序列化对象中的所有成员变量都定义为 <span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> 的，一来，可以减少代码量，主要是为了减少方法数（虽说现在对于方法数超 <span style="box-sizing:border-box;color:rgb(42, 161, 152);">64</span>K 有比较成熟的 dex 分包方案，但是尽量不超不是更好）；二来，通过对象的 <span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> 属性直接读写比使用 getter/setter 速度要快（听说的，没有验证过）。
+
+&gt; 注意：这里建议在全局常量类（没有，那就定义一个，下面会介绍）中定义一个唯一的 INTENT_EXTRA_KEY，往 Bundle 中存和取得时候都用它，也不用去为命名 key 费神（命名从来不简单，不是吗），取的时候也不用思考是用什么 key 存的，简单又可以避免犯错。
+
+具体如下图所示：
+![导航管理类-跳转需要传递数据的页面](http:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//upload-images.jianshu.io/upload_images/1233754-8e7e60b8e75c0696.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</span>
+![导航管理类-传递数据](http:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//upload-images.jianshu.io/upload_images/1233754-cf4de86178b55378.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</span>
+![导航管理类-获取传递的数据](http:<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//upload-images.jianshu.io/upload_images/1233754-6cae34270d70ff30.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</span>
+导航管理类代码如下：
+```java
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//==========逻辑方法==========</span>
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> &lt;T&gt; <span style="box-sizing:border-box;">T <span style="box-sizing:border-box;color:rgb(38, 139, 210);">getParcelableExtra</span><span style="box-sizing:border-box;">(Activity activity)</span> </span>{
+        Parcelable parcelable = activity.getIntent().getParcelableExtra(NavigateManager.PARCELABLE_EXTRA_KEY);
+        activity = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> (T)parcelable;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">overlay</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> flags, Parcelable parcelable)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        setFlags(intent, flags);
+        putParcelableExtra(intent, parcelable);
+        context.startActivity(intent);
+        context = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">overlay</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz, Parcelable parcelable)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        putParcelableExtra(intent, parcelable);
+        context.startActivity(intent);
+        context = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">overlay</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz, Serializable serializable)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        putSerializableExtra(intent, serializable);
+        context.startActivity(intent);
+        context = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">overlay</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        context.startActivity(intent);
+        context = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">forward</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> flags, Parcelable parcelable)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        setFlags(intent, flags);
+        intent.putExtra(PARCELABLE_EXTRA_KEY, parcelable);
+        context.startActivity(intent);
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isActivity(context)) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+        ((Activity)context).finish();
+        context = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">forward</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz, Parcelable parcelable)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        putParcelableExtra(intent, parcelable);
+        context.startActivity(intent);
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isActivity(context)) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+        ((Activity)context).finish();
+        context = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">forward</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz, Serializable serializable)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        putSerializableExtra(intent, serializable);
+        context.startActivity(intent);
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isActivity(context)) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+        ((Activity)context).finish();
+        context = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">forward</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        context.startActivity(intent);
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isActivity(context)) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+        ((Activity)context).finish();
+        context = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">startForResult</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> flags)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isActivity(context)) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+        ((Activity)context).startActivityForResult(intent, flags);
+        context = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">startForResult</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> flags, Parcelable parcelable)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isActivity(context)) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+        putParcelableExtra(intent, parcelable);
+        ((Activity)context).startActivityForResult(intent, flags);
+        context = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">setResult</span><span style="box-sizing:border-box;">(Context context, Class&lt;? extends Activity&gt; targetClazz, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> flags, Parcelable parcelable)</span> </span>{
+        Intent intent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent(context, targetClazz);
+        setFlags(intent, flags);
+        putParcelableExtra(intent, parcelable);
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isActivity(context)) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+        ((Activity)context).setResult(flags, intent);
+        ((Activity)context).finish();
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">isActivity</span><span style="box-sizing:border-box;">(Context context)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (!(context <span style="box-sizing:border-box;color:rgb(133, 153, 0);">instanceof</span> Activity)) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">true</span>;
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">false</span>;
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">setFlags</span><span style="box-sizing:border-box;">(Intent intent, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> flags)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (flags &lt; <span style="box-sizing:border-box;color:rgb(42, 161, 152);">0</span>) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+        intent.setFlags(flags);
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">putParcelableExtra</span><span style="box-sizing:border-box;">(Intent intent, Parcelable parcelable)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (parcelable == <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+        intent.putExtra(PARCELABLE_EXTRA_KEY, parcelable);
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">putSerializableExtra</span><span style="box-sizing:border-box;">(Intent intent, Serializable serializable)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (serializable == <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+        intent.putExtra(PARCELABLE_EXTRA_KEY, serializable);
+    }
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">传递数据用的序列化对象，如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">DishesStockVO</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">implements</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">Parcelable</span> </span>{
+
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> isShowMask; 
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> pageNum; 
+
+    <span style="box-sizing:border-box;">@Override</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">describeContents</span><span style="box-sizing:border-box;">()</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> <span style="box-sizing:border-box;color:rgb(42, 161, 152);">0</span>;
+    }
+
+    <span style="box-sizing:border-box;">@Override</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">writeToParcel</span><span style="box-sizing:border-box;">(Parcel dest, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> flags)</span> </span>{
+        dest.writeByte(isShowMask ? (<span style="box-sizing:border-box;color:rgb(133, 153, 0);">byte</span>) <span style="box-sizing:border-box;color:rgb(42, 161, 152);">1</span> : (<span style="box-sizing:border-box;color:rgb(133, 153, 0);">byte</span>) <span style="box-sizing:border-box;color:rgb(42, 161, 152);">0</span>);
+        dest.writeInt(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">this</span>.pageNum);
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">DishesStockVO</span><span style="box-sizing:border-box;">()</span> </span>{
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">DishesStockVO</span><span style="box-sizing:border-box;">(Parcel in)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">this</span>.isShowMask = in.readByte() != <span style="box-sizing:border-box;color:rgb(42, 161, 152);">0</span>;
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">this</span>.pageNum = in.readInt();
+    }
+
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">final</span> Creator&lt;DishesStockVO&gt; CREATOR = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Creator&lt;DishesStockVO&gt;() {
+        <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> DishesStockVO <span style="box-sizing:border-box;color:rgb(38, 139, 210);">createFromParcel</span><span style="box-sizing:border-box;">(Parcel source)</span> </span>{
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> DishesStockVO(source);
+        }
+
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> DishesStockVO[] newArray(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> size) {
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> DishesStockVO[size];
+        }
+    };
+
+    <span style="box-sizing:border-box;">@Override</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> String <span style="box-sizing:border-box;color:rgb(38, 139, 210);">toString</span><span style="box-sizing:border-box;">()</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;DishesStockVO{&quot;</span> +
+                <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;isShowMask=&quot;</span> + isShowMask +
+                <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;, pageNum=&quot;</span> + pageNum +
+                <span style="box-sizing:border-box;color:rgb(42, 161, 152);">'}'</span>;
+    }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">好像，还没入正题。这里再多说一句，beautifulSoup 写了一篇文章，说的就是 Android 路由表框架的，可以去看看——“<a href="https://link.jianshu.com/?t=http://sixwolf.net/blog/2016/03/23/Android%E8%B7%AF%E7%94%B1%E6%A1%86%E6%9E%B6%E8%AE%BE%E8%AE%A1/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Android路由框架设计与实现</a>”。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">好了，回到主题，在 Presenter 中该如何处理页面跳转的问题。在这里我建议简单处理，在 View Interface 中定义好接口（方法），在 View 的实现类中去处理（本来就是它的责任，不是吗？）。在 View 的实现类中，使用 NavigationManager 工具类跳转，达到解耦的目的。如下图所示：</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:625px;max-height:282px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:45.12%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/625.png" type="image/png" data-filename="625.png" height="282" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="625"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">对页面跳转的处理</div>
+</div><br style="box-sizing:border-box;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">显示对话框<br style="box-sizing:border-box;"/>
+我在这里采用和页面跳转的处理类似的方案，这也是 View 的责任，所以让 View 自己去完成。这里建议每个模块都定义一个相应的 XxxDialogManager 类，来管理该模块所有的弹窗，当然对于弹窗本来就不多的，那就直接在 util 包中定义一个 DialogManager 类就好了。如下图：</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:625px;max-height:283px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:45.28%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/625 [1].png" type="image/png" data-filename="625.png" height="283" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="625"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">对显示对话框的处理</div>
+</div>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.5.3. 一个页面多个View的问题###</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">对于复杂页面，一般建议拆成多个自定义 View，那么这就引出一个问题，这时候是用一个 Presenter 好，还是定义多个 Presenter 好呢？我的建议是，每个 View Interface 对应一个 Presenter，如下图所示：</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:646px;max-height:294px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:45.51%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/646.png" type="image/png" data-filename="646.png" height="294" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="646"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">一个页面多个 View 处理</div>
+</div>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.5.4. 一个View有两个实现类的问题###</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">有些时候会遇到这样的问题，只是展示上有差别，两个页面上所有的操作都是一样的，这就意味着 View Interface 是一样的，只是有两个实现类。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">这个问题该怎么处理，或许可以继续使用同样的Presenter并在另一个Android组件中实现View接口。不过这个界面似乎有更多的功能，那要不要把这些新功能加进这个Presenter呢？这个视情况而定，有多种方案：一是将Presenter整合负责不同操作，二是写两个Presenter分别负责操作和展示，三是写一个Presenter包含所有操作（在两个View相似时）。记住没有完美的解决方案，编程的过程就是让步的过程。（参考自：<a href="https://link.jianshu.com/?t=https://github.com/PaNaVTEC" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Christian Panadero PaNaVTEC</a> 的 <a href="https://link.jianshu.com/?t=http://panavtec.me/modeling-presentation-layer" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Modeling my presentation layer</a>）<br style="box-sizing:border-box;"/>
+如下图所示：<br style="box-sizing:border-box;"/>
+</p><div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:301px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:27.54%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/700 [5].png" type="image/png" data-filename="700.png" height="193" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">一个 View 多个实现类处理</div>
+</div><p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"></p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.6. 关于 RestAPI##</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">一般项目当中会用到很多和服务器端通信用的接口，这里建议在每个模块中都建立一个 api 包，在该包下来统一处理该模块下所有的 RestAPI。<br style="box-sizing:border-box;"/>
+如下图所示：</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:300px;max-height:281px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:93.67%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/300.png" type="image/png" data-filename="300.png" height="281" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="300"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">统一管理 RestAPI</div>
+</div><br style="box-sizing:border-box;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">对于网络请求之类需要异步处理的情况，一般都需要传入一个回调接口，来获取异步处理的结果。对于这种情况，我建议参考 onClick(View v) {} 的写法。那就是为每一个请求编一个号（使用 int 值），我称之为 taskId，可以将该编号定义在各个模块的常量类中。然后在回调接口的实现类中，可以在回调方法中根据 taskId 来统一处理（一般是在这里分发下去，分别调用不同的方法）。<br style="box-sizing:border-box;"/>
+如下图所示：</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:604px;max-height:234px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:38.74%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/604.png" type="image/png" data-filename="604.png" height="234" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="604"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">定义 taskId</div>
+</div><br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:625px;max-height:429px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:68.64%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/625 [2].png" type="image/png" data-filename="625.png" height="429" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="625"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">异步任务回调处理</div>
+</div>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.6. 关于项目中的常量管理##</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">Android 中不推荐使用枚举，推荐使用常量，我想说说项目当中我一般是怎么管理常量的。<br style="box-sizing:border-box;"/>
+灵感来自 R.java 类，这是由项目构建工具自动生成并维护的，可以进去看看，里面是一堆的静态内部类，如下图：</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:303px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:38.9%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/700 [6].png" type="image/png" data-filename="700.png" height="272" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">Android 中的 R 文件</div>
+</div><br style="box-sizing:border-box;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">看到这，可能大家都猜到了，那就是定义一个类来管理全局的常量数据，我一般喜欢命名为 C.java。这里有一点要注意，我们的项目是按模块划分的包，所以会有一些是该模块单独使用的常量，那么这些最好不要写到全局常量类中，否则会导致 C 类膨胀，不利于管理，最好是将这些常量定义到各个模块下面。如下图所示：</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:394px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:52.32%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android MVP 详解（下）_files/700 [7].png" type="image/png" data-filename="700.png" height="366" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">全局常量 C 类</div>
+</div>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.7. 关于第三方库##</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">Android 开发中不可避免要导入很多第三方库，这里我想谈谈我对第三方库的一些看法。关于第三方库的推荐我就不做介绍了，很多专门说这方面的文章。</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.7.1. 挑选第三方库的一些建议###</h3>
+<ol style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">项目中确实需要（这不是废话吗？用不着，我要它干嘛？呵呵，建议不要为了解决一个小小的问题导入一个大而全的库）</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">使用的人要多（大家都在用的一般更新会比较快，出现问题解决方案也多）</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">效率和体量的权衡（如果效率没有太大影响的情况下，我一般建议选择体量小点的，如，Gson vs Jackson，Gson 胜出；还是 65K 的问题）</li>
+</ol>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.7.2. 使用第三方库尽量二次封装###</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">为什么要二次封装？<br style="box-sizing:border-box;"/>
+为了方便更换，说得稍微专业点为了降低耦合。<br style="box-sizing:border-box;"/>
+有很多原因可能需要你替换项目中的第三方库，这时候如果你是经过二次封装的，那么很简单，只需要在封装类中修改一下就可以了，完全不需要去全局检索代码。<br style="box-sizing:border-box;"/>
+我就遇到过几个替换第三方库的事情：</p>
+<ol style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">替换项目中的统计埋点工具</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">替换网络框架</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">替换日志工具</li>
+</ol>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">那该怎么封装呢？<br style="box-sizing:border-box;"/>
+一般的，如果是一些第三方的工具类，都会提供一些静态方法，那么这个就简单了，直接写一个工具类，提供类似的静态方法即可（就是用静态工厂模式）。<br style="box-sizing:border-box;"/>
+如下代码所示，这是对系统 Log 的简单封装：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(147, 161, 161);">/**
+ * Description: 企业中通用的Log管理
+ * 开发阶段LOGLEVEL = 6
+ * 发布阶段LOGLEVEL = -1
+ */</span>
+
+<span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">Logger</span> </span>{
+
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> LOGLEVEL = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">6</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> VERBOSE = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">1</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> DEBUG = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">2</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> INFO = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">3</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> WARN = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">4</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> ERROR = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">5</span>;
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">setDevelopMode</span><span style="box-sizing:border-box;">(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> flag)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(flag) {
+            LOGLEVEL = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">6</span>;
+        } <span style="box-sizing:border-box;color:rgb(133, 153, 0);">else</span> {
+            LOGLEVEL = -<span style="box-sizing:border-box;color:rgb(42, 161, 152);">1</span>;
+        }
+    }
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">v</span><span style="box-sizing:border-box;">(String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; VERBOSE &amp;&amp; !TextUtils.isEmpty(msg)) {
+            Log.v(tag, msg);
+        }
+    }
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">d</span><span style="box-sizing:border-box;">(String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; DEBUG &amp;&amp; !TextUtils.isEmpty(msg)) {
+            Log.d(tag, msg);
+        }
+    }
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">i</span><span style="box-sizing:border-box;">(String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; INFO &amp;&amp; !TextUtils.isEmpty(msg)) {
+            Log.i(tag, msg);
+        }
+    }
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">w</span><span style="box-sizing:border-box;">(String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; WARN &amp;&amp; !TextUtils.isEmpty(msg)) {
+            Log.w(tag, msg);
+        }
+    }
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">e</span><span style="box-sizing:border-box;">(String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; ERROR &amp;&amp; !TextUtils.isEmpty(msg)) {
+            Log.e(tag, msg);
+        }
+    }
+    
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">现在如果想替换为 <a href="https://link.jianshu.com/?t=https://github.com/orhanobut" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">orhanobut</a> 的 <a href="https://link.jianshu.com/?t=https://github.com/orhanobut/logger" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Logger</a>，那很简单，代码如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(147, 161, 161);">/**
+ * Description: 通用的Log管理工具类
+ * 开发阶段LOGLEVEL = 6
+ * 发布阶段LOGLEVEL = -1
+ */</span>
+
+<span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">Logger</span> </span>{
+
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> String mTag = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;MVPBestPractice&quot;</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> LOGLEVEL = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">6</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> VERBOSE = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">1</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> DEBUG = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">2</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> INFO = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">3</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> WARN = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">4</span>;
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> ERROR = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">5</span>;
+
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> {
+        com.orhanobut.logger.Logger
+                .init(mTag)                     <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// default PRETTYLOGGER or use just init()</span>
+                .setMethodCount(<span style="box-sizing:border-box;color:rgb(42, 161, 152);">3</span>)              <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// default 2</span>
+                .hideThreadInfo()               <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// default shown</span>
+                .setLogLevel(LogLevel.FULL);    <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// default LogLevel.FULL</span>
+    }
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">setDevelopMode</span><span style="box-sizing:border-box;">(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> flag)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(flag) {
+            LOGLEVEL = <span style="box-sizing:border-box;color:rgb(42, 161, 152);">6</span>;
+            com.orhanobut.logger.Logger.init().setLogLevel(LogLevel.FULL);
+        } <span style="box-sizing:border-box;color:rgb(133, 153, 0);">else</span> {
+            LOGLEVEL = -<span style="box-sizing:border-box;color:rgb(42, 161, 152);">1</span>;
+            com.orhanobut.logger.Logger.init().setLogLevel(LogLevel.NONE);
+        }
+    }
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">v</span><span style="box-sizing:border-box;">(@NonNull String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; VERBOSE &amp;&amp; !TextUtils.isEmpty(msg)) {
+            tag = checkTag(tag);
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.v(tag, msg);</span>
+            com.orhanobut.logger.Logger.t(tag).v(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">d</span><span style="box-sizing:border-box;">(@NonNull String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; DEBUG &amp;&amp; !TextUtils.isEmpty(msg)) {
+            tag = checkTag(tag);
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.d(tag, msg);</span>
+            com.orhanobut.logger.Logger.t(tag).d(msg);
+        }
+    }
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">i</span><span style="box-sizing:border-box;">(@NonNull String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; INFO &amp;&amp; !TextUtils.isEmpty(msg)) {
+            tag = checkTag(tag);
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.i(tag, msg);</span>
+            com.orhanobut.logger.Logger.t(tag).i(msg);
+        }
+    }
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">w</span><span style="box-sizing:border-box;">(@NonNull String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; WARN &amp;&amp; !TextUtils.isEmpty(msg)) {
+            tag = checkTag(tag);
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.w(tag, msg);</span>
+            com.orhanobut.logger.Logger.t(tag).w(msg);
+        }
+    }
+    
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">e</span><span style="box-sizing:border-box;">(@NonNull String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; ERROR &amp;&amp; !TextUtils.isEmpty(msg)) {
+            tag = checkTag(tag);
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.e(tag, msg);</span>
+            com.orhanobut.logger.Logger.t(tag).e(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">e</span><span style="box-sizing:border-box;">(@NonNull String tag, Exception e)</span> </span>{
+        tag = checkTag(tag);
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; ERROR) {
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.e(tag, e==null ? &quot;未知错误&quot; : e.getMessage());</span>
+            com.orhanobut.logger.Logger.t(tag).e(e == <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span> ? <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;未知错误&quot;</span> : e.getMessage());
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">v</span><span style="box-sizing:border-box;">(String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; VERBOSE &amp;&amp; !TextUtils.isEmpty(msg)) {
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.v(mTag, msg);</span>
+            com.orhanobut.logger.Logger.v(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">d</span><span style="box-sizing:border-box;">(String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; DEBUG &amp;&amp; !TextUtils.isEmpty(msg)) {
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.d(mTag, msg);</span>
+            com.orhanobut.logger.Logger.d(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">i</span><span style="box-sizing:border-box;">(String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; INFO &amp;&amp; !TextUtils.isEmpty(msg)) {
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.i(mTag, msg);</span>
+            com.orhanobut.logger.Logger.i(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">w</span><span style="box-sizing:border-box;">(String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; WARN &amp;&amp; !TextUtils.isEmpty(msg)) {
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.w(mTag, msg);</span>
+            com.orhanobut.logger.Logger.v(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">e</span><span style="box-sizing:border-box;">(String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; ERROR &amp;&amp; !TextUtils.isEmpty(msg)) {
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.e(mTag, msg);</span>
+            com.orhanobut.logger.Logger.e(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">e</span><span style="box-sizing:border-box;">(Exception e)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; ERROR) {
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.e(mTag, e==null ? &quot;未知错误&quot; : e.getMessage());</span>
+            com.orhanobut.logger.Logger.e(e == <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span> ? <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;未知错误&quot;</span> : e.getMessage());
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">wtf</span><span style="box-sizing:border-box;">(@NonNull String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; INFO &amp;&amp; !TextUtils.isEmpty(msg)) {
+            tag = checkTag(tag);
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.i(tag, msg);</span>
+            com.orhanobut.logger.Logger.t(tag).wtf(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">json</span><span style="box-sizing:border-box;">(@NonNull String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; INFO &amp;&amp; !TextUtils.isEmpty(msg)) {
+            tag = checkTag(tag);
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.i(tag, msg);</span>
+            com.orhanobut.logger.Logger.t(tag).json(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">xml</span><span style="box-sizing:border-box;">(@NonNull String tag, String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; INFO &amp;&amp; !TextUtils.isEmpty(msg)) {
+            tag = checkTag(tag);
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.i(tag, msg);</span>
+            com.orhanobut.logger.Logger.t(tag).xml(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">wtf</span><span style="box-sizing:border-box;">(String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; INFO &amp;&amp; !TextUtils.isEmpty(msg)) {
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.i(tag, msg);</span>
+            com.orhanobut.logger.Logger.wtf(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">json</span><span style="box-sizing:border-box;">(String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; INFO &amp;&amp; !TextUtils.isEmpty(msg)) {
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.i(tag, msg);</span>
+            com.orhanobut.logger.Logger.json(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">xml</span><span style="box-sizing:border-box;">(String msg)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span>(LOGLEVEL &gt; INFO &amp;&amp; !TextUtils.isEmpty(msg)) {
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//          Log.i(tag, msg);</span>
+            com.orhanobut.logger.Logger.xml(msg);
+        }
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> String <span style="box-sizing:border-box;color:rgb(38, 139, 210);">checkTag</span><span style="box-sizing:border-box;">(String tag)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (TextUtils.isEmpty(tag)) {
+            tag = mTag;
+        }
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> tag;
+    }
+
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">这里是最简单的一些替换，如果是替换网络框架，图片加载框架之类的，可能要多费点心思去封装一下，这里可以参考“门面模式”。（在这里就不展开来讲如何对第三库进行二次封装了，以后有时间专门写个帖子）</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.7.3. 建立单独的 Module 管理所有的第三库###</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">原因前面已经说过了，而且操作也很简单。网上有不少拆分 Gradle 文件的方法，讲的都很不错。那我们就先从最简单的做起，赶快行动起来，把项目中用到的第三方库都集中到 Library Module 中来吧。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.8. MVP vs MVVM##</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">关于 MVP 和 MVVM 我只想说一句，它们并不是相斥的。具体它们是怎么不相斥的，<a href="https://link.jianshu.com/?t=http://blog.zhaiyifan.cn/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">markzhai</a> 的这篇文章“<a href="https://link.jianshu.com/?t=http://blog.zhaiyifan.cn/2016/03/16/android-new-project-from-0-p3/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">MVPVM in Action, 谁告诉你MVP和MVVM是互斥的</a>”说得很详细。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.9. Code##</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">抱歉，要食言了，AndroidStudio 出了点问题，代码还没写完，代码估计要这周末才能同步到 <a href="https://link.jianshu.com/?t=https://github.com/DIY-green/MVPBestPractice" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">GitHub</a> 上了，目前只上传了一个空框架。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">5.10. 小结##</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">历时三天的 MVP 总结，总算要告一段落了。前期断断续续地花了将近一周左右零散的时间去调研 MVP，直到正式开始码字的时候才发现准备的还不够。看了很多文章，有观点一致的，也有观点很不一致的。最关键的是，自己对于 MVP 还没有比较深刻的认知，所以在各种观点中取舍花了很长时间。<br style="box-sizing:border-box;"/>
+这算得上是我第一次真正意义上的写技术性的文章，说来惭愧，工作这么长时间了，现在才开始动笔。<br style="box-sizing:border-box;"/>
+总体来说，写得并不尽如人意，套一句老话——革命尚未成功，同志仍需努力。这算是一次尝试，希望以后会越写越顺畅。在这里给各位坚持看到此处的看官们问好了，祝大家一同进步。（欢迎大家围观我的<a href="https://link.jianshu.com/?t=https://github.com/DIY-green" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">GitHub</a>，周末更新，会渐渐提交更多有用的代码的）</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">6. 进阶与不足##</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">鉴于本人能力有限，还有很多想写的和该写的内容没有写出来，很多地方表达的也不是很清晰。下面说一说我觉得还有哪些不足和下一步要进阶的方向。</p>
+<ol style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">说好的“show me the code”，代码呢？（再次抱歉了）</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">上篇当中关于各种 Presenter 方案只是做了简单的罗列，并没有仔细分析各个方案的优点和不足</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">没有形成自己的框架（呵呵，好高骛远了，但是梦想还是要有的...）</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">没有单元测试（项目代码都还没有呢，提倡 TDD 不是，呵呵）</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">很多细节没有介绍清楚（如关于Model、Domain、Entity 等概念不是很清晰）</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">很多引用的观点没有指明出处（如有侵权，马上删除）<br style="box-sizing:border-box;"/>
+......</li>
+</ol>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">最后想说一句，没有完美的架构，没有完美的框架，赶紧编码吧！</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">7. 附录##</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><a href="https://link.jianshu.com/?t=http://pan.baidu.com/s/1bETicm" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Android MVP 总结资料汇总</a><br style="box-sizing:border-box;"/>
+附上我的思维导图：<br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=https://github.com/DIY-green/MVPBestPractice/blob/master/doc/MVPBestPractice.mmap" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">MVPBestPractice.mmap</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=https://github.com/DIY-green/MVPBestPractice/blob/master/doc/MVP%E6%80%BB%E7%BB%93.mmap" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">MVP总结.mmap</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=https://github.com/DIY-green/MVPBestPractice/blob/master/doc/Presenter%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.mmap" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Presenter生命周期.mmap</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=https://github.com/DIY-green/MVPBestPractice/blob/master/doc/%E6%80%8E%E4%B9%88%E5%86%99Presenter.mmap" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">怎么写Presenter.mmap</a></p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">参考：<br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=https://segmentfault.com/a/1190000003871577" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">https://segmentfault.com/a/1190000003871577</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://www.open-open.com/lib/view/open1450008180500.html" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://www.open-open.com/lib/view/open1450008180500.html</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://www.myexception.cn/android/2004698.html" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://www.myexception.cn/android/2004698.html</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://gold.xitu.io/entry/56cbf38771cfe40054eb3a34" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://gold.xitu.io/entry/56cbf38771cfe40054eb3a34</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://kb.cnblogs.com/page/531834/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://kb.cnblogs.com/page/531834/</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://blog.zhaiyifan.cn/2016/03/16/android-new-project-from-0-p3/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://blog.zhaiyifan.cn/2016/03/16/android-new-project-from-0-p3/</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://www.open-open.com/lib/view/open1446377609317.html" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://www.open-open.com/lib/view/open1446377609317.html</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://my.oschina.net/mengshuai/blog/541314?fromerr=3J2TdbiW" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://my.oschina.net/mengshuai/blog/541314?fromerr=3J2TdbiW</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://gold.xitu.io/entry/56fcf1f75bbb50004d872e74" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://gold.xitu.io/entry/56fcf1f75bbb50004d872e74</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=https://github.com/googlesamples/android-architecture/tree/todo-mvp-loaders/todoapp" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">https://github.com/googlesamples/android-architecture/tree/todo-mvp-loaders/todoapp</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://blog.zhaiyifan.cn/2016/03/16/android-new-project-from-0-p3/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://blog.zhaiyifan.cn/2016/03/16/android-new-project-from-0-p3/</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://android.jobbole.com/82375/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://android.jobbole.com/82375/</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://blog.csdn.net/weizhiai12/article/details/47904135" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://blog.csdn.net/weizhiai12/article/details/47904135</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://android.jobbole.com/82051/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://android.jobbole.com/82051/</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://android.jobbole.com/81153/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://android.jobbole.com/81153/</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://blog.chengdazhi.com/index.php/115" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://blog.chengdazhi.com/index.php/115</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://blog.chengdazhi.com/index.php/131" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://blog.chengdazhi.com/index.php/131</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://www.codeceo.com/article/android-mvp-practice.html" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://www.codeceo.com/article/android-mvp-practice.html</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://www.wtoutiao.com/p/h01nn2.html" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://www.wtoutiao.com/p/h01nn2.html</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://blog.jobbole.com/71209/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://blog.jobbole.com/71209/</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://www.cnblogs.com/tianzhijiexian/p/4393722.html" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://www.cnblogs.com/tianzhijiexian/p/4393722.html</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=https://github.com/xitu/gold-miner/blob/master/TODO/things-i-wish-i-knew-before-i-wrote-my-first-android-app.md" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">https://github.com/xitu/gold-miner/blob/master/TODO/things-i-wish-i-knew-before-i-wrote-my-first-android-app.md</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://gold.xitu.io/entry/56cd79c12e958a69f944984c" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://gold.xitu.io/entry/56cd79c12e958a69f944984c</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://blog.yongfengzhang.com/cn/blog/write-code-that-is-easy-to-delete-not-easy-to/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://blog.yongfengzhang.com/cn/blog/write-code-that-is-easy-to-delete-not-easy-to/</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://kb.cnblogs.com/page/533808/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://kb.cnblogs.com/page/533808/</a></p>
+
+        </div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

@@ -1,0 +1,172 @@
+<html>
+<head>
+  <title>实战解析Android架构设计原则-CSDN.NET</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2136"/>
+<h1>实战解析Android架构设计原则-CSDN.NET</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>实战解析Android架构设计原则</h1><div><div></div></div></div>
+				
+				
+				<div>
+					
+				<strong>摘要：</strong>好的软件设计必须能够帮助开发者发展和扩充解决方案，保持代码清晰健壮，并且可扩展，易于维护，而不必每件事都重写代码。面对软件存在的问题，必须遵守SOLID原则，不要过度工程化，尽可能降低框架中模块的依赖性。				</div>
+				
+				<p><i>CSDN移动将持续为您优选移动开发的精华内容，共同探讨移动开发的技术热点话题，涵盖移动应用、开发工具、移动游戏及引擎、智能硬件、物联网等方方面面。如果您想投稿、参与内容翻译工作，或寻求近匠报道，请发送邮件至tangxy#csdn.net（请把#改成@）。 </i>
+    </p>
+<hr/>
+<p>嘿！经过一段时间收集了大量反馈意见后，我认为应该来说说这个话题了。我会在这里给出我认为构建现代移动应用（Android）的好方法，这会是另一番体味。</p>
+<p>开始之前，假设你已经阅读过我之前撰写的文章“
+    <a href="http://fernandocejas.com/2014/09/03/architecting-android-the-clean-way/" target="_blank">Architecting Android…The clean way</a>?”。如果还没有阅读过，为了更好地理解这篇文章，应借此机会读一读：</p>
+<p>
+    </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d5978722f5d_middle.jpg.png" type="image/png" data-filename="55d5978722f5d_middle.jpg.png" height="374" width="550"/></div>
+    <p></p>
+    
+    
+    <p>演变意味着一个循序渐进的过程，由某些状态改变到另一种不同的状态，且新状态通常更好或更复杂。</p>
+    <p>照这么一说，软件是随着时间发展和改变的，是架构上的发展和改变。实际上，好的软件设计必须能够帮助我们发展和扩充解决方案，保持其健壮性，而不必每件事都重写代码（虽然在某些情况下重写的方法更好，但是那是另一篇文章的话题，所以相信我，让我们聚焦在前面所讨论的话题上）。</p>
+    <p>在这篇文章中，我将讲解我认为是必需的和重要的要点，为了保持基本代码条理清晰，要记住下面这张图片，我们开始吧！</p>
+    <p>
+        </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d5980b2c496_middle.jpg" type="image/jpeg" data-filename="55d5980b2c496_middle.jpg" height="239" width="550"/></div>
+        <p></p>
+    <h2><b>响应式方法：RxJava</b></h2>
+    <p>因为已经<a href="http://blog.danlew.net/2014/09/15/grokking-rxjava-part-1/" target="_blank">有很多这方面的文章</a>，还有这方面<a href="https://speakerdeck.com/benjchristensen" target="_blank">做得很好、令人景仰的人</a>，所以我不打算在这里讨论RxJava的好处（<a href="https://github.com/ReactiveX/RxJava/wiki/" target="_blank">我假设您已经对它有所体验了</a>）。但是，我将指出在Android应用程序开发方面的有趣之处，以及如何帮助我形成第一个清晰的架构的方法。</p>
+    <p>首先，我选择了一种响应式的模式通过转换usecase（在这个清晰的架构命名规则中，其被称为interactor）返回Observables&lt;T&gt;，表示所有底层都遵循这一链条，也返回Observables&lt;T&gt;
+        。</p>
+    <p>
+        </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d598792f9c5_middle.jpg.png" type="image/png" data-filename="55d598792f9c5_middle.jpg.png" height="306" width="550"/></div>
+        <p></p>
+    <p>正如你所看到的，所有用例继承这个抽象类，并实现抽象方法buildUseCaseObservable()。该方法将建立一个Observables&lt;T&gt;，它承担了繁重的工作，还要返回所需的数据。</p>
+    <p>需要强调是，在execute()方法中，要确保Observables&lt;T&gt; 是在独立线程执行，因此，要尽可能减轻阻止android主线程的程度。其结果就是会通过android主线程调度程序将主线程压入线程队列的尾部（push
+        back）。</p>
+    <p>到目前为止，我们的Observables&lt;T&gt;启动并且运行了。但是，正如你所知，必须要观察它所发出的数据序列。要做到这一点，我改进了presenters（MVP模式表现层的一部分），把它变成了观察者（Subscribers），它通过用例对发出的项目做出“react”，以便更新用户界面。</p>
+    <p>观察者是这样的：</p>
+    <p>
+        </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d598acd86b5_middle.jpg.png" type="image/png" data-filename="55d598acd86b5_middle.jpg.png" height="184" width="550"/></div>
+        <p></p>
+    <p>每个观察者都是每个presenter的内部类，并实现了一个Defaultsubscriber&lt;T&gt;接口，创建了基本的默认错误处理。</p>
+    <p>将所有的片段放在一起后，通过下面的图，你可以获得完整的概念：</p>
+    <p>
+        </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d598f470280.jpg" type="image/jpeg" data-filename="55d598f470280.jpg" height="393" width="522"/></div>
+        <p></p>
+    <p>让我们列举一些摆脱基于RxJava方法的好处：</p>
+    <p>在观察者（Subscribers）与被观察者（Observables）之间去耦合：更加易于维护和测试。</p>
+    <ul>
+        <li>简化异步任务：如果要求多个异步执行时，如果需要一个以上异步执行的级别，Java的thread和future的操作和同步比较复杂，因此通过使用调度程序，我们可以很方便地（不需要额外工作）在后台与主线程之间跳转，特别是当我们需要更新UI时。还可以避免“回调的坑”——
+            它使我们代码可读性差，且难以跟进。</li>
+        <li>数据转换/组成：在不影响客户端情况下，我们能够整合多个Observables&lt;T&gt;，使解决方案更灵活。</li>
+        <li>错误处理：在任何Observables&lt;T&gt;内发生错误时，就向消费者发出信号。</li>
+    </ul>
+    <p>从我的角度看有一点不足，甚至要为此需要付出代价，那些还不熟悉概念的开发人员还是要遵循学习曲线。但你从中得到了极有价值的东西。为了成功而reactive起来吧！</p>
+    <h2>依赖注入：Dagger 2</h2>
+    <p>关于依赖注入，<a href="http://fernandocejas.com/2015/04/11/tasting-dagger-2-on-android/" target="_blank">因为我已经写了一篇完整的文章</a>，我不想说太多。强烈建议你阅读它，这样我们就可以接着说下面的内容了。</p>
+    <p>值得一提的是，通过实现一个像Dagger 2那样的依赖注入框架我们能够获得：</p>
+    <ul>
+        <li>组件重用，因为依赖的对象可以在外部注入和配置。</li>
+        <li>当注入对象作为协作者（collaborators）时，由于对象的实例存在于在一个隔离和解耦地方，这样在我们的代码库中，就不需要做很多的改变，就可以改变任何对象的实现。</li>
+        <li>依赖可以注入到一个组件：这些将这些模拟实现的依赖对象注入成为可能，这使得测试更容易。</li>
+    </ul>
+    <h2><b>Lambda表达式：Retrolambda</b></h2>
+    <p>没有人会抱怨在代码中使用Java 8的lambada表达式，甚至在简化并摆脱了很多样板代码以后，使用得更多，如你看到这段代码：</p>
+    <p>
+        </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d59aacc231a.jpg.png" type="image/png" data-filename="55d59aacc231a.jpg.png" height="83" width="576"/></div>
+        <p></p>
+        <p>然而，我百感交集，为什么呢？我们曾在<a href="https://developers.soundcloud.com/blog/" target="_blank">@SoundCloud</a>讨论<a href="https://github.com/orfjackal/retrolambda" target="_blank">Retrolambada</a>，主要是是否使用它，结果是：</p>
+        <p> 1. 赞成的理由：</p>
+        <ul>
+            <li>Lambda表达式和方法引用</li>
+            <li>“try-with-resources”语句</li>
+            <li>使用karma做开发</li>
+        </ul>
+        <p>2. 反对的理由： </p>
+        <ul>
+            <li>Java 8 API的意外使用</li>
+            <li>十分令人反感的第三方库</li>
+            <li>要与Android一起使用的第三方插件Gradle</li>
+        </ul>
+        <p>最后，我们认定它不能为我们解决任何问题：你的代码看起来很好且具有可读性，但这不是我们与之共存的东西，由于现在所有功能最强大的IDE都包含代码折叠式选项，这就涵盖这一需求了，至少是一个可接受的方式。</p>
+        <p>说实话，尽管我可能会在业余时间的项目中使用它，但在这里使用它的主要原因是尝试和体验Android中Lambda表达式。是否使用它由你自己决定。在这里我只是展示我的视野。当然，对于这样一项了不起的工作，这个<a href="https://github.com/orfjackal" target="_blank">库</a>的作者值得称赞。</p>
+        
+        <p>在测试方面，与示例的第一个版本相关的部分变化不大：</p>
+        <ul>
+            <li>表现层：用Espresso 2和Android Instrumentation测试框架测试UI。</li>
+            <li>领域层：JUnit + Mockito —— 它是Java的标准模块。</li>
+            <li>数据层：将测试组合换成了Robolectric 3 + JUnit + Mockito。这一层的测试曾经存在于单独的Android模块。由于当时（当前示例程序的第一个版本）没有内置单元测试的支持，也没有建立像robolectric那样的框架，该框架比较复杂，需要一群黑客的帮忙才能让其正常工作。</li>
+        </ul>
+        <p>幸运的是，这都是过去的一部分，而现在所有都是即刻可用，这样我可以把它们重新放到数据模块内，专门为其默认的测试路径：src/test/java。</p>
+        
+        <p>我认为一个好的架构关键因素之一是代码/包的组织：程序员浏览源代码遇到的第一件事情就是包结构。一切从它流出，一切依赖于它。</p>
+        <p>我们能够辨别出将应用程序封装进入包（package）的2个路径：</p>
+        <ul>
+            <li>按层分包：每一个包（package）中包含的项通常不是彼此密切相关的。这样包的内聚性低、模块化程度低，包之间偶合度高。因此，编辑某个特性要编辑来自不同包的文件。另外，单次操作几乎不可能删除掉某个功能特性。</li>
+            <li>按特性分包：用包来体现特性集。把所有相关某一特性（且仅特性相关）的项放入一个包中。这样包的内聚性高，模块化程度高，包之间偶合度低。紧密相关的项放在一起。它们没有分散到整个应用程序中。</li>
+        </ul>
+        <p>我的建议是去掉按特性分包，会带来的好处有以下主要几点：</p>
+        <ul>
+            <li>模块化程度更高</li>
+            <li>代码导航更容易</li>
+            <li>功能特性的作用域范围最小化了</li>
+        </ul>
+        <p>如果与功能特性团队一起工作（就像我们在@SoundCloud的所作所为），也会是非常有趣的事情。代码的所有权会更容易组织，也更容易被模块化。在许多开发人员共用一个代码库的成长型组织当中，这是一种成功。</p>
+        <p>
+            </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d59a7a729ca_middle.jpg.png" type="image/png" data-filename="55d59a7a729ca_middle.jpg.png" height="600" width="466"/></div>
+            <p></p>
+            <p>如你所见，我的方法看起来就像按层分包：这里我可能会犯错（例如，在“users”下组织一切），但在这种情况下我会原谅自己，因为这是个以学习为目的的例子，而且我想显示的是清晰架构方法的主要概念。领会其意，切勿盲目模仿:-)。</p>
+            <h2>还需要做的事：组织构建逻辑</h2>
+            <p>我们都知道，房子是从地基上建立起来的。软件开发也是这样，我想说的是，从我的角度来看，构建系统（及其组织）是软件架构的重要部分。</p>
+            <p>在Android平台上，我们采用Gradle，它事实上是一种与平台无关的构建系统，功能非常强大。这里的想法是通过一些提示和技巧，让你组织构建应用程序时能够得到简化。</p>
+            <ul>
+                <li>在单独的gradle构建文件中按功能对内容进行分组
+                </li>
+            </ul>
+            <p>
+                </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d59af99e57a.jpg.png" type="image/png" data-filename="55d59af99e57a.jpg.png" height="300" width="283"/></div>
+                <p></p>
+            <p>
+                </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d59b1a9b921_middle.jpg.png" type="image/png" data-filename="55d59b1a9b921_middle.jpg.png" height="382" width="550"/></div>
+            <p></p>
+            <p>因此，你可以用“apply from: ‘buildsystem/ci.gradle’”插入到任何Gradle建立的文件中进行配置。不要把所有都放置在一个build.gradle文件中，否则就是去创建一个怪物，这是教训。</p>
+            <ul>
+                <li>创建依赖关系图</li>
+            </ul>
+            <p>
+                </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d59b81e024a_middle.jpg.png" type="image/png" data-filename="55d59b81e024a_middle.jpg.png" height="427" width="550"/></div>
+            <p></p>
+            <p>
+                </p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d59bc8a5cf2_middle.jpg.png" type="image/png" data-filename="55d59bc8a5cf2_middle.jpg.png" height="223" width="550"/></div> <p></p>
+            <p>如果想在项目的不同模块间重用相同的组件版本，这很好；否则就要在不同的模块间使用不同的版本的组件依赖。另外一点，你是在同一个地方控制依赖关系，像组件版本发生冲突这样的事情一眼就能看出来。</p>
+            
+            <p>到目前为止讲了那么多，一句话，要记住没有灵丹妙药。但好的软件架构会帮助代码保持清晰和健壮，还可以保持代码的可扩展性，易于维护。</p>
+            <p>我想指出一些事情。面对软件存在的问题，要报以本应当解决的态度：</p>
+            <ul>
+                <li>遵守SOLID原则</li>
+                <li>不要过度思考（不过度工程化）</li>
+                
+                <li>尽可能降低（Android）框架中模块的依赖性</li>
+            </ul>
+            <p>（译者/张挥戈  友情审校/白云鹏）</p>
+            <p><b>文章来源：<a href="http://fernandocejas.com/2015/07/18/architecting-android-the-evolution/" target="_blank">Fernando Cejas's Blog</a></b>
+            </p>
+            <p><b>作者简介：</b>
+            </p>
+            <p>Fernando Cejas，软件工程师、极客、Ruby小白、充满好奇心的求知者、敏捷方法学的狂热粉丝。热衷于移动开发，2010年起一直从事Android开发，目前就职于SoundCloud公司。</p><p><b>译者简介：</b></p>
+            <p>张挥戈，长期从事计算机软件开发、项目管理和产品设计工作，曾在多家移动互联网公司任技术总监。关注Android平台相关技术以及其他平台客户端软件开发相关话题。
+                </p>
+            <hr/>
+            <p><b>预告：</b> 
+                <a href="http://mdcc.csdn.net/" target="_blank">2015中国移动开发者大会（MDCC 2015）</a>将于10月15-16日在北京新云南皇冠假日酒店召开。大会特设五大技术专场：平台与技术iOS、平台与技术Android、产品与设计、游戏开发、企业移动化。此外，大会更是首次举办国内极具权威影响力的IoT技术峰会，特设硬件开发技术与虚拟现实两大专场。大会将聚集国内最具实力的产品技术团队，与开发者一道进行最前沿的探讨与交流。</p>
+            <h3>第一时间掌握最新移动开发相关信息和技术，请关注mobilehub公众微信号（ID: mobilehub)。  </h3>
+            <p></p><div><img src="实战解析Android架构设计原则-CSDN.NET_files/55d59d43d944d.jpg" type="image/jpeg" data-filename="55d59d43d944d.jpg" height="240" width="240"/></div>
+            <p></p>
+				</div></div></div><br/></div></span>
+</div></body></html> 

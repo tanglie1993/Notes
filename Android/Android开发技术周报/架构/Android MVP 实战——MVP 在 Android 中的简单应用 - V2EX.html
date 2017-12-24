@@ -1,0 +1,340 @@
+<html>
+<head>
+  <title>Android MVP 实战——MVP 在 Android 中的简单应用 - V2EX</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3887"/>
+<h1>Android MVP 实战——MVP 在 Android 中的简单应用 - V2EX</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div><div style="font-family:&quot;Helvetica Neue&quot;, &quot;Luxi Sans&quot;, &quot;DejaVu Sans&quot;, Tahoma, &quot;Hiragino Sans GB&quot;, &quot;Microsoft Yahei&quot;, sans-serif;min-width:820px;"><div style="text-align:center;background-color:rgb(226, 226, 226);background-image:url(&quot;/static/img/shadow_light.png&quot;);background-repeat:repeat-x;"><div style="min-width:600px;"><div><div style="background-color:rgb(255, 255, 255);border-radius:3px;box-shadow:rgba(0, 0, 0, 0.1) 0px 2px 3px;">
+    <div style="padding:10px;font-size:15px;line-height:120%;text-align:left;border-bottom:1px solid rgb(226, 226, 226);overflow:auto;"><div style="float:right;text-align:right;"><a href="https://www.v2ex.com/member/Bison" style="color:rgb(119, 128, 135);text-decoration:none;word-break:break-all;"><img src="Android MVP 实战——MVP 在 Android 中的简单应用 - V2EX_files/132011_large.png" type="image/png" data-filename="132011_large.png" align="default" border="0" height="73" style="border-radius:4px;" width="73"/></a></div>
+    <a href="https://www.v2ex.com/" style="color:rgb(119, 128, 135);text-decoration:none;word-break:break-all;">V2EX</a> <span style="font-family:&quot;Lucida Grande&quot;;font-weight:500;"> › </span> <a href="https://www.v2ex.com/go/android" style="color:rgb(119, 128, 135);text-decoration:none;word-break:break-all;">Android</a>
+    <div style="height:10px;"></div>
+    <h1 style="font-size:24px;font-weight:500;line-height:150%;margin:0px 0px 10px;padding:0px;word-wrap:break-word;">Android MVP 实战——MVP 在 Android 中的简单应用</h1>
+    <div style="display:inline-block;">
+<a href="#" style="padding:2px 8px;color:rgb(119, 119, 136);word-break:break-all;font-size:10px;line-height:1;text-decoration:none;border:1px solid rgb(226, 226, 226);border-radius:3px;display:inline-block;vertical-align:baseline;text-align:center;"><li style="display:inline-block;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:1;font-family:FontAwesome;font-size:inherit;text-rendering:auto;-webkit-font-smoothing:antialiased;"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:1;font-family:FontAwesome;font-size:inherit;"></span></li></a>  <a href="#" style="padding:2px 8px;color:rgb(119, 119, 136);word-break:break-all;font-size:10px;line-height:1;text-decoration:none;border:1px solid rgb(226, 226, 226);border-radius:3px;display:inline-block;vertical-align:baseline;text-align:center;"><li style="display:inline-block;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:1;font-family:FontAwesome;font-size:inherit;text-rendering:auto;-webkit-font-smoothing:antialiased;"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:1;font-family:FontAwesome;font-size:inherit;"></span></li></a></div>   <small style="color:rgb(153, 153, 153);"><a href="https://www.v2ex.com/member/Bison" style="color:rgb(119, 128, 135);text-decoration:none;word-break:break-all;">Bison</a> · 2015-08-12 15:50:18 +08:00 · 2760 次点击</small>
+    </div>
+    
+    
+    <div style="padding:10px;font-size:14px;line-height:120%;text-align:left;background-color:rgb(249, 249, 249);border-left:5px solid rgb(240, 240, 240);border-bottom:1px solid rgb(226, 226, 226);color:rgb(153, 153, 153);">这是一个创建于 864 天前的主题，其中的信息可能已经有所发展或是发生改变。</div>
+    
+    
+    <div style="padding:10px;font-size:14px;line-height:120%;text-align:left;border-bottom:1px solid rgb(226, 226, 226);">
+        
+        <div style="font-size:14px;line-height:1.6;color:rgb(0, 0, 0);word-wrap:break-word;"><div style="margin-top:0px;margin-bottom:0px;"><p style="margin-top:0px;"><em>导读：上一章我们初探了<a href="http://www.v2ex.com/t/212456#reply2" rel="nofollow" style="color:rgb(119, 128, 135);text-decoration:none;word-break:break-all;" target="_blank">Android MVP</a>，但是只涉及到一些概念性的东西，这一章，我们将来一起来一步步实现一个简单的MVP的Demo</em></p>
+
+<h2 style="font-size:18px;font-weight:500;line-height:100%;margin:15px 0px;padding:0px 0px 8px;border-bottom:1px solid rgb(226, 226, 226);">回顾</h2>
+
+<p>上章我们说到如何抽离MVP的层？还记得大致的步骤么？</p>
+
+<ul style="margin:15px 0px 15px 20px;padding:0px;">
+<li style="padding:0px;margin:0px;">创建实体JavaBean对象.</li>
+<li style="padding:0px;margin:0px;">抽离出View的接口，即ViewInterface.</li>
+<li style="padding:0px;margin:0px;">抽离Model的接口，即ModelInterface.</li>
+<li style="padding:0px;margin:0px;">实现Presenter层.</li>
+<li style="padding:0px;margin:0px;">实现ModelInterface与ViewInterface.</li>
+</ul>
+
+<p>好了，我们就先按照这个步骤来吧。首先：</p>
+
+<h2 style="font-size:18px;font-weight:500;line-height:100%;margin:15px 0px;padding:0px 0px 8px;border-bottom:1px solid rgb(226, 226, 226);">需求</h2>
+
+<p>想来想去，最后决定还是用登陆这个比较典型的粟子。如下：</p>
+
+<ul style="margin:15px 0px 15px 20px;padding:0px;">
+<li style="padding:0px;margin:0px;">用户界面接收用户名密码，点击登录按钮，出现进度条，进行接口请求.</li>
+<li style="padding:0px;margin:0px;">登陆成功，进度条消失，跳转UI.</li>
+<li style="padding:0px;margin:0px;">登陆失败，进度条消失，停留并显示失败原因</li>
+</ul>
+
+<p>需求很简单，那么下面开始实战吧！</p>
+
+<h2 style="font-size:18px;font-weight:500;line-height:100%;margin:15px 0px;padding:0px 0px 8px;border-bottom:1px solid rgb(226, 226, 226);">实现</h2>
+
+<p>创建项目MVPDemo，这里我选择的开发环境是AndroidStudio.&lt;br&gt;下面先看一下包结构：</p>
+
+<p><img src="Android MVP 实战——MVP 在 Android 中的简单应用 - V2EX_files/1439360431_9050.png" type="image/png" data-filename="1439360431_9050.png" alt="package_construct" height="213" style="max-width:100%;" width="293"/></p>
+
+<p>按照MVP的通用结构，将其分为了三层，那么接下来是布局文件，这没什么好说的，大家大致过一下就好：</p>
+<div><pre style="font-family:Consolas, &quot;Panic Sans&quot;, Consolas, &quot;DejaVu Sans Mono&quot;, &quot;Bitstream Vera Sans Mono&quot;, Menlo, &quot;Microsoft Yahei&quot;, monospace;font-size:13px;letter-spacing:0.015em;line-height:120%;white-space:pre;overflow:auto;background-color:rgb(248, 248, 248);padding:5px;">&lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+    xmlns:tools=&quot;http://schemas.android.com/tools&quot; android:layout_width=&quot;match_parent&quot;
+    android:layout_height=&quot;match_parent&quot; android:paddingLeft=&quot;@dimen/activity_horizontal_margin&quot;
+    android:paddingRight=&quot;@dimen/activity_horizontal_margin&quot;
+    android:paddingTop=&quot;@dimen/activity_vertical_margin&quot;
+    android:orientation=&quot;vertical&quot;
+    android:paddingBottom=&quot;@dimen/activity_vertical_margin&quot; tools:context=&quot;.MainActivity&quot;&gt;
+
+&lt;EditText
+    android:layout_width=&quot;match_parent&quot;
+    android:id=&quot;@+id/userName&quot;
+    android:hint=&quot;userName&quot;
+    android:layout_height=&quot;wrap_content&quot; /&gt;
+&lt;EditText
+    android:layout_width=&quot;match_parent&quot;
+    android:id=&quot;@+id/passWord&quot;
+    android:hint=&quot;passWord&quot;
+    android:layout_height=&quot;wrap_content&quot; /&gt;
+
+
+&lt;Button
+    android:layout_width=&quot;match_parent&quot;
+    android:layout_height=&quot;wrap_content&quot;
+    android:onClick=&quot;onAction&quot;
+    android:text=&quot;登录&quot;/&gt;
+
+&lt;/LinearLayout&gt;
+</pre></div>
+
+<p>就是简单的两个输入框，一个用于登录的Button.接下来，我们再来按照昨天说的步骤，开始MVP的应用。</p>
+
+<ul style="margin:15px 0px 15px 20px;padding:0px;">
+<li style="padding:0px;margin:0px;"><p><strong>创建JavaBean对象</strong>.这个相信对大家没有什么难度。这里根据登陆的需求，我创建了一个<strong>LoginInfo</strong>实体。代码如下：</p>
+<div><pre style="font-family:Consolas, &quot;Panic Sans&quot;, Consolas, &quot;DejaVu Sans Mono&quot;, &quot;Bitstream Vera Sans Mono&quot;, Menlo, &quot;Microsoft Yahei&quot;, monospace;font-size:13px;letter-spacing:0.015em;line-height:120%;white-space:pre;overflow:auto;background-color:rgb(248, 248, 248);padding:5px;">public class LoginInfo {
+    private String userName;
+    private String passWord;
+
+    public LoginInfo(String userName, String passWord) {
+        this.userName = userName;
+        this.passWord = passWord;
+    }
+
+    public String getUserName() {
+
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getPassWord() {
+        return passWord;
+    }
+
+    public void setPassWord(String passWord) {
+        this.passWord = passWord;
+    }
+}
+</pre></div></li>
+<li style="padding:0px;margin:0px;"><p><strong>抽离出View的接口.</strong> 思考一下，昨天我们说了，ViewInterface是负责交互的,那么登录这个需求中涉及到UI交互的有哪些呢？界面变动有哪些呢？完成交互需要提供哪些界面元素有哪些呢？这么一想，我们不难得出：</p>
+
+<ol style="margin:1em 0px 0em 2em;padding:0px;">
+<li style="padding:0px;margin:0px;">点击登录，即Button的点击监听事件.</li>
+<li style="padding:0px;margin:0px;">进度条的显示与隐藏.</li>
+<li style="padding:0px;margin:0px;">用户名和密码的获取（必要的界面元素）.</li>
+</ol></li>
+</ul>
+
+<p>以下，贴出ViewInterface的抽离代码，取名为LoginViewInterface.</p>
+<div><pre style="font-family:Consolas, &quot;Panic Sans&quot;, Consolas, &quot;DejaVu Sans Mono&quot;, &quot;Bitstream Vera Sans Mono&quot;, Menlo, &quot;Microsoft Yahei&quot;, monospace;font-size:13px;letter-spacing:0.015em;line-height:120%;white-space:pre;overflow:auto;background-color:rgb(248, 248, 248);padding:5px;">public interface LoginViewInterface {
+            String getUserName();
+
+            String getPassword();
+
+            void showProgress();
+
+            void dismissProgress();
+
+            void showLoginFail(String error);
+
+            void goToActivity();
+        }
+</pre></div>
+
+<p>再次回顾一下，我们可以发现，在LoginViewInterface中，出现的接口都是与交互，与UI，与界面元素有关的。</p>
+
+<ul style="margin:15px 0px 15px 20px;padding:0px;">
+<li style="padding:0px;margin:0px;"><p><strong>抽离Model的接口.</strong>这里虽然说的是抽离model，但这里的Model层抽离出来的东西，其实是用于数据流的输入与输出。说得直白一点，它其实是对于我们的JavaBean来说的，是用来提供javaBean对象的业务层,怎么理解呢？可以这么想，它就是为Presenter层提供所操作javaBean的钩子。比如，我们的登录，那么在ModelInterface里面它只负责提供是否登录成功的数据流以及登录成功后的用户数据，登录失败的错误原因等。根源在于提供数据。无论你是从网络获取还是从本地数据库读，你只要能提供这些数据就好。它并不包括对登录成功与失败的处理逻辑。那么一切就很明显了，如下：</p>
+<div><pre style="font-family:Consolas, &quot;Panic Sans&quot;, Consolas, &quot;DejaVu Sans Mono&quot;, &quot;Bitstream Vera Sans Mono&quot;, Menlo, &quot;Microsoft Yahei&quot;, monospace;font-size:13px;letter-spacing:0.015em;line-height:120%;white-space:pre;overflow:auto;background-color:rgb(248, 248, 248);padding:5px;">public interface LoginModelInterface {
+
+    void login(String userName,String password,LoginPresenter.CallBack callBack);
+}
+</pre></div></li>
+</ul>
+
+<p>因为这里登录是属于耗时操作，所以我们在Presenter层定义了一个内部回调接口，用于在异步线程中回调。代码如下</p>
+<div><pre style="font-family:Consolas, &quot;Panic Sans&quot;, Consolas, &quot;DejaVu Sans Mono&quot;, &quot;Bitstream Vera Sans Mono&quot;, Menlo, &quot;Microsoft Yahei&quot;, monospace;font-size:13px;letter-spacing:0.015em;line-height:120%;white-space:pre;overflow:auto;background-color:rgb(248, 248, 248);padding:5px;">public interface CallBack{
+
+          void onSuccess(LoginInfo info);
+
+          void onFail(Throwable error);
+    }
+</pre></div>
+
+<ul style="margin:15px 0px 15px 20px;padding:0px;">
+<li style="padding:0px;margin:0px;"><p><strong>实现Presenter</strong>,这个不难，我们的登录需求，处理逻辑其实就只有Login这一个。所以只需要实现login相关的逻辑处理就行了。贴出代码：</p>
+<div><pre style="font-family:Consolas, &quot;Panic Sans&quot;, Consolas, &quot;DejaVu Sans Mono&quot;, &quot;Bitstream Vera Sans Mono&quot;, Menlo, &quot;Microsoft Yahei&quot;, monospace;font-size:13px;letter-spacing:0.015em;line-height:120%;white-space:pre;overflow:auto;background-color:rgb(248, 248, 248);padding:5px;">public class LoginPresenter {
+
+    private final LoginModelInterface loginBusiness;
+
+    private final LoginViewInterface loginViewInterface;
+
+    public LoginPresenter(LoginViewInterface viewInterface){
+        this.loginBusiness = new LoginBusinessImp();
+        this.loginViewInterface = viewInterface;
+    }
+
+    public void login(){
+        String userName = loginViewInterface.getUserName();
+        String password  = loginViewInterface.getPassword();
+        if(TextUtils.isEmpty(userName)||TextUtils.isEmpty(password)){
+            loginViewInterface.showLoginFail(&quot;请完善登录信息&quot;);
+            return;
+        }
+        loginViewInterface.showProgress();
+        loginBusiness.login(userName, password, new CallBack() {
+            @Override
+            public void onSuccess(LoginInfo info) {
+                loginViewInterface.dismissProgress();
+                loginViewInterface.goToActivity();
+            }
+
+            @Override
+            public void onFail(final Throwable error) {
+                loginViewInterface.dismissProgress();
+                loginViewInterface.showLoginFail(error.getMessage());
+            }
+        });
+    }
+
+    public interface CallBack{
+
+        void onSuccess(LoginInfo info);
+
+        void onFail(Throwable error);
+    }
+}
+</pre></div></li>
+<li style="padding:0px;margin:0px;"><p><strong>实现ModelInterface与ViewInterface.</strong>这一步就更较简单了。既然接口都抽离出来了，实现还会难吗？直接贴代码了</p>
+<div><pre style="font-family:Consolas, &quot;Panic Sans&quot;, Consolas, &quot;DejaVu Sans Mono&quot;, &quot;Bitstream Vera Sans Mono&quot;, Menlo, &quot;Microsoft Yahei&quot;, monospace;font-size:13px;letter-spacing:0.015em;line-height:120%;white-space:pre;overflow:auto;background-color:rgb(248, 248, 248);padding:5px;">public class LoginBusinessImp implements LoginModelInterface {
+    @Override
+    public void login(final String userName, final String password, final LoginPresenter.CallBack callBack) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //进行耗时操作，进行网络请求
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                //模拟验证。用户名密码相同，我们定为校验失败，否则校验成功
+                if(!userName.equals(password)){
+                    LoginInfo info = new LoginInfo(userName,password);
+                    callBack.onSuccess(info);
+                }else{
+                    callBack.onFail(new Exception(&quot;用户名或密码错误&quot;));
+                }
+            }
+        }).start();
+    }
+}
+</pre></div></li>
+</ul>
+
+<p>这里说明一下，有些朋友可能会疑惑，你不是说ModelInterface只需要提供需要的数据就行了吗？登录业务的话，那这里只需要在登录成功的时候，返回一个成功的状态码，再加上一个LoginInfo给Presenter层，登录失败返回错误异常就行了，不需要进行逻辑判断。但你这里明显是用if else进行了逻辑判断啊？</p>
+
+<p>好吧，这是因为我们这里是模拟登录。也就是说在实际开发中，判断登录成功与失败是在服务器中进行的，我们这儿的逻辑也是模拟的服务器校验逻辑。而且，MVP的根本目的在于减轻Activity或Fragment的当量，即使有一些简单的逻辑处理混在里面倒也无需计较。</p>
+
+<p>最后还有我们的Activity:</p>
+<div><pre style="font-family:Consolas, &quot;Panic Sans&quot;, Consolas, &quot;DejaVu Sans Mono&quot;, &quot;Bitstream Vera Sans Mono&quot;, Menlo, &quot;Microsoft Yahei&quot;, monospace;font-size:13px;letter-spacing:0.015em;line-height:120%;white-space:pre;overflow:auto;background-color:rgb(248, 248, 248);padding:5px;">public class LoginActivity extends AppCompatActivity implements LoginViewInterface {
+
+        private EditText userNameEdit;
+        private EditText pwdEdit;
+        private ProgressDialog dialog;
+
+        private LoginPresenter loginPresenter = new LoginPresenter(this);
+
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_main);
+            initViews();
+        }
+
+        private void initViews() {
+
+            userNameEdit = (EditText) findViewById(R.id.userName);
+            pwdEdit = (EditText) findViewById(R.id.passWord);
+        }
+
+        public void onAction(View v){
+            loginPresenter.login();
+        }
+
+
+        @Override
+        public String getUserName() {
+            return userNameEdit.getText().toString().trim();
+        }
+
+        @Override
+        public String getPassword() {
+            return pwdEdit.getText().toString().trim();
+        }
+
+        @Override
+        public void showProgress() {
+            if(dialog==null){
+                dialog = ProgressDialog.show(this,&quot;&quot;,&quot;loading...&quot;);
+            }else{
+                if(!dialog.isShowing()){
+                    dialog.show();
+                }
+            }
+        }
+
+        @Override
+        public void dismissProgress() {
+            if(dialog!=null&amp;&amp;dialog.isShowing()){
+                dialog.dismiss();
+            }
+        }
+
+        @Override
+        public void showLoginFail(final String error) {
+           runOnUiThread(new Runnable() {
+               @Override
+               public void run() {
+                   Toast.makeText(LoginActivity.this, error, Toast.LENGTH_SHORT).show();
+               }
+           });
+
+        }
+
+        @Override
+        public void goToActivity() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(LoginActivity.this, &quot;登录成功,跳转HomeActivity&quot;, Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        }
+    }
+</pre></div>
+
+<p>这里跳转与错误信息提示，我都偷懒直接用的Toast了。另外为防止子线程刷新UI崩溃，这里作了一下处理。当然也可以Activity中不做处理，而放在Presenter层通过Handler来实现异步UI更新，我这里是只是图个便捷。</p>
+
+<p><em>好了，到这里这么一个简单的Demo便完成了，功能比较单一，也就不贴效果图了。回顾一下，有的朋友可能会说，这么一个简单的登录业务就给我搞了这么多类，而实际开发中一个界面涉及的业务何其之多，使用MVP真的现实吗？其实，这是可以的，并不是虚妄，而且实质上，在熟练以后，它并不会给你增加多少工作量，反而会让你在以后的维护工作中轻松自如。有兴趣的同学，可以看一下 chrisbanes的开源项目<a href="https://github.com/chrisbanes/philm" rel="nofollow" style="color:rgb(119, 128, 135);text-decoration:none;word-break:break-all;" target="_blank">philm</a>,其整体架构就是一套MVP的实现,另外下面附上本文中的Demo源码</em></p>
+
+<p style="margin-bottom:0px;"><a href="https://github.com/oeager/MvpDemo" rel="nofollow" style="color:rgb(119, 128, 135);text-decoration:none;word-break:break-all;" target="_blank">源码下载</a></p>
+</div></div>
+        
+        
+    </div>
+    
+    
+    
+</div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

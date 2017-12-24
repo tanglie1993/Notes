@@ -1,0 +1,59 @@
+<html>
+<head>
+  <title>模块化的乐趣 | 并发编程网 - ifeve.com</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1204"/>
+<h1>模块化的乐趣 | 并发编程网 - ifeve.com</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>模块化的乐趣 | 并发编程网 - ifeve.com</h1><div><div></div></div></div>
+     <h3></h3>
+     
+      <p><a href="http://java.dzone.com/articles/fun-modules" target="_blank" title="原文链接">原文链接</a>  作者：Kirk Knoernschild</p>
+<p>         模块间的紧耦合是一种很糟糕的设计，而耦合的最坏表现就是模块间的循环依赖。幸运的是，有几种方法可以用来消除循环依赖，分别是回调函数，代码上移，代码下移。 接下来，我会为大家展示一个小例子。示例中，我会分别使用上述几种技术来消除循环依赖。</p>
+<p>        在消除循环依赖之后，我们会探索另外两项技术，来达到依赖反转和消除模块之间依赖的目的。本示例的所有代码都可以在<a href="https://code.google.com/p/kcode/source/browse/#svn/trunk/edcie" target="_blank" title="Google Code">Google</a><a href="https://code.google.com/p/kcode/source/browse/#svn/trunk/edcie" target="_blank" title="Google Code"> Code</a>下载，每个解决方法对应的代码都包含有一个编译脚本和一个简单测试用例。一般你只需要输入 ant compile就可以执行编译脚本，不过如果你想使用JarAnalyzer，那么必须要有GraphViz。注意每个解决方法对应的代码版本都具有相同的行为！</p>
+<p>         接下来的例子非常简单。假设有这样一个系统，包含有Customer两个类，分别在两个模块中—cust.jarbill.jar。同时有一个测试类PaymentTest测试两者交互的行为，billtest.jar模块。最初的类图显示在下面，需要引起注意图中两个类的双向关联。</p>
+
+<p>          随着逐步的深入，我们会往系统中添加更多的类和抽象来提高模块化程度。另外，我们会使用JarAnalyzer来描述模块间的关系，同时也用来衡量设计的好坏。用JarAnalyzer生成的模块结构如下图所示，可以通过查看编译脚本来了解JarAnalyzer的用法。回到正题，这篇文章中我们的目的是用上述三种方法来消除循环依赖，再之后会探索不同的途径来构建非循环依赖的模块。</p>
+<div><a href="http://ifeve.com/wp-content/uploads/2015/02/dependencies.png" target="_blank"><img src="模块化的乐趣  并发编程网 - ifeve.com_files/Image.png" type="image/png" data-filename="" height="66" width="500"/></a><p>有循环依赖的模块结构</p></div>
+<h2><b>上移</b></h2>
+<p>        首先使用的方法叫上移。我们通过将导致依赖的因子（这里是折扣的计算）上移到一个更高级别的模块，来达到消除循环依赖的目的。然而在此之前，我们要先弄清楚这个例子中为什么会存在循环依赖。具体原因如下：</p>
+<pre>Customer方法被调用的时候，需要先去判断是否有折扣。但是，计算折扣的方法是在Customer类中，而不是类需要调用Customer的方法来计算合适的折扣。可以这样来思考这个问题...Customer代表一个付款人，而我们和每个付款人协商折扣。所以折扣的计算是封装在Customer</pre>
+<p>       为了打破这个依赖，我们将导致依赖的因素上移到一个更高级别的类-CustomerMediatorMediator类将计算折扣的细节封装起来，并传给类。了解这次修改的最好方法就是看修改后的PaymentTest我已经修改好了编译脚本，并且将Mediator。但如果在深入了解这个类结构后，你可能会质疑为什么不直接把折扣数从Customer类。不用担心，这个例子只是初步的设计，并不是解决此类问题的最好方法。我们要知道的就是，这个方法的核心是将依赖上移到mediator模块，来达到消除循环依赖的目的。</p>
+<div><a href="http://ifeve.com/wp-content/uploads/2015/02/dependencies1.png" target="_blank"><img src="模块化的乐趣  并发编程网 - ifeve.com_files/Image [1].png" type="image/png" data-filename="" alt="Escalating the Cause of the Cyclic Dependency" height="69" width="550"/></a><p>上移循环依赖</p></div>
+<h2><b>下移</b></h2>
+<p>          一个解决此类特定循环依赖问题的更好方法是下移（这里Customer间有组合关系）。通过下移，我们将导致依赖的因子下移到一个更低级别的模块，这正好和上移 相反。我们引入一个DiscountCalculator类，用来传递给类，修改后的PaymentTestDiscountCalculator对象并将其传进来。因为Customer类知道怎么计算折扣，所以由Customer类提供生成DiscountCalculator的工厂方法。新的类结构图如下所示。</p>
+<div><a href="http://ifeve.com/wp-content/uploads/2015/02/edcie-demotion-1.jpg" target="_blank"><img src="模块化的乐趣  并发编程网 - ifeve.com_files/Image.jpg" type="image/jpeg" data-filename="" alt="Class Structure" height="130" width="300"/></a></div>
+<p>        接下来我们会修改编译脚本将DiscountCalcultorcalc.jar，最终的模块结构图如下所示。</p>
+<div><a href="http://ifeve.com/wp-content/uploads/2015/02/dependencies2.png" target="_blank"><div><img src="模块化的乐趣  并发编程网 - ifeve.com_files/Image [2].png" type="image/png" data-filename="" alt="Demoting the Cause of the Cyclic Dependency" height="82" width="576"/></div></a><p>下移循环依赖</p></div>
+<p>        通过分析你会发现下移比上移在处理这种循环依赖的问题上显得更为合理，但是关键的区别是什么呢？使用上移我可以单独部署cust.jarbill.jar。而虽然下移更为合理，但是如果要部署cust.jarbill.jar，也必须依赖calc.jar。可行的的解决方案总是会和具体问题关联，而理想的解决方案是在整个开发周期中具有灵活扩展性。</p>
+<h2><b>回调</b></h2>
+<p>        回调类似于观察者模式，我们将DiscountCalculator类重构为接口，并让Customer实现这个接口。新的类结构图如下所示。</p>
+<div><a href="http://ifeve.com/wp-content/uploads/2015/02/edcie-callback1.jpg" target="_blank"><img src="模块化的乐趣  并发编程网 - ifeve.com_files/Image [1].jpg" type="image/jpeg" data-filename="" alt="Class Structure" height="130" width="300"/></a></div>
+<p>        在这个例子中，回调类似于下移和最初版本的组合，CustomerDiscountCalculator类型被传给。与下移中DiscountCalculator类被封装在一个单独的模块不同的是，现在我们把它放在模块中。需要注意的是，它不能放在模块，这会引入循环依赖。新的类结构图如下所示，有点像消除循环依赖的最初版本。</p>
+<div><a href="http://ifeve.com/wp-content/uploads/2015/02/dependencies3.png" target="_blank"><img src="模块化的乐趣  并发编程网 - ifeve.com_files/Image [3].png" type="image/png" data-filename="" alt="用回调消除循环依赖" height="66" width="500"/></a><p>用回调消除循环依赖</p></div>
+<h2><b>依赖反转</b></h2>
+<p>        接下来我们讨论一下模块关系。虽然回调看上去是最合理的解决方法，但如果我们想单独部署模块而不依赖模块呢？回调并不能做到这一点，不过通过一些小技巧，模块的依赖关系能够被反转。</p>
+<p>类重构为接口，接下来为了避免分离包（同一个包中的不同类被打包到不同的模块），我将Customer类放在同一个包。新的类图如下所示。</p>
+<div><a href="http://ifeve.com/wp-content/uploads/2015/02/edcie-inverted.jpg" target="_blank"><div><img src="模块化的乐趣  并发编程网 - ifeve.com_files/Image [2].jpg" type="image/jpeg" data-filename="" alt="依赖反转后的类结构" height="253" width="380"/></div></a><p>依赖反转后的类结构</p></div>
+<p>反转后的模块结构图如下所示 </p>
+<div><a href="http://ifeve.com/wp-content/uploads/2015/02/dependencies4.png" target="_blank"><img src="模块化的乐趣  并发编程网 - ifeve.com_files/Image [4].png" type="image/png" data-filename="" alt="反转后的模块结构" height="67" width="500"/></a><p>反转后的模块结构</p></div>
+<h2><b>消除依赖</b></h2>
+<p>        依赖反转满足了我们这样的需求，独立部署模块而不用依赖模块。不过现在，我想探索基于独立测试模块需求的解决方法。在依赖反转之后，我能够独立的测试模块，但是如果我想同时独立测试（或者部署）两个模块呢？为了达到这个目的，需要彻底消除两者之间的关联。       事实证明，在使用了依赖反转（大多是抽象耦合）后，类结构变得非常灵活。我只需要简单地把两个接口-BillDiscountCalculator-分别封装起来，不需要额外的修改。我将它们移到一个新的包，一样地，修改编译脚本将这两个接口打包到模块。至此，我们成功地消除了模块的关联，模块结构如下所示。</p>
+<div><a href="http://ifeve.com/wp-content/uploads/2015/02/dependencies5.png" target="_blank"><div><img src="模块化的乐趣  并发编程网 - ifeve.com_files/Image [5].png" type="image/png" data-filename="" alt="消除模块间的依赖" height="136" width="576"/></div></a><p>消除模块间的依赖</p></div>
+
+<p>        从最开始的两个存在循环依赖的模块，到最后模块之间没有任何依赖的模块结构，我们取得了很大的进步。 模块之间没有依赖，就意味着模块可以独立测试和部署。如果你关注我的博客，你应该知道我已经写了大量的文章，关于权衡灵活性和复杂性，可用和重用，以及其他架构和设计方面的。我也希望这个小例子能说清楚这些里面的部分概念。</p>
+<p>        最后提示，为了更深入地了解这样设计的目的，以及从对象层次上去理解为什么要这样做，我希望你能亲自运行每个工程的编译脚本，并查看在statsdependencies.html文件。当然，你需要确保JarAnalyzer正确运行，而JarAnalyzerGraphViz。如你所见，相比原始的版本，最终的版本在设计质量上有着显著的提升。</p>
+<hr/>
+<a href="https://www.jianxun.io/?utm_source=ifeve&amp;utm_medium=webad&amp;utm_campaign=regular&amp;utm_content=&amp;utm_term=bottombanner" target="_blank"><div><img src="模块化的乐趣  并发编程网 - ifeve.com_files/ifeve-bottombanner.jpg" type="image/jpeg" data-filename="ifeve-bottombanner.jpg" height="150" width="500"/></div></a><br/><br/><img src="模块化的乐趣  并发编程网 - ifeve.com_files/Image [6].png" type="image/png" data-filename="" alt="Favorite" height="16" title="Favorite" width="16"/><img src="模块化的乐趣  并发编程网 - ifeve.com_files/loading.gif" type="image/gif" data-filename="loading.gif" alt="Loading" height="16" title="Loading" width="16"/><a href="http://ifeve.com/fun-modules/?wpfpaction=add&amp;postid=18394" target="_blank" title="添加本文到我的收藏">添加本文到我的收藏</a>
+           </div></div></div><br/></div></span>
+</div></body></html> 

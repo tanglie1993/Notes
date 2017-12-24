@@ -1,0 +1,216 @@
+<html>
+<head>
+  <title>携程移动App架构优化之旅</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2004"/>
+<h1>携程移动App架构优化之旅</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>携程移动App架构优化之旅</h1><div><div></div></div></div>
+	
+       
+   	
+
+
+
+
+
+
+
+
+
+
+			
+	
+
+	
+			
+	
+		
+			
+	       	<blockquote>
+<p>本文为携程移动开发总监陈浩然在2015年10月份的ArchSummit全球架构师峰会上的演讲总结。由于面向受众为架构师，因此不会涉及到很多技术细节。通过本文，你可以了解携程通过哪些手段来优化它的App架构的。</p></blockquote>
+<p>『携程旅行App』作为携程超级App产品，是公司全品类旅行产品的核心售卖入口，过去两年为了更好支撑无线业务的快速发展，携程移动App在产品和技术架构方面也做了大量的优化。
+</p>
+<p>产品方面，携程App从原先的iPhone、iPad、Android Phone、Android Pad和Windows Phone共五个版本精简为Universial iOS和Universial Android两个版本，以便于集中研发和市场资源发布新产品。
+</p><h2>无线后端服务架构</h2>
+<p>无线后端服务架构方面，原有的无线架构（图一）是所有无线服务耦合成一个统一的服务模块，囊括了所有提供给客户端访问的API。
+</p><p></p><div><img src="携程移动App架构优化之旅_files/001.jpg" type="image/jpeg" data-filename="001.jpg" height="443" width="576"/></div><p></p>
+			
+	        
+	            
+
+
+
+
+
+
+
+
+
+    
+
+	        
+	        
+<p>在统一服务模块功能较少的时候，这套架构完全符合业务功能需求，但当功能迭代加快，问题不断出现：
+</p><ul>
+<li>
+<p>每个API都是DLL动态库形式（.net）实现，在某些公共逻辑接口发生变化时，不同时期上线的API可能使用了不同版本的逻辑接口定义，会导致运行时出现诡异结果或者进程Crash，影响稳定性；</p>
+	        
+	        
+	            
+	        
+	       	
+</li><li>
+<p>每次大版本发布上线，从测试到全面发布完毕，都需要全量回归测试过程，开发和测试进度严重耦合，影响发布效率；</p>
+</li><li>
+<p>新增的低优先级API可能稳定性不好，出现问题时会影响到整个服务进程的稳定性。</p></li></ul>
+<p>除了这种完全耦合的弊端之外，还存在其他诸如缺少负载均衡、越少监控、缺少熔断等影响后端稳定性的问题。于是我们开始尝试使用一种新的无线架构：Gateway（图二）。
+</p><p></p><div><img src="携程移动App架构优化之旅_files/002.jpg" type="image/jpeg" data-filename="002.jpg" height="341" width="576"/></div><p></p>
+<p>携程基于Netflix的开源项目Zuul开发了无线Gateway（曾在2015年QCon上海会议中分享）。Gateway的职能是负责接收来自无线端的所有API请求，并将他们路由到正确的目标应用服务器，并且提供限流、隔离、熔断等功能，保证了无线服务的长期稳定运行，拥有的弹性容错机制也减少了日常运维工作。同时该Gateway提供了多维度的监控数据，并与报警系统对接，实时监控线上情况，达到运维自动化。
+</p><h2>App工程架构</h2>
+<p>App工程架构方面，原先的App开发还是单工程单构建的方式，各产品间的代码耦合严重，于是进行了App工程的解耦（图三和图四）。</p><p></p><div><img src="携程移动App架构优化之旅_files/003.jpg" type="image/jpeg" data-filename="003.jpg" height="235" width="576"/></div><p></p>
+<p>(点击放大图像)</p>
+<p><a href="http://cdn.infoqstatic.com/statics_s1_20160517-0032u4/resource/articles/ctrip-app-architecture/zh/resources/005.jpg" target="_blank"></a></p><div><a href="http://cdn.infoqstatic.com/statics_s1_20160517-0032u4/resource/articles/ctrip-app-architecture/zh/resources/005.jpg" target="_blank"><img src="携程移动App架构优化之旅_files/005.jpg" type="image/jpeg" data-filename="005.jpg" height="284" width="576"/></a></div><p></p>
+
+<p>解耦后各产品间代码完全独立，相互页面和功能的跳转走数据总线或者URL总线方式来实现，打包时的资源问题可以通过Run Script（iOS）和Gradle（Android）来定制化解决。
+</p><p>在App工程架构解耦后，紧接着是两个问题：
+</p><ul>
+<li>
+<p>开发框架是否满足产品开发需求？</p>
+</li><li>
+<p>性能和质量是否达到用户体验要求？</p></li></ul>
+<p>为了解决第一个问题，我们梳理了现有的App功能，将通讯、定位、Hybrid框架、数据库、登录、分享、基础库等核心功能实现了SDK化，也提供给公司其他App直接使用；同时将App内部的公共业务组件例如地图、日历、城市、图片、通讯录等实现了统一。
+</p><p>要解决第二个问题『App性能和质量』，首先需要了解App性能的现状，即App端性能的采集。常规做法有两种：1. 使用第三方性能采集SDK，例如OneAPM、听云等第三方工具；2. 自建。携程为了完整掌握用户数据采用了自建的方式：App通过日志SDK采集日志，上传至日志服务端，日志消息经Kafka消息队列存入HDFS（RCFile格式）分布式文件存储系统，后期的数据查询均基于Hive系统来实现。
+</p><p>App端的性能数据会在多种纬度（操作系统、App版本、网络状况、位置）下采集网络（网络服务成功率、平均耗时、耗时分布等）、定位（经纬度成功率、城市定位成功率等）、启动时间、内存流量等各类指标。其中像网络服务性能是对于用户体验至关重要的端到端性能，也是优化的核心依据。
+</p><p>性能数据采集后需要采用简单直观的Portal进行展示，携程为无线业务开发了Web端和App端性能展示Portal，图五是网络性能的截屏，数据会每小时进行更新聚合并展示。
+</p><p>(点击放大图像)</p>
+<p><a href="http://cdn.infoqstatic.com/statics_s1_20160517-0032u4/resource/articles/ctrip-app-architecture/zh/resources/004.jpg" target="_blank"></a></p><div><a href="http://cdn.infoqstatic.com/statics_s1_20160517-0032u4/resource/articles/ctrip-app-architecture/zh/resources/004.jpg" target="_blank"><img src="携程移动App架构优化之旅_files/004.jpg" type="image/jpeg" data-filename="004.jpg" height="308" width="576"/></a></div><p></p>
+<p>基于完备的性能采集数据，很多App性能便可以依据数据进行迭代优化，例如App网络服务方面，携程App采用了以下多种优化手段：
+</p><ul>
+<li>
+<p>使用TCP长连接实现网络服务，减少网络连接时间</p>
+</li><li>
+<p>根据网络状况2G/3G/4G/WIFI进行调优参数</p>
+</li><li>
+<p>根据连接/读/写不同阶段使用重试机制</p>
+</li><li>
+<p>使用IP列表避免DNS解析失败或者劫持，无需进行DNS解析</p>
+</li><li>
+<p>根据网络延迟选择服务端IP（使用Ping）</p>
+</li><li>
+<p>使用ProtocolBuffer+Gzip减少Payload</p></li></ul>
+<p>经过这些优化手段，携程App的端到端网络服务成功率从最初很差的95.32%提升至99.87%，用户体验得到明显提升。
+</p><p>携程App的Hybrid框架也是经过多个版本的迭代，已经支持强大的插件功能，已经做到凡是可以用Native的组件通通使用Native组件来优化Hybrid业务的体验。携程Hybrid框架在设计之初即采用了离线包功能：Hybrid业务整体打包在App中，节省了用户打开页面时的资源加载时间；同时离线包支持查分增量更新，并通过7z压缩方式进一步降低了增量更新包的大小，相对zip压缩减少30%大小。
+</p><h2>Native的插件化和HotFix</h2>
+<p>Native的插件化和HotFix方面，我们在iOS端使用开源的解决方案JSPatch，在Android端采用了自研的解决方案DynamicAPK，可以支持各组件的资源及代码的更新。DynamicAPK方案无需做任何activity/fragment/resource的proxy实现，使得原有的业务代码无需修改即可支持，迁移代码很小，同时可以提升App启动时间，详情请参考GitHub。
+</p><p>其他优化都是针对特定的业务场景展开，例如Android的海外地图没有好的解决方案，iOS的地图控件又存在人在国外看国外和人在国外看国内地图数据精度低的问题，携程基于Google地图开发了Hybrid版地图，用于在特定场景的业务需求；Hybrid网络性能优化，通过Hybrid接口发送Native网络服务，可以避免DNS劫持并且利用Native端的TCP长连接；海外网络性能优化，通过TCP海外加速产品实现链路优化；图片性能优化方面使用了WebP图片格式，可以降低30-40%图片大小，图片分片上传等。
+</p><p>移动端技术发展很快，携程也在积极尝试新技术，例如React Native（已在账户信息部分页面使用），新的网络协议SPDYHTTP/2.0，Apple/Huawei/Samsung Watch App等都做了大量尝试，以期能够提升产品品质。
+</p><p>总之，App架构的技术优化没有尽头，我们会继续以开发效率、性能、质量、新技术几个纬度不断推进，希望未来可以有更多内容分享给业内同行。
+
+
+</p><hr/>
+<p>感谢<a href="http://www.infoq.com/cn/author/%E5%BE%90%E5%B7%9D" target="_blank">徐川</a>对本文的审校。</p>
+<p>给InfoQ中文站投稿或者参与内容翻译工作，请邮件至<a href="http://www.infoq.com/cn/articles/ctrip-app-architecturemailto:editors@cn.infoq.com" target="_blank">editors@cn.infoq.com</a>。也欢迎大家通过新浪微博（<a href="http://www.weibo.com/infoqchina" target="_blank">@InfoQ</a>，<a href="http://weibo.com/u/1451714913" target="_blank">@丁晓昀</a>），微信（微信号：<a href="http://weixin.sogou.com/gzh?openid=oIWsFt0HnZ93MfLi3pW2ggVJFRxY" target="_blank">InfoQChina</a>）关注我们。</p>
+
+
+	       	
+       	
+		
+		
+
+
+
+
+
+
+
+
+
+		<div><b>【ArchSummit深圳2016】15大精彩专题，50位大咖讲师，Cloudera、Hearsay Social、Uber、LinkedIn、Twitter等等，你将为哪家公司技术点赞？阿里巴巴、腾讯、百度、美团、饿了么、滴滴、新浪微博等等，核心业务技术较量谁又能触动你的神经...最精彩的技术切磋从这开始，ArchSummit九折门票倒计时，<a href="http://sz2016.archsummit.com/schedule?utm_source=wenzhang&amp;utm_medium=bottomnew&amp;utm_campaign=gary" target="_blank">详情请点击</a>。</b></div>
+      
+		
+		
+		
+			
+			
+			
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+		
+		
+
+		
+				
+		
+		
+			
+		
+
+
+
+
+
+
+
+
+
+
+
+
+    <div>
+        
+        
+        <h3>告诉我们您的想法</h3>
+        
+            
+
+            
+            
+            
+            当有人回复此评论时请E-mail通知我
+            
+            
+        
+        
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+	
+
+	</div></div></div><br/></div></span>
+</div></body></html> 

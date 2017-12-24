@@ -1,0 +1,352 @@
+<html>
+<head>
+  <title>Google 官方应用架构的最佳实践指南</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="4041"/>
+<h1>Google 官方应用架构的最佳实践指南</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:10px;-webkit-tap-highlight-color:rgba(0, 0, 0, 0);"><div style="box-sizing:border-box;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-size:14px;line-height:1.42857;color:rgb(51, 51, 51);background-color:rgb(255, 255, 255);font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;"><div style="box-sizing:border-box;transition:right 0.4s ease;background-color:rgb(255, 255, 255);"><div style="box-sizing:border-box;outline:none;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;font-size:16px;line-height:170%;word-wrap:break-word;text-align:justify;"><span style="font-size:16px;line-height:170%;text-align:justify;display:table;"> </span>
+            	<div style="box-sizing:border-box;float:left;margin-right:15px;margin-top:0px;">
+            	<a href="#" style="position:absolute;background-color:transparent;color:rgb(51, 122, 183);top:-20px;display:block;box-sizing:border-box;width:20px;height:20px;right:0px;text-align:center;text-decoration:none;" target="_blank"><i style="text-rendering:auto;display:inline-block;font-variant:normal;font-weight:normal;font-stretch:normal;box-sizing:border-box;font-family:FontAwesome;transform:translate(0px, 0px);font-style:normal;-webkit-font-smoothing:antialiased;font-size:16px;line-height:20px;width:20px;height:20px;vertical-align:top;color:rgb(204, 204, 204);"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:20px;font-family:FontAwesome;font-size:16px;color:rgb(204, 204, 204);"></span></i></a>
+            	<ins style="box-sizing:border-box;"></ins> </div>
+                <blockquote style="box-sizing:border-box;padding:10px 20px;margin:10px 0px;font-size:14px;border-left:5px solid rgba(128, 128, 128, 0.075);background:rgb(247, 247, 247);"><span style="font-size:14px;"></span>
+  <p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:0px;">本文作者：<a href="https://zhuanlan.zhihu.com/p/27026614" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 122, 183);text-decoration:none;" target="_blank">Hevin</a>，已获授权，版权归原作者所有，未经作者同意，请勿转载。 <br style="box-sizing:border-box;"/>
+  责编：屠敏，关注物联网、移动开发、VR/AR 领域，寻求报道或投稿请发邮件<a href="http://geek.csdn.net/news/detail/198991mailto:tumin@csdn.net" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 122, 183);text-decoration:none;" target="_blank">tumin@csdn.net</a>。</p>
+<span style="font-size:14px;"></span></blockquote><hr style="border-left-style:initial;height:0px;margin-top:20px;margin-bottom:20px;border-width:1px 0px 0px;border-right-style:initial;border-bottom-style:initial;box-sizing:content-box;border-right-color:initial;border-bottom-color:initial;border-left-color:initial;border-image:initial;border-top-style:solid;border-top-color:rgb(238, 238, 238);"/><blockquote style="box-sizing:border-box;padding:10px 20px;margin:10px 0px;font-size:14px;border-left:5px solid rgba(128, 128, 128, 0.075);background:rgb(247, 247, 247);"><span style="font-size:14px;"></span>
+  <p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:0px;"><strong style="box-sizing:border-box;font-weight:700;">导语：</strong>虽然说 Android 的架构选择一直都很自由，MVP、MVC、MVVM 各有拥趸。但 Google 最近还是推出了一份关于应用架构的实践指南，并给出了相当详尽的步骤和一些指导建议。希望大家都能看一看，学习一下，打造更加优秀易用的 APP，也为 Android 生态的改善做一点贡献。: )</p>
+<span style="font-size:14px;"></span></blockquote><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">最近，官方推出了一份关于应用架构的最佳实践指南。这里就给大家简要介绍一下：</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">首先，Android 开发者肯定都知道 Android 中有四大组件，这些组件都有各自的生命周期并且在一定程度上是不受你控制的。在任何时候，Android 操作系统都可能根据用户的行为或资源紧张等原因回收掉这些组件。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">这也就引出了<strong style="box-sizing:border-box;font-weight:700;">第一条准则</strong>：「不要在应用程序组件中保存任何应用数据或状态，并且组件间也不应该相互依赖」。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">最常见的错误就是在 Activity 或 Fragment 中写了与 UI 和交互无关的代码。尽可能减少对它们的依赖，这能避免大量生命周期导致的问题，以提供更好的用户体验。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"><strong style="box-sizing:border-box;font-weight:700;">第二条准则：</strong>「通过 model 驱动应用 UI，并尽可能的持久化」。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">这样做主要有两个原因：</p><ol style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;">
+<li style="box-sizing:border-box;">如果系统回收了你的应用资源或其他什么意外情况，不会导致用户丢失数据。</li>
+<li style="box-sizing:border-box;">Model 就应该是负责处理应用程序数据的组件。独立于视图和应用程序组件，保持了视图代码的简单，也让你的应用逻辑更容易管理。并且，将应用数据置于 model 类中，也更有利于测试。</li>
+</ol><h3 style="box-sizing:border-box;font-family:inherit;font-weight:500;line-height:1.1;color:inherit;margin-bottom:10px;font-size:24px;margin-top:20px;">官方推荐的 App 架构</h3><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">在这里，官方演示了通过使用最新推出的 <a href="https://developer.android.com/topic/libraries/architecture/index.html" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 122, 183);text-decoration:none;" target="_blank">Architecture Components</a> 来构建一个应用。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">想象一下，您正在打算开发一个显示用户个人信息的界面，用户数据通过 REST API 从后端获取。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">首先，我们需要创建三个文件：</p><ul style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;">
+<li style="box-sizing:border-box;">user_profile.xml：定义界面。</li>
+<li style="box-sizing:border-box;">UserProfileViewModel.java：数据类。</li>
+<li style="box-sizing:border-box;">UserProfileFragment.java：显示 ViewModel 中的数据并对用户的交互做出反应。</li>
+</ul><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">为了简单起见，我们这里就省略掉布局文件。</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">UserProfileViewModel</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">extends</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">ViewModel</span> {</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> String userId;
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> User user;
+
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> <span style="box-sizing:border-box;">init</span>(String userId) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>.userId = userId;
+    }
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> User <span style="box-sizing:border-box;">getUser</span>() {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> user;
+    }
+}</code></pre><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">UserProfileFragment</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">extends</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">LifecycleFragment</span> {</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">static</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">final</span> String UID_KEY = <span style="box-sizing:border-box;color:rgb(0, 136, 0);">&quot;uid&quot;</span>;
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> UserProfileViewModel viewModel;
+
+    <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Override</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> <span style="box-sizing:border-box;">onActivityCreated</span>(@Nullable Bundle savedInstanceState) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">super</span>.onActivityCreated(savedInstanceState);
+        String userId = getArguments().getString(UID_KEY);
+        viewModel = ViewModelProviders.of(<span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>).get(UserProfileViewModel.class);
+        viewModel.init(userId);
+    }
+
+    <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Override</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> View <span style="box-sizing:border-box;">onCreateView</span>(LayoutInflater inflater,
+                @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> inflater.inflate(R.layout.user_profile, container, <span style="box-sizing:border-box;color:rgb(0, 0, 136);">false</span>);
+    }
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">注意其中的 ViewModel 和 LifecycleFragment 都是 Android 新引入的，可以参考<a href="https://developer.android.com/topic/libraries/architecture/adding-components.html" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 122, 183);text-decoration:none;" target="_blank">官方说明</a>进行集成。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">现在，我们完成了这三个模块，该如何将它们联系起来呢？也就是当 ViewModel 中的用户字段被设置时，我们需要一种方法来通知 UI。这就是 LiveData 的用武之地了。</p><blockquote style="box-sizing:border-box;padding:10px 20px;margin:10px 0px;font-size:14px;border-left:5px solid rgba(128, 128, 128, 0.075);background:rgb(247, 247, 247);"><span style="font-size:14px;"></span>
+  <p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"><a href="https://developer.android.com/topic/libraries/architecture/livedata.html" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 122, 183);text-decoration:none;" target="_blank">LiveData</a> 是一个可被观察的数据持有者（用到了观察者模式）。其能够允许 Activity, Fragment 等应用程序组件对其进行观察，并且不会在它们之间创建强依赖。LiveData 还能够自动响应各组件的声明周期事件，防止内存泄漏，从而使应用程序不会消耗更多的内存。</p>
+  
+  <p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:0px;"><strong style="box-sizing:border-box;font-weight:700;">注意：</strong> LiveData 和 RxJava 或 Agera 的区别主要在于 LiveData 自动帮助处理了生命周期事件，避免了内存泄漏。</p>
+<span style="font-size:14px;"></span></blockquote><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">所以，现在我们来修改一下 UserProfileViewModel：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">UserProfileViewModel</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">extends</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">ViewModel</span> {</span>
+    ...
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> LiveData&lt;User&gt; user;
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> LiveData&lt;User&gt; <span style="box-sizing:border-box;">getUser</span>() {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> user;
+    }
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">再在 UserProfileFragment 中对其进行观察并更新我们的 UI：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Override</span>
+<span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> <span style="box-sizing:border-box;">onActivityCreated</span>(@Nullable Bundle savedInstanceState) {
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">super</span>.onActivityCreated(savedInstanceState);
+    viewModel.getUser().observe(<span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>, user -&gt; {
+      <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// update UI</span>
+    });
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"><strong style="box-sizing:border-box;font-weight:700;">获取数据</strong></p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">现在，我们联系了 ViewModel 和 Fragment，但 ViewModel 又怎么来获取到数据呢？</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">在这个示例中，我们假定后端提供了 REST API，因此我们选用 <a href="http://square.github.io/retrofit/" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 122, 183);text-decoration:none;" target="_blank">Retrofit</a> 来访问我们的后端。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">首先，定义一个 Webservice：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">interface</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">Webservice</span> {</span>
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">/**
+     *<span style="box-sizing:border-box;color:rgb(102, 0, 102);"> @GET</span> declares an HTTP GET request
+     *<span style="box-sizing:border-box;color:rgb(102, 0, 102);"> @Path</span>(&quot;user&quot;) annotation on the userId parameter marks it as a
+     * replacement for the {user} placeholder in the<span style="box-sizing:border-box;color:rgb(102, 0, 102);"> @GET</span> path
+     */</span>
+    <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@GET</span>(<span style="box-sizing:border-box;color:rgb(0, 136, 0);">&quot;/users/{user}&quot;</span>)
+    Call&lt;User&gt; getUser(<span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Path</span>(<span style="box-sizing:border-box;color:rgb(0, 136, 0);">&quot;user&quot;</span>) String userId);
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">不要通过 ViewModel 直接来获取数据，这里我们将工作转交给一个新的 Repository 模块。</p><blockquote style="box-sizing:border-box;padding:10px 20px;margin:10px 0px;font-size:14px;border-left:5px solid rgba(128, 128, 128, 0.075);background:rgb(247, 247, 247);"><span style="font-size:14px;"></span>
+  <p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:0px;">Repository 模块负责数据处理，为应用的其他部分提供干净可靠的 API。你可以将其考虑为不同数据源（Web，缓存或数据库）与应用之间的中间层。</p>
+<span style="font-size:14px;"></span></blockquote><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">UserRepository</span> {</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> Webservice webservice;
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// ...</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> LiveData&lt;User&gt; <span style="box-sizing:border-box;">getUser</span>(<span style="box-sizing:border-box;color:rgb(0, 0, 136);">int</span> userId) {
+        <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// This is not an optimal implementation, we'll fix it below</span>
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">final</span> MutableLiveData&lt;User&gt; data = <span style="box-sizing:border-box;color:rgb(0, 0, 136);">new</span> MutableLiveData&lt;&gt;();
+        webservice.getUser(userId).enqueue(<span style="box-sizing:border-box;color:rgb(0, 0, 136);">new</span> Callback&lt;User&gt;() {
+            <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Override</span>
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> <span style="box-sizing:border-box;">onResponse</span>(Call&lt;User&gt; call, Response&lt;User&gt; response) {
+                <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// error case is left out for brevity</span>
+                data.setValue(response.body());
+            }
+        });
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> data;
+    }
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"><strong style="box-sizing:border-box;font-weight:700;">管理组件间的依赖关系</strong></p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">根据上面的代码，我们可以看到 UserRepository 中有一个 Webservice 的实例，不要直接在 UserRepository 中 new 一个 Webservice。这很容易导致代码的重复与复杂化，比如 UserRepository 很可能不是唯一用到 Webservice 的类，如果每个用到的类都新建一个 Webservice，这显示会导致资源的浪费。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">这里，我们推荐使用 <a href="https://google.github.io/dagger/" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 122, 183);text-decoration:none;" target="_blank">Dagger 2</a> 来管理这些依赖关系。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">现在，让我们来把 ViewModel 和 Repository 连接起来吧：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">UserProfileViewModel</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">extends</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">ViewModel</span> {</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> LiveData&lt;User&gt; user;
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> UserRepository userRepo;
+
+    <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Inject</span> <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// UserRepository parameter is provided by Dagger 2</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;">UserProfileViewModel</span>(UserRepository userRepo) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>.userRepo = userRepo;
+    }
+
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> <span style="box-sizing:border-box;">init</span>(String userId) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">if</span> (<span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>.user != <span style="box-sizing:border-box;color:rgb(0, 0, 136);">null</span>) {
+            <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// ViewModel is created per Fragment so</span>
+            <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// we know the userId won't change</span>
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span>;
+        }
+        user = userRepo.getUser(userId);
+    }
+
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> LiveData&lt;User&gt; <span style="box-sizing:border-box;">getUser</span>() {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>.user;
+    }
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"><strong style="box-sizing:border-box;font-weight:700;">缓存数据</strong></p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">在实际项目中，Repository 往往不会只有一个数据源。因此，我们这里在其中再加入缓存：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Singleton</span>  <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// informs Dagger that this class should be constructed once</span>
+<span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">UserRepository</span> {</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> Webservice webservice;
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// simple in memory cache, details omitted for brevity</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> UserCache userCache;
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> LiveData&lt;User&gt; <span style="box-sizing:border-box;">getUser</span>(String userId) {
+        LiveData&lt;User&gt; cached = userCache.get(userId);
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">if</span> (cached != <span style="box-sizing:border-box;color:rgb(0, 0, 136);">null</span>) {
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> cached;
+        }
+
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">final</span> MutableLiveData&lt;User&gt; data = <span style="box-sizing:border-box;color:rgb(0, 0, 136);">new</span> MutableLiveData&lt;&gt;();
+        userCache.put(userId, data);
+        <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// this is still suboptimal but better than before.</span>
+        <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// a complete implementation must also handle the error cases.</span>
+        webservice.getUser(userId).enqueue(<span style="box-sizing:border-box;color:rgb(0, 0, 136);">new</span> Callback&lt;User&gt;() {
+            <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Override</span>
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> <span style="box-sizing:border-box;">onResponse</span>(Call&lt;User&gt; call, Response&lt;User&gt; response) {
+                data.setValue(response.body());
+            }
+        });
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> data;
+    }
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"><strong style="box-sizing:border-box;font-weight:700;">持久化数据</strong></p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">现在当用户旋转屏幕或暂时离开应用再回来时，数据是直接可见的，因为是直接从缓存中获取的数据。但要是用户长时间关闭应用，并且 Android 还彻底杀死了进程呢？</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">我们目前的实现中，会再次从网络中获取数据。这可不是一个好的用户体验。这时就需要数据持久化了。继续引入一个新组件 <a href="https://developer.android.com/topic/libraries/architecture/room.html" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 122, 183);text-decoration:none;" target="_blank">Room</a>。</p><blockquote style="box-sizing:border-box;padding:10px 20px;margin:10px 0px;font-size:14px;border-left:5px solid rgba(128, 128, 128, 0.075);background:rgb(247, 247, 247);"><span style="font-size:14px;"></span>
+  <p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:0px;">Room 能帮助我们方便的实现本地数据持久化，抽象出了很多常用的数据库操作，并且在编译时会验证每个查询，从而损坏的 SQL 查询只会导致编译时错误，而不是运行时崩溃。还能和上面介绍的 LiveData 完美合作，并帮开发者处理了很多线程问题。</p>
+<span style="font-size:14px;"></span></blockquote><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">现在，让我们来看看怎么使用 Room 吧。: )</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">首先，在 User 类上面加上 @Entity，将 User 声明为你数据库中的一张表。</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Entity</span>
+class User {
+  <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@PrimaryKey</span>
+  <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">int</span> id;
+  <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> String name;
+  <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> String lastName;
+  <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// getters and setters for fields</span>
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">再创建数据库类并继承 RoomDatabase：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Database</span>(entities = {User.class}, version = <span style="box-sizing:border-box;color:rgb(0, 102, 102);">1</span>)
+<span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">abstract</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">MyDatabase</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">extends</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">RoomDatabase</span> {</span>
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">注意 MyDatabase 是一个抽象类，Room 会自动添加实现的。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">现在我们需要一种方法来将用户数据插入到数据库：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Dao</span>
+<span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">interface</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">UserDao</span> {</span>
+    <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Insert</span>(onConflict = REPLACE)
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> save(User user);
+    <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Query</span>(<span style="box-sizing:border-box;color:rgb(0, 136, 0);">&quot;SELECT * FROM user WHERE id = :userId&quot;</span>)
+    LiveData&lt;User&gt; load(String userId);
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">再在数据库类中加入 DAO：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Database</span>(entities = {User.class}, version = <span style="box-sizing:border-box;color:rgb(0, 102, 102);">1</span>)
+<span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">abstract</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">MyDatabase</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">extends</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">RoomDatabase</span> {</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">abstract</span> UserDao <span style="box-sizing:border-box;">userDao</span>();
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">注意上面的 load 方法返回的是 LiveData，Room 会知道什么时候数据库发生了变化并自动通知所有的观察者。这也就是 LiveData 和 Room 搭配的妙用。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">现在继续修改 UserRepository：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Singleton</span>
+<span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">UserRepository</span> {</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">final</span> Webservice webservice;
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">final</span> UserDao userDao;
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">final</span> Executor executor;
+
+    <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Inject</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;">UserRepository</span>(Webservice webservice, UserDao userDao, Executor executor) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>.webservice = webservice;
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>.userDao = userDao;
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>.executor = executor;
+    }
+
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> LiveData&lt;User&gt; <span style="box-sizing:border-box;">getUser</span>(String userId) {
+        refreshUser(userId);
+        <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// return a LiveData directly from the database.</span>
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> userDao.load(userId);
+    }
+
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> <span style="box-sizing:border-box;">refreshUser</span>(<span style="box-sizing:border-box;color:rgb(0, 0, 136);">final</span> String userId) {
+        executor.execute(() -&gt; {
+            <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// running in a background thread</span>
+            <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// check if user was fetched recently</span>
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">boolean</span> userExists = userDao.hasUser(FRESH_TIMEOUT);
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">if</span> (!userExists) {
+                <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// refresh the data</span>
+                Response response = webservice.getUser(userId).execute();
+                <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// TODO check for error etc.</span>
+                <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// Update the database.The LiveData will automatically refresh so</span>
+                <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// we don't need to do anything else here besides updating the database</span>
+                userDao.save(response.body());
+            }
+        });
+    }
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">可以看到，即使我们更改了 UserRepository 中的数据源，我们也完全不需要修改 ViewModel 和 Fragment，这就是抽象的好处。同时还非常适合测试，我们可以在测试 UserProfileViewModel 时提供测试用的 UserRepository。</p><blockquote style="box-sizing:border-box;padding:10px 20px;margin:10px 0px;font-size:14px;border-left:5px solid rgba(128, 128, 128, 0.075);background:rgb(247, 247, 247);"><span style="font-size:14px;"></span>
+  <p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:0px;">下面部分的内容在原文中是作为附录，但我个人觉得也很重要，所以擅自挪上来，一起为大家介绍了。: )</p>
+<span style="font-size:14px;"></span></blockquote><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">在上面的例子中，有心的大家可能发现了我们没有处理网络错误和正在加载状态。但在实际开发中其实是很重要的。这里，我们就实现一个工具类来根据不同的网络状况选择不同的数据源。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">首先，实现一个 Resource 类：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(136, 0, 0);">//a generic class that describes a data with a status</span>
+<span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> Resource&lt;T&gt; {
+    @NonNull <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> final Status status;
+    @Nullable <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> final T data;
+    @Nullable <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> final String message;
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> <span style="box-sizing:border-box;">Resource</span>(@NonNull Status status, @Nullable T data, @Nullable String message) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>.status = status;
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>.data = data;
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">this</span>.message = message;
+    }
+
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">static</span> &lt;T&gt; Resource&lt;T&gt; <span style="box-sizing:border-box;">success</span>(@NonNull T data) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">new</span> Resource&lt;&gt;(SUCCESS, data, <span style="box-sizing:border-box;color:rgb(0, 0, 136);">null</span>);
+    }
+
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">static</span> &lt;T&gt; Resource&lt;T&gt; <span style="box-sizing:border-box;">error</span>(String msg, @Nullable T data) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">new</span> Resource&lt;&gt;(ERROR, data, msg);
+    }
+
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">static</span> &lt;T&gt; Resource&lt;T&gt; <span style="box-sizing:border-box;">loading</span>(@Nullable T data) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">new</span> Resource&lt;&gt;(LOADING, data, <span style="box-sizing:border-box;color:rgb(0, 0, 136);">null</span>);
+    }
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">因为，从网络加载数据和从磁盘加载是很相似的，所以再新建一个 NetworkBoundResource 类，方便多处复用。下面是 NetworkBoundResource 的决策树：</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"></p><center style="box-sizing:border-box;"><img src="Google 官方应用架构的最佳实践指南_files/20170523100721373.png" type="image/png" data-filename="20170523100721373.png" alt="" height="465" style="box-sizing:border-box;border:0px;vertical-align:middle;display:table;margin:auto;max-width:100%;" title="" width="534"/></center><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"></p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">API 设计：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(136, 0, 0);">// ResultType: Type for the Resource data</span>
+<span style="box-sizing:border-box;color:rgb(136, 0, 0);">// RequestType: Type for the API response</span>
+<span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">abstract</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">class</span> NetworkBoundResource&lt;ResultType, RequestType&gt; {
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// Called to save the result of the API response into the database</span>
+    @WorkerThread
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">abstract</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> <span style="box-sizing:border-box;">saveCallResult</span>(@NonNull RequestType item);
+
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// Called with the data in the database to decide whether it should be</span>
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// fetched from the network.</span>
+    @MainThread
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">abstract</span> boolean <span style="box-sizing:border-box;">shouldFetch</span>(@Nullable ResultType data);
+
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// Called to get the cached data from the database</span>
+    @NonNull @MainThread
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">abstract</span> LiveData&lt;ResultType&gt; <span style="box-sizing:border-box;">loadFromDb</span>();
+
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// Called to create the API call.</span>
+    @NonNull @MainThread
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">abstract</span> LiveData&lt;ApiResponse&lt;RequestType&gt;&gt; <span style="box-sizing:border-box;">createCall</span>();
+
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// Called when the fetch fails. The child class may want to reset components</span>
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// like rate limiter.</span>
+    @MainThread
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> <span style="box-sizing:border-box;">onFetchFailed</span>() {
+    }
+
+    <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// returns a LiveData that represents the resource</span>
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> final LiveData&lt;Resource&lt;ResultType&gt;&gt; <span style="box-sizing:border-box;">getAsLiveData</span>() {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> result;
+    }
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">注意上面使用了 ApiResponse 作为网络请求， ApiResponse 是对于 Retrofit2.Call 的简单包装，用于将其响应转换为 LiveData。</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">下面是具体的实现：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;"><span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> abstract class NetworkBoundResource<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&lt;</span>ResultType, RequestType<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&gt;</span> {
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> final MediatorLiveData<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&lt;</span>Resource<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&lt;</span>ResultType<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&gt;&gt;</span> result <span style="box-sizing:border-box;color:rgb(0, 0, 0);">=</span> <span style="box-sizing:border-box;color:rgb(0, 102, 102);">new</span> MediatorLiveData<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&lt;&gt;</span>();
+
+    @MainThread
+    NetworkBoundResource() {
+        result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>setValue(Resource<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>loading(<span style="box-sizing:border-box;color:rgb(102, 0, 102);">null</span>));
+        LiveData<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&lt;</span>ResultType<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&gt;</span> dbSource <span style="box-sizing:border-box;color:rgb(0, 0, 0);">=</span> loadFromDb();
+        result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>addSource(dbSource, <span style="box-sizing:border-box;color:rgb(102, 0, 102);">data</span> <span style="box-sizing:border-box;color:rgb(0, 0, 0);">-&gt; </span>{
+            result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>removeSource(dbSource);
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">if</span> (shouldFetch(<span style="box-sizing:border-box;color:rgb(102, 0, 102);">data</span>)) {
+                fetchFromNetwork(dbSource);
+            } <span style="box-sizing:border-box;color:rgb(0, 0, 136);">else</span> {
+                result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>addSource(dbSource,
+                        newData <span style="box-sizing:border-box;color:rgb(0, 0, 0);">-&gt; </span>result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>setValue(Resource<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>success(newData)));
+            }
+        });
+    }
+
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> <span style="box-sizing:border-box;color:rgb(0, 102, 102);">void</span> fetchFromNetwork(final LiveData<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&lt;</span>ResultType<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&gt;</span> dbSource) {
+        LiveData<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&lt;</span>ApiResponse<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&lt;</span>RequestType<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&gt;&gt;</span> apiResponse <span style="box-sizing:border-box;color:rgb(0, 0, 0);">=</span> createCall();
+        <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// we re-attach dbSource as a new source,</span>
+        <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// it will dispatch its latest value quickly</span>
+        result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>addSource(dbSource,
+                newData <span style="box-sizing:border-box;color:rgb(0, 0, 0);">-&gt; </span>result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>setValue(Resource<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>loading(newData)));
+        result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>addSource(apiResponse, response <span style="box-sizing:border-box;color:rgb(0, 0, 0);">-&gt; </span>{
+            result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>removeSource(apiResponse);
+            result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>removeSource(dbSource);
+            <span style="box-sizing:border-box;color:rgb(136, 0, 0);">//noinspection ConstantConditions</span>
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">if</span> (response<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>isSuccessful()) {
+                saveResultAndReInit(response);
+            } <span style="box-sizing:border-box;color:rgb(0, 0, 136);">else</span> {
+                onFetchFailed();
+                result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>addSource(dbSource,
+                        newData <span style="box-sizing:border-box;color:rgb(0, 0, 0);">-&gt; </span>result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>setValue(
+                                Resource<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>error(response<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>errorMessage, newData)));
+            }
+        });
+    }
+
+    @MainThread
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">private</span> <span style="box-sizing:border-box;color:rgb(0, 102, 102);">void</span> saveResultAndReInit(ApiResponse<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&lt;</span>RequestType<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&gt;</span> response) {
+        <span style="box-sizing:border-box;color:rgb(0, 102, 102);">new</span> AsyncTask<span style="box-sizing:border-box;color:rgb(0, 0, 0);">&lt;</span><span style="box-sizing:border-box;color:rgb(0, 102, 102);">Void</span>, <span style="box-sizing:border-box;color:rgb(0, 102, 102);">Void</span>, <span style="box-sizing:border-box;color:rgb(0, 102, 102);">Void</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);">&gt;</span>() {
+
+            @Override
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> <span style="box-sizing:border-box;color:rgb(0, 102, 102);">Void</span> doInBackground(<span style="box-sizing:border-box;color:rgb(0, 102, 102);">Void</span><span style="box-sizing:border-box;">...</span> voids) {
+                saveCallResult(response<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>body);
+                <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> <span style="box-sizing:border-box;color:rgb(102, 0, 102);">null</span>;
+            }
+
+            @Override
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> <span style="box-sizing:border-box;color:rgb(0, 102, 102);">void</span> onPostExecute(<span style="box-sizing:border-box;color:rgb(0, 102, 102);">Void</span> aVoid) {
+                <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// we specially request a new live data,</span>
+                <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// otherwise we will get immediately last cached value,</span>
+                <span style="box-sizing:border-box;color:rgb(136, 0, 0);">// which may not be updated with latest results received from network.</span>
+                result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>addSource(loadFromDb(),
+                        newData <span style="box-sizing:border-box;color:rgb(0, 0, 0);">-&gt; </span>result<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>setValue(Resource<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>success(newData)));
+            }
+        }<span style="box-sizing:border-box;color:rgb(102, 0, 102);">.</span>execute();
+    }
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">现在，我们就能使用 NetworkBoundResource 来根据不同的情况获取数据了：</p><pre style="line-height:1.45;overflow:auto;box-sizing:border-box;color:rgb(51, 51, 51);font-size:13px;padding:9.5px;margin:0px 0px 10px;font-family:&quot;Source Code Pro&quot;, monospace;display:block;word-break:break-all;word-wrap:break-word;background-color:rgb(248, 249, 250);border:1px solid rgba(128, 128, 128, 0.075);border-radius:0px;"><code style="box-sizing:border-box;display:block;background:rgb(255, 255, 255);font-family:&quot;Source Code Pro&quot;, monospace;font-size:inherit;padding:0px;color:inherit;background-color:transparent;border-radius:0px;white-space:pre-wrap;">class UserRepository {
+    Webservice webservice;
+    UserDao userDao;
+
+    <span style="box-sizing:border-box;color:rgb(0, 0, 136);">public</span> LiveData&lt;Resource&lt;User&gt;&gt; <span style="box-sizing:border-box;">loadUser</span>(<span style="box-sizing:border-box;color:rgb(0, 0, 136);">final</span> String userId) {
+        <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">new</span> NetworkBoundResource&lt;User,User&gt;() {
+            <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Override</span>
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">void</span> <span style="box-sizing:border-box;">saveCallResult</span>(@NonNull User item) {
+                userDao.insert(item);
+            }
+
+            <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Override</span>
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> <span style="box-sizing:border-box;color:rgb(0, 0, 136);">boolean</span> <span style="box-sizing:border-box;">shouldFetch</span>(@Nullable User data) {
+                <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> rateLimiter.canFetch(userId) &amp;&amp; (data == <span style="box-sizing:border-box;color:rgb(0, 0, 136);">null</span> || !isFresh(data));
+            }
+
+            <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@NonNull</span> <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Override</span>
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> LiveData&lt;User&gt; <span style="box-sizing:border-box;">loadFromDb</span>() {
+                <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> userDao.load(userId);
+            }
+
+            <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@NonNull</span> <span style="box-sizing:border-box;color:rgb(155, 133, 157);">@Override</span>
+            <span style="box-sizing:border-box;color:rgb(0, 0, 136);">protected</span> LiveData&lt;ApiResponse&lt;User&gt;&gt; <span style="box-sizing:border-box;">createCall</span>() {
+                <span style="box-sizing:border-box;color:rgb(0, 0, 136);">return</span> webservice.getUser(userId);
+            }
+        }.getAsLiveData();
+    }
+}</code></pre><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">到这里，我们的代码就全部完成了。最后的架构看起来就像这样：</p><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"></p><center style="box-sizing:border-box;"><img src="Google 官方应用架构的最佳实践指南_files/20170523100426769.png" type="image/png" data-filename="20170523100426769.png" alt="" height="450" style="box-sizing:border-box;border:0px;vertical-align:middle;display:table;margin:auto;max-width:100%;" title="" width="600"/></center><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"></p><h3 style="box-sizing:border-box;font-family:inherit;font-weight:500;line-height:1.1;color:inherit;margin-bottom:10px;font-size:24px;margin-top:20px;">最后的最后，给出一些指导原则</h3><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">下面的原则虽然不是强制性的，但根据我们的经验遵循它们能使您的代码更健壮、可测试和可维护的。</p><ul style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;">
+<li style="box-sizing:border-box;">所有您在 manifest 中定义的组件 - activity, service, broadcast receiver… 都不是数据源。因为每个组件的生命周期都相当短，并取决于当前用户与设备的交互和系统的运行状况。简单来说，这些组件都不应当作为应用的数据源。</li>
+<li style="box-sizing:border-box;">在您应用的各个模块之间建立明确的责任边界。比如，不要将与数据缓存无关的代码放在同一个类中。</li>
+<li style="box-sizing:border-box;">每个模块尽可能少的暴露内部实现。从过去的经验来看，千万不要为了一时的方便而直接将大量的内部实现暴露出去。这会让你在以后承担很重的技术债务（很难更换新技术）。</li>
+<li style="box-sizing:border-box;">在您定义模块间交互时，请考虑如何使每个模块尽量隔离，通过设计良好的 API 来进行交互。</li>
+<li style="box-sizing:border-box;">您应用的核心应该是能让它脱颖而出的某些东西。不要浪费时间重复造轮子或一次次编写同样的模板代码。相反，应当集中精力在使您的应用独一无二，而将一些重复的工作交给这里介绍的 Android Architecture Components 或其他优秀的库。</li>
+<li style="box-sizing:border-box;">尽可能持久化数据，以便您的应用在脱机模式下依然可用。虽然您可能享受着快捷的网络，但您的用户可能不会。</li>
+</ul><blockquote style="box-sizing:border-box;padding:10px 20px;margin:10px 0px;font-size:14px;border-left:5px solid rgba(128, 128, 128, 0.075);background:rgb(247, 247, 247);"><span style="font-size:14px;"></span>
+  <p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;">另外，Kotlin 版本的多个官方 Sample 也公布啦，感兴趣的同学赶紧去看看吧：<a href="https://developer.android.com/samples/index.html?language=kotlin" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 122, 183);text-decoration:none;" target="_blank">Android Kotlin Samples</a></p>
+  
+  <p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:0px;">原文：<a href="https://developer.android.com/topic/libraries/architecture/guide.html#building_the_user_interface" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 122, 183);text-decoration:none;" target="_blank">Guide to App Architecture</a></p>
+<span style="font-size:14px;"></span></blockquote><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:20px;"></p><center style="box-sizing:border-box;"><img src="Google 官方应用架构的最佳实践指南_files/20170523102929075.jpg" type="image/jpeg" data-filename="20170523102929075.jpg" alt="" height="360" style="box-sizing:border-box;border:0px;vertical-align:middle;display:table;margin:auto;max-width:100%;" title="" width="600"/></center><p style="box-sizing:border-box;margin:0px 0px 10px;margin-bottom:0px;"></p>            <span style="font-size:16px;line-height:170%;text-align:justify;display:block;clear:both;width:0px;height:0px;visibility:hidden;">.</span></div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

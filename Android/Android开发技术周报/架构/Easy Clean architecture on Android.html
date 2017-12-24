@@ -1,0 +1,235 @@
+<html>
+<head>
+  <title>Easy Clean architecture on Android</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2875"/>
+<h1>Easy Clean architecture on Android</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>Easy Clean architecture on Android</h1><div><div></div></div></div>
+
+        
+        <div>
+                    <div>
+            
+            
+            <a target="_blank"><span>关注</span></a>
+            
+            <div>
+              
+                
+              <span>字数 4360</span>
+            <span>评论 19</span><span>赞赏 2</span></div>
+          </div>
+          
+        </div>
+        
+
+        
+        
+          <div>
+<div>
+
+<div><div><img src="Easy Clean architecture on Android_files/700.png" type="image/png" data-filename="700.png" height="141" width="576"/></div></div>
+</div>
+
+</div>
+<p>在我这几年的学习和成长中，深刻的意识到搭建一个Android应用架构是件非常痛苦的事，它不仅要满足不断增长的业务需求，还要保证架构自身的整洁，这让事情变得非常具有挑战，但我们必须这样做，因为健壮的Android架构是一款优秀APP的基础。本文的代码示例可以从github中获得，仓库地址是<strong><a href="https://link.jianshu.com/?t=https://github.com/SmartDengg/android-easy-cleanarchitecture" target="_blank">android-easy-cleanarchitecture</a></strong>。</p>
+<h2>Why we need an architecture?</h2>
+<p>Android入门要求始终不高，因为Android Framework会帮我们做很多事，甚至不需要通过深入的学习就能写出一个简单的APP，比如说在<code>Activity</code>或<code>Fragment</code>中摆放几个<code>View</code>用来展示到屏幕上，后台耗时任务放在<code>Service</code>中执行，组件之间使用<code>Broadcast</code>传递数据，由此看来“人人都能成为Android工程师”，真的是这样吗？</p>
+<p>当然不是！！！</p>
+<p>如果我们如此天真的开始编程，迟早会为此付出代价。那些依赖关系混乱，灵活性不够高的代码将会成为我们最大的阻碍，任由发展的后果就是，导致项目一片狼藉，我们很难加入新的功能，只能对它进行重构甚至推翻重做。在开始编程前，我们不应该低估一个应用程序的复杂性，应该将你的APP看做一个拥有前端，后端和存储特性的复杂系统。</p>
+<p>另外，在软件工程领域，始终都有一些值得我们学习和遵守的原则，比如：<strong>单一职责原则</strong>，<strong>依赖倒置原则</strong>，<strong>避免副作用</strong>等等。Android Framework不会强制我们遵守这些原则，或者说它对我们没有任何限制，试想那些耦合紧密的实现类，处理大量业务逻辑的Activity或Fragment，随处可见的<a href="https://link.jianshu.com/?t=https://github.com/greenrobot/EventBus" target="_blank">EventBus</a>，难以阅读的数据流传递和混乱的回调逻辑等等，它们虽然不会导致系统马上崩溃，但随着项目的发展，它们会变得难以维护，甚至很难添加新的代码，这无疑会成为业务增长的可怕障碍。</p>
+<p>所以说，对于开发者们来讲，一个好的架构指导规范，至关重要。</p>
+<p>从事Android工作以来，我始终认为我们能将APP做的更好，我也遇到过很多好的坏的软件设计，自己也做过很多不同的尝试，我不断地吸取教训并做出改变，直到我遇到了<a href="https://link.jianshu.com/?t=https://8thlight.com/blog/uncle-bob/2012/08/13/the-clean-architecture.html" target="_blank">Clean Architecture</a>，我确定这就是我想要的，我决定使用它。本文的目标是分享我使用<strong>clean Architecture</strong>构建项目时所收获的经验，希望能够为你的项目改进带来灵感。</p>
+<h2>Avoid God Activity</h2>
+<p>可能是出于“快速迭代”，于是你集成了这个万能的<code>Activity</code>，它无所不能：</p>
+<ul>
+<li>管理自身生命周期(在正确的生命周期中处理任务)</li>
+<li>维持UI状态(配置变更时保存/回复视图状态)</li>
+<li>处理Intent(接收和发送正确的Intent)</li>
+<li>数据更新(与远程API同步数据，本地存储)</li>
+<li>线程切换</li>
+<li>业务逻辑<br/>
+......</li>
+</ul>
+<p>甚至突破了所有的约束壁垒：在Android世界里面加入了业务代码；在BaseActivity中定义了所有子类可能用到的变量等等。它现在的确就是个“上帝”，方便且万能的“上帝”！</p>
+<p>随着项目的发展，它已经庞大到无法再添加代码了，于是为它写了很多帮助类，你想重构它：</p>
+<div>
+
+<div>god activity</div>
+</div>
+<p><strong>不经意间，你已经埋下了黑色炸弹</strong>。</p>
+<p>看上去，业务逻辑被转移到了帮助类中，<code>Activity</code>中的代码减少了，不再那么臃肿，帮助类缓解了“万能类”的压力，但随着项目的成长，业务的扩大，同时这些帮助类也变多，那个时候又要按照业务继续拆分它们，<code>APIHelperThis</code>、<code>APIHelperThat</code>等等。原来的问题又出现了，测试成本还在，维护成本好像又增加了，那些混乱并且难以复用的程序又回来了，我们的努力好像都白费了。</p>
+<p>然而你写这个万能类的初衷是什么，想快捷、方便的使用一些功能函数吗，尤其希望在子类中能够很快的拿到。</p>
+<p>当然，一部分人会根据不同的业务功能分离出不同的<strong>抽象类</strong>，但相对那种业务场景下，它们仍是万能的。</p>
+<p>无论什么理由这种创造“上帝类”的做法都应该尽量避免，我们不应该把重点放在编写那些大而全的类，而是投入精力去编写那些易于维护和测试的低耦合类，如果可以的话，最好不要让业务逻辑进入纯净的Android世界，这也是我一直努力的目标。</p>
+<h2>Clean architecture and The Clean rule</h2>
+<p>这种看起来像“洋葱”的环形图就是<strong><a href="https://link.jianshu.com/?t=https://8thlight.com/blog/uncle-bob/2012/08/13/the-clean-architecture.html" target="_blank">Clean Architecture</a></strong>，不同颜色的“环”代表了不同的系统结构，它们组成了整个系统，箭头则代表了依赖关系，</p>
+
+<p>关于它的组成细节，在这里就不做深入的介绍了，因为有太多的文章讲的比我好，比我详尽。另外值得一提的是architecture是面向软件设计的，它不应该做语言差异，而本文将主要讲述如何结合Clean Architecture构建你的Android应用程序。</p>
+<p>在使用clean架构搭建项目前，我阅读了大量的文章，并付诸了很多实践，我的收获很大，经验和教训告诉我一个架构的清晰和整洁离不开这三个原则：</p>
+<ul>
+<li>分层原则</li>
+<li>依赖原则</li>
+<li>抽象原则</li>
+</ul>
+<p>接下来我就分别阐述一下，我对这些原则的理解，以及背后的原因。</p>
+<h3>分层原则</h3>
+<p>首先，值得一提的是框架不会限制你对应用程序的具体分层，你可以拥有任意的层数，但是在Android中通常情况下我会划分为3层：</p>
+<ul>
+<li>外层：实现层</li>
+<li>中间层：接口适配层</li>
+<li>内层：业务逻辑层</li>
+</ul>
+<p>接下来，介绍下这三层所应包含的内容。</p>
+<h4>实现层</h4>
+<p>一句话：<strong>实现层就是Android框架层</strong>。这个地方应该是Android framework的具体实现，它应该包括所有Android的东西，也就是说这里的代码应该是解决Android问题的，是与平台特性相关的，是具体的实现细节，如，<code>Activity</code>的跳转，创建并加载<code>Fragment</code>，处理<code>Intent</code>或者开启<code>Service</code>等。</p>
+<h4>接口适配层</h4>
+<p>接口适配层的目的是连接业务逻辑与框架特定代码，担任外层与内层之间的桥梁。</p>
+<h4>业务逻辑层</h4>
+<p>最重要的是业务逻辑层，我们在这里解决所有业务逻辑，这一层不应该包含Android代码，应该能够在没有Android环境的情况下测试它，也就是说我们的业务逻辑能够被独立测试，开发和维护，这就是clean架构的主要好处。</p>
+<h3>依赖规则</h3>
+<p>依赖规则与箭头方向保持一致，<strong>外层”依赖“内层</strong>，这里所说的“依赖”并不是指你在<code>gradle</code>中编写的那些<em>dependency</em>语句，应该将它理解成“看到”或者“知道”，外层知道内层，相反内层不知道外层，或者说外层知道内层是如何定义抽象的，而内层却不知道外层是如何实现的。如前所述，内层包含业务逻辑，外层包含实现细节，结合依赖规则就是：<strong>业务逻辑既看不到也不知道实现细节</strong>。</p>
+<p>对于项目工程来讲，具体的依赖方式完全取决于你。你可以将他们划入不同的包，通过包结构来管理它们，需要注意的是不要在内部包中使用外部包的代码。使用包来进行管理十分的简单，但同时也暴露了致命的问题，一旦有人不知道依赖规则，就可能写出错误的代码，因为这种管理方式不能阻止人们对依赖规则的破坏，所以我更倾向将他们归纳到不同的Android module中，调整module间的依赖关系，使内层代码根本无法知道外层的存在。</p>
+<p>另外值得一提的是，尽管没人能够阻止你跳过相邻的层去访问其它层的代码，但我还是强烈建议只与相邻层进行数据访问。</p>
+<h3>抽象原则</h3>
+<p>在依赖原则中，我已经暗示了抽象原则，顺着箭头方向由两边朝中间移动时，东西就越抽象，相对的，朝两边移动时，东西就越具体。这也是我一直反复强调的，<strong>内圈包含业务逻辑，外圈包含实现细节</strong>。</p>
+<p>接下来我会用一个例子来解释抽象原则：</p>
+<p>在内层定一个抽象接口<code>Notification</code>，一方面，业务逻辑可以直接使用它来向用户显示通知，另一方面，我们也可以在外层实现该接口，使用Android framework提供的<code>NotificationManager</code>来显示通知。业务逻辑使用的只是通知接口，它不了解实现细节，不知道通知是如何实现的，甚至不知道实现细节的存在。</p>
+<p>这很好演示了如何使用抽象原则。当抽象与依赖结合后，就会发现使用抽象通知的业务逻辑看不到也不知道使用Android通知管理器的具体实现，这就是我们想要的：<strong>业务逻辑不会注意到具体的实现细节，更不知道它何时会改变</strong>。抽象原则很好的帮我们做到了这一点。</p>
+<h2>Apply on Android</h2>
+<p>按照上面提到的分层原则，我把项目分为了三层，也就是说它有三个Android module，如下图所示：</p>
+<div>
+
+<div>Clean architecture modules</div>
+</div>
+<p>在<strong>Domain</strong>中定义业务逻辑规则，在<strong>UI</strong>中实现界面交互，<strong>Model</strong>则是业务逻辑的具体实现方式(Android framework)。箭头方向代表依赖关系，内层抽象，外层具体，外层知道内层，内层不了解外层。</p>
+<p>具体到Android中的框架结构如下图所示：</p>
+<div>
+
+<div>clean architecture structure</div>
+</div>
+<p>你可能有些困惑，为什么<strong>Domain</strong>指向<strong>Data</strong>？既然<strong>Domain</strong>包含业务逻辑，它就应该是应用程序的中心，它不应该依赖<strong>Model</strong>，按照前面提到的原则，<strong>Domain</strong>是抽象的，<strong>Model</strong>是具体的，应该是<strong>Model</strong>依赖<strong>Domain</strong>，而不是<strong>Domain</strong>依赖<strong>Model</strong>。</p>
+<p>其实这很好理解，也是我始终强调的，这里所说的“依赖”并不是指配置在<code>gradle</code>中的dependency，你应该将它理解为“知道”，“了解”，“意识”，图中的箭头代表了调用关系，而非模块间的依赖关系。我们应该能够理解：<strong>抽象是理论，依赖是实践，抽象是应用的逻辑布局，依赖是应用的组合策略</strong>。对于框架结构的理解，我们应该跳出代码层面，不要局限在惯性思维中，否则很快就会陷入逻辑混乱的怪圈。</p>
+<p>与调用关系对应的就是数据流的走向：</p>
+<div>
+
+<div>clean architecture data stream</div>
+</div>
+<p>在<strong>app</strong>中接受用户的行为，根据<strong>domain</strong>中定义的业务规则，访问<strong>model</strong>中的真实数据，然后依次返回，最终更新界面，这就是一个完整的数据流走向。</p>
+<p>为了更方便理解，我对项目进行了简单的拆解，并在图中加上了类的用例描述，它看起来就像这样：</p>
+<div>
+
+<div>clean architecture UML</div>
+</div>
+<p>对上图所表示内容做一下总结：</p>
+<p>首先，项目被分为三层：</p>
+<ul>
+<li>app：UI，Presenter ...</li>
+<li>domain：Entity，Use case，Repository ...</li>
+<li>model：DB，API ...</li>
+</ul>
+<p>其次，更细节的子模块划分：</p>
+<h3>UI</h3>
+<p>视图，包含所有的Android控件，负责UI展示。</p>
+<h3>Presenter</h3>
+<p>处理用户交互，调用适当的业务逻辑，并将数据结果发送到UI进行渲染。也就是说Presenter将担任着接口适配层的责任，连接Android实现和业务逻辑，负责数据的传递和回调。</p>
+<h3>Entity</h3>
+<p>实体，也就是业务对象，是应用的核心，它代表了应用的主要功能，你应该能够通过查看这些应用来判断这款应用的功能，例如，如果你有一个新闻应用，这些实体将是体育、汽车或者财经等实体类。</p>
+<h3>Use case</h3>
+<p>用例，即interactor，也就是业务服务，是实体的扩展，同时也是业务逻辑的扩展。它们包含的逻辑并不仅针对于一个实体，而是能处理更多的实体。一个好的用例，应该可以用通俗的语言来描述所做的事情，例如，转账可以叫做TransferMoneyUseCase。</p>
+<h3>Repository</h3>
+<p>抽象的核心，它们应该被定义为接口，为UseCase提供相应的输入和输出，能够直接对实体进行CRUD等操作。或者它们可以暴露一些更复杂的操作行为，如过滤，聚合等，具体的实现细节可以由外层来实现。</p>
+<h3>DB&amp;API</h3>
+<p>数据库和API的实现都应该放在这里，比如上面示例中，可以将DAO，Retrofit，json解析等放在这里。它们应该能够实现在Repository中定义的接口，是具体的实现细节，能够对实体类进行直接操作。</p>
+<h2>Show code</h2>
+<p>你可以像前面UML图中演示的那样，组合你的<code>MVPView</code>和<code>MVPPresenter</code>，让它们更容易被管理和维护。</p>
+<p>首先定义<code>BaseView</code>和<code>BasePresenter</code>，在<code>BaseView</code>中我是用了<a href="https://link.jianshu.com/?t=https://github.com/ReactiveX/RxJava" target="_blank">RxJava</a>的<code>Observable</code>作为结果类型。：</p>
+<pre><code>public interface BaseView&lt;T&gt; {
+
+  void showData(Observable&lt;T&gt; data);
+
+  void showError(String errorMessage);
+}
+</code></pre>
+<pre><code>public interface BasePresenter&lt;V&gt; {
+
+  void attachView(V view);
+
+  void detachView();
+}
+</code></pre>
+<p>假设你有一个根据城市ID获取该城市已上映电影的需求，那么你可以这样组合你的<code>MovieView</code>和<code>MoviePresenter</code>接口：</p>
+<pre><code>
+interface MovieContract {
+
+  interface Presenter&lt;Request, Result&gt; extends BasePresenter&lt;View&lt;Result&gt;&gt; {
+    void loadData(Request request);
+  }
+
+  interface View&lt;Result&gt; extends BaseView&lt;Result&gt; {
+    void showProgress();
+  }
+}
+</code></pre>
+<p><strong>泛型的加入，有效保证了数据的类型安全</strong>。</p>
+<p>接下来实现你自己的<code>XXXPresenter</code>和<code>XXXView</code>接口的实现类，就像这样：</p>
+<pre><code>class MoviePresenterImp implements MovieContract.Presenter&lt;MovieUseCase.Request, List&lt;MovieEntity&gt;&gt; {
+
+  @Override public void attachView(UserContract.View&lt;List&lt;MovieEntity&gt;&gt; view) {
+     /*subscribe MovieUseCase and do some initialization*/
+  }
+
+  @Override public void detachView() {
+    /*unsubscribe MovieUseCase and release resources*/
+  }
+
+  @Override public void loadData(MovieUseCase.Request request) {
+     /*load data from MovieUseCase*/
+  }
+
+}
+
+
+class MovieActivity extends AppCompatActivity implements MovieContract.View&lt;List&lt;MovieEntity&gt;&gt; {
+
+  @Override protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+    /*also initialize the corresponding presenter*/
+  }
+
+  @Override public void showData(Observable&lt;List&lt;MovieEntity&gt;&gt; data) {
+    /*show data and hide progress*/
+  }
+
+  @Override public void showError(String errorMessage) {
+    /*show error message and hide progress*/
+  }
+
+  @Override public void showProgress() {
+    /*show progress*/
+  }
+}
+
+</code></pre>
+<p>关于示例中的<code>UseCase.Request</code>来自于<a href="https://link.jianshu.com/?t=https://fernandocejas.com/2016/12/24/clean-architecture-dynamic-parameters-in-use-cases/" target="_blank">Clean Architecture: Dynamic Parameters in Use Cases</a>：在<code>XXXUseCase</code>中创建静态内部类<code>Request</code>作为动态请求参数的容器。其实这很好理解，而且也完全正确，因为<code>UseCase</code>就是你定义业务规则的地方，把<strong>业务(请求)条件</strong>与<strong>业务规则</strong>定义组合在一起不仅容易理解也更方便管理。不过我会在下篇文章中介绍另一种动态参数方式，也是我一直在使用的。</p>
+<h2>总结：</h2>
+<p>我相信你和我一样，在搭建框架的过程中遭遇着各式各样的挑战，从错误中吸取教训，不断优化代码，调整依赖关系，甚至重新组织模块结构，这些你做出的改变都是想让架构变得更健壮，我们一直希望应用程序能够变得易开发易维护，这才是真正意义上的团队受益。</p>
+<p>不得不说，搭建应用架构的方式多种多样，而且我认为，没有万能的，一劳永逸的架构，它应该是不断迭代更新，适应业务的。所以说，你可以按照文中提供的思路，尝试着结合业务来构建你的应用程序。</p>
+<p>另外值得一提的是，如果你想做的更好，可以为你的项目加入模板化，组件化等策略，因为并没有说一个项目只能使用一种框架结构。: )</p>
+<p>最后，希望这篇文章能够对你有所帮助，如果你有其他更好的架构思路，欢迎分享或与我交流。</p>
+<p>Happy coding !</p>
+
+        </div></div></div><br/></div></span>
+</div></body></html> 

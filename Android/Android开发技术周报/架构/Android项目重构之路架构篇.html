@@ -1,0 +1,295 @@
+<html>
+<head>
+  <title>Android项目重构之路:架构篇</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3441"/>
+<h1>Android项目重构之路:架构篇</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="background-color:rgb(255, 255, 255);-webkit-font-smoothing:antialiased;"><div style="color:rgba(0, 0, 0, 0.6);font-family:&quot;Open Sans&quot;, sans-serif;font-size:15px;background-color:rgb(255, 255, 255);line-height:2.1;"><div><div><div style="background-color:rgb(255, 255, 255);">
+  <div>
+    <h2 style="text-transform:uppercase;letter-spacing:1px;font-size:2.5rem;line-height:1;font-weight:600;color:rgb(95, 95, 95);padding-bottom:10px;"><a style="text-decoration:none;letter-spacing:1px;color:rgb(95, 95, 95);">Android项目重构之路:架构篇</a>
+
+
+
+    </h2>
+  </div>
+
+
+
+
+
+  <div style="line-height:1.8em;word-break:break-all;"><p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">原创文章，转载请注明：转载自<a href="http://keeganlee.me/" style="opacity:1;transition:all 0.15s linear;color:rgb(60, 189, 16);text-decoration:none;letter-spacing:1px;">Keegan小钢</a></span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">并标明原文链接：<a href="http://keeganlee.me/post/android/20150605" style="opacity:1;transition:all 0.15s linear;color:rgb(60, 189, 16);text-decoration:none;letter-spacing:1px;"><strong>http://keeganlee.me/post/android/20150605</strong></a></span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">微信订阅号：<strong>keeganlee_me</strong></span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">写于2015-06-05</span>
+</p>
+
+
+<hr style="border-bottom-color:initial;display:block;border-width:1px 0px 0px;border-right-style:initial;border-bottom-style:initial;border-left-style:initial;border-right-color:initial;height:1px;border-left-color:initial;border-image:initial;border-top-style:solid;border-top-color:rgb(239, 239, 239);margin:3.2em 0px;padding:0px;"/>
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;text-indent:0px;"><a href="http://keeganlee.me/post/android/20150605" style="opacity:1;transition:all 0.15s linear;color:rgb(60, 189, 16);text-decoration:none;letter-spacing:1px;">Android项目重构之路:架构篇</a></span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;text-indent:0px;"><a href="http://keeganlee.me/post/android/20150619" style="opacity:1;transition:all 0.15s linear;color:rgb(60, 189, 16);text-decoration:none;letter-spacing:1px;">Android项目重构之路:界面篇</a></span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;text-indent:0px;"><a href="http://keeganlee.me/post/android/20150629" style="opacity:1;transition:all 0.15s linear;color:rgb(60, 189, 16);text-decoration:none;letter-spacing:1px;">Android项目重构之路:实现篇</a></span>
+</p>
+
+
+<hr style="border-bottom-color:initial;display:block;border-width:1px 0px 0px;border-right-style:initial;border-bottom-style:initial;border-left-style:initial;border-right-color:initial;height:1px;border-left-color:initial;border-image:initial;border-top-style:solid;border-top-color:rgb(239, 239, 239);margin:3.2em 0px;padding:0px;"/>
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">去年10月底换到了新公司，做移动研发组的负责人，刚开始接手android项目时，发现该项目真的是一团糟。首先是其架构，是按功能模块进行划分的，本来按模块划分也挺好的，可是，他却分得太细，总共分为了17个模块，而好几个模块也就只有两三个类而已。但应用本身其实比较简单，要按功能模块来分的话，最多五个模块就够了。另外，有好多模块划分也很模糊，也有很多类按其功能其实可以属于多个模块的，也有些类定义不明确，做了不该做的事。有时候，我要找一个界面的Activity，按照其功能应该属于A模块的，可是在A模块里却找不到，于是，我只好去AndroidManifest文件里找了，找到才发现原来在B模块里。也有时候，我要找另一个界面的Activity，可我看遍了所有模块，也没看出这个界面应该属于哪个模块，没法子，又只能去AndroidManifest文件里找了，找到才发现竟然在C模块里。代码也是又乱又臭，导致出现一大堆bug又不好找，改好一个bug又出现另一个。整个项目从架构到代码都是又臭又乱，开发人员只是不停地改bug，根本没法做新功能，更别谈扩展了。当时，公司已经有为不同客户定制化app的需求，而现有的架构完全无法满足这样的需求。因此，我决定重构，搭建一个易维护、易扩展、可定制的项目。</span>
+</p>
+
+
+<p style="margin:0.8em 0px;margin-bottom:0.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">我将项目分为了四个层级：模型层、接口层、核心层、界面层。模型层定义了所有的模型；接口层封装了服务器提供的API；核心层处理所有业务逻辑；界面层就处理界面的展示。几个层级之间的关系如下图所示：</span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;text-indent:0px;"><img src="Android项目重构之路架构篇_files/Image.jpg" type="image/jpeg" data-filename="" alt="" height="278" style="max-width:100%;height:auto;" title="" width="300"/></span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">下面展开说明具体的每个层次：</span>
+</p>
+
+
+<blockquote style="box-sizing:border-box;margin:1.6em 0px;padding:0px 0px 0px 1.2em;border-left:0.4em solid rgb(221, 221, 221);color:rgb(85, 85, 85);min-height:20px;">
+<h2 style="text-rendering:optimizeLegibility;line-height:1.2em;font-size:1.65em;margin:1em 0px;">接口层</h2>
+</blockquote>
+
+<p style="margin:0.8em 0px;margin-bottom:0.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">接口层封装了网络底层的API，并提供给核心层调用。刚开始，为了简单，该层的核心类我只定义了4个：</span>
+</p>
+
+
+<ol style="margin:0.8em 0px;">
+<li>PostEngine，请求引擎类，对请求的发送和响应结果进行处理；
+</li>
+<li>Response，响应类，封装了Http请求返回的数据结构；
+</li>
+<li>Api，接口类，定义了所有接口方法；
+</li>
+<li>ApiImpl，接口实现类，实现所有接口方法。
+</li>
+</ol>
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">PostEngine将请求封装好发送到服务器，并对响应结果的json数据转化为Response对象返回。Response其实就是响应结果的json数据实体类，json数据是有固定结构的，分为三类，如下：</span>
+</p>
+
+<div style="background:rgb(238, 238, 221);"><pre style="font-family:Inconsolata, monospace, sans-serif;box-sizing:border-box;border:1px solid rgb(227, 237, 243);width:100%;padding:10px;margin:1.6em 0px;font-size:0.9em;white-space:pre;overflow:auto;background:rgb(247, 250, 251);border-radius:3px;"><span></span><span style="color:rgb(85, 85, 85);">{</span><span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;event&quot;</span><span style="color:rgb(85, 85, 85);">:</span> <span style="color:rgb(205, 85, 85);">&quot;0&quot;</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;msg&quot;</span><span style="color:rgb(85, 85, 85);">:</span> <span style="color:rgb(205, 85, 85);">&quot;success&quot;</span><span style="color:rgb(85, 85, 85);">}</span>
+<span style="color:rgb(85, 85, 85);">{</span><span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;event&quot;</span><span style="color:rgb(85, 85, 85);">:</span> <span style="color:rgb(205, 85, 85);">&quot;0&quot;</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;msg&quot;</span><span style="color:rgb(85, 85, 85);">:</span> <span style="color:rgb(205, 85, 85);">&quot;success&quot;</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;obj&quot;</span><span style="color:rgb(85, 85, 85);">:{</span><span style="color:rgb(166, 23, 23);background-color:rgb(227, 210, 210);">...</span><span style="color:rgb(85, 85, 85);">}}</span>
+<span style="color:rgb(85, 85, 85);">{</span><span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;event&quot;</span><span style="color:rgb(85, 85, 85);">:</span> <span style="color:rgb(205, 85, 85);">&quot;0&quot;</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;msg&quot;</span><span style="color:rgb(85, 85, 85);">:</span> <span style="color:rgb(205, 85, 85);">&quot;success&quot;</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;objList&quot;</span><span style="color:rgb(85, 85, 85);">:[{</span><span style="color:rgb(166, 23, 23);background-color:rgb(227, 210, 210);">...</span><span style="color:rgb(85, 85, 85);">},</span> <span style="color:rgb(85, 85, 85);">{</span><span style="color:rgb(166, 23, 23);background-color:rgb(227, 210, 210);">...</span><span style="color:rgb(85, 85, 85);">}],</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;currentPage&quot;</span><span style="color:rgb(85, 85, 85);">:</span> <span style="color:rgb(180, 82, 205);">1</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;pageSize&quot;</span><span style="color:rgb(85, 85, 85);">:</span> <span style="color:rgb(180, 82, 205);">20</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;maxCount&quot;</span><span style="color:rgb(85, 85, 85);">:</span> <span style="color:rgb(180, 82, 205);">2</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">&quot;maxPage&quot;</span><span style="color:rgb(85, 85, 85);">:</span> <span style="color:rgb(180, 82, 205);">1</span><span style="color:rgb(85, 85, 85);">}</span>
+</pre></div>
+
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">event为返回码，0表示成功，msg则是返回的信息，obj是返回的单个数据对象，objList是返回的数据对象数组，currentPage表示当前页，pageSize则表示当前页最多对象数量，maxCount表示对象数据总量，maxPage表示总共有多少页。根据此结构，Response基本的定义如下：</span>
+</p>
+
+<div style="background:rgb(238, 238, 221);"><pre style="font-family:Inconsolata, monospace, sans-serif;box-sizing:border-box;border:1px solid rgb(227, 237, 243);width:100%;padding:10px;margin:1.6em 0px;font-size:0.9em;white-space:pre;overflow:auto;background:rgb(247, 250, 251);border-radius:3px;"><span></span><span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">class</span> <span style="color:rgb(0, 139, 69);font-weight:bold;">Response</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">T</span><span style="color:rgb(85, 85, 85);">&gt;</span> <span style="color:rgb(85, 85, 85);">{</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">private</span> <span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">event</span><span style="color:rgb(85, 85, 85);">;</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">private</span> <span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">msg</span><span style="color:rgb(85, 85, 85);">;</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">private</span> <span style="color:rgb(85, 85, 85);">T</span> <span style="color:rgb(85, 85, 85);">obj</span><span style="color:rgb(85, 85, 85);">;</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">private</span> <span style="color:rgb(85, 85, 85);">T</span> <span style="color:rgb(85, 85, 85);">objList</span><span style="color:rgb(85, 85, 85);">;</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">private</span> <span style="color:rgb(167, 167, 167);font-weight:bold;">int</span> <span style="color:rgb(85, 85, 85);">currentPage</span><span style="color:rgb(85, 85, 85);">;</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">private</span> <span style="color:rgb(167, 167, 167);font-weight:bold;">int</span> <span style="color:rgb(85, 85, 85);">pageSize</span><span style="color:rgb(85, 85, 85);">;</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">private</span> <span style="color:rgb(167, 167, 167);font-weight:bold;">int</span> <span style="color:rgb(85, 85, 85);">maxCount</span><span style="color:rgb(85, 85, 85);">;</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">private</span> <span style="color:rgb(167, 167, 167);font-weight:bold;">int</span> <span style="color:rgb(85, 85, 85);">maxPage</span><span style="color:rgb(85, 85, 85);">;</span>
+    
+    <span style="color:rgb(153, 153, 153);">//getter和setter方法</span>
+    <span style="color:rgb(85, 85, 85);">...</span>    
+<span style="color:rgb(85, 85, 85);">}</span>
+</pre></div>
+
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">每个属性名称都要与json数据对应的名称相一致，否则无法转化。obj和objList用泛型则可以转化为相应的具体对象了。</span>
+</p>
+
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">Api接口类定义了所有的接口方法，方法定义类似如下：</span>
+</p>
+
+<div style="background:rgb(238, 238, 221);"><pre style="font-family:Inconsolata, monospace, sans-serif;box-sizing:border-box;border:1px solid rgb(227, 237, 243);width:100%;padding:10px;margin:1.6em 0px;font-size:0.9em;white-space:pre;overflow:auto;background:rgb(247, 250, 251);border-radius:3px;"><span></span><span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(85, 85, 85);">Response</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">Void</span><span style="color:rgb(85, 85, 85);">&gt;</span> <span style="color:rgb(0, 139, 69);">login</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">loginName</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">password</span><span style="color:rgb(85, 85, 85);">);</span>
+<span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(85, 85, 85);">Response</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">VersionInfo</span><span style="color:rgb(85, 85, 85);">&gt;</span> <span style="color:rgb(0, 139, 69);">getLastVersion</span><span style="color:rgb(85, 85, 85);">();</span>
+<span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(85, 85, 85);">Response</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">List</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">Coupon</span><span style="color:rgb(85, 85, 85);">&gt;&gt;</span> <span style="color:rgb(0, 139, 69);">listNewCoupon</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(167, 167, 167);font-weight:bold;">int</span> <span style="color:rgb(85, 85, 85);">currentPage</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(167, 167, 167);font-weight:bold;">int</span> <span style="color:rgb(85, 85, 85);">pageSize</span><span style="color:rgb(85, 85, 85);">);</span>
+</pre></div>
+
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">ApiImpl则实现所有Api接口了，实现代码类似如下：</span>
+</p>
+
+<div style="background:rgb(238, 238, 221);"><pre style="font-family:Inconsolata, monospace, sans-serif;box-sizing:border-box;border:1px solid rgb(227, 237, 243);width:100%;padding:10px;margin:1.6em 0px;font-size:0.9em;white-space:pre;overflow:auto;background:rgb(247, 250, 251);border-radius:3px;"><span></span><span style="color:rgb(112, 122, 124);">@Override</span>
+<span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(85, 85, 85);">Response</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">Void</span><span style="color:rgb(85, 85, 85);">&gt;</span> <span style="color:rgb(0, 139, 69);">login</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">loginName</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">password</span><span style="color:rgb(85, 85, 85);">)</span> <span style="color:rgb(85, 85, 85);">{</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">try</span> <span style="color:rgb(85, 85, 85);">{</span>
+        <span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">method</span> <span style="color:rgb(85, 85, 85);">=</span> <span style="color:rgb(85, 85, 85);">Api</span><span style="color:rgb(85, 85, 85);">.</span><span style="color:rgb(101, 139, 0);">LOGIN</span><span style="color:rgb(85, 85, 85);">;</span>
+        <span style="color:rgb(85, 85, 85);">List</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">NameValuePair</span><span style="color:rgb(85, 85, 85);">&gt;</span> <span style="color:rgb(85, 85, 85);">params</span> <span style="color:rgb(85, 85, 85);">=</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">new</span> <span style="color:rgb(85, 85, 85);">ArrayList</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">NameValuePair</span><span style="color:rgb(85, 85, 85);">&gt;();</span>
+        <span style="color:rgb(85, 85, 85);">params</span><span style="color:rgb(85, 85, 85);">.</span><span style="color:rgb(101, 139, 0);">add</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(139, 0, 139);font-weight:bold;">new</span> <span style="color:rgb(85, 85, 85);">BasicNameValuePair</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(205, 85, 85);">&quot;loginName&quot;</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(85, 85, 85);">loginName</span><span style="color:rgb(85, 85, 85);">));</span>
+        <span style="color:rgb(85, 85, 85);">params</span><span style="color:rgb(85, 85, 85);">.</span><span style="color:rgb(101, 139, 0);">add</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(139, 0, 139);font-weight:bold;">new</span> <span style="color:rgb(85, 85, 85);">BasicNameValuePair</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(205, 85, 85);">&quot;password&quot;</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(85, 85, 85);">EncryptUtil</span><span style="color:rgb(85, 85, 85);">.</span><span style="color:rgb(101, 139, 0);">makeMD5</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(85, 85, 85);">password</span><span style="color:rgb(85, 85, 85);">)));</span>
+        <span style="color:rgb(85, 85, 85);">TypeToken</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">Response</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">Void</span><span style="color:rgb(85, 85, 85);">&gt;&gt;</span> <span style="color:rgb(85, 85, 85);">typeToken</span> <span style="color:rgb(85, 85, 85);">=</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">new</span> <span style="color:rgb(85, 85, 85);">TypeToken</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">Response</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">Void</span><span style="color:rgb(85, 85, 85);">&gt;&gt;(){};</span>
+        <span style="color:rgb(139, 0, 139);font-weight:bold;">return</span> <span style="color:rgb(85, 85, 85);">postEngine</span><span style="color:rgb(85, 85, 85);">.</span><span style="color:rgb(101, 139, 0);">specialHandle</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(85, 85, 85);">method</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(85, 85, 85);">params</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(85, 85, 85);">typeToken</span><span style="color:rgb(85, 85, 85);">);</span>
+    <span style="color:rgb(85, 85, 85);">}</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">catch</span> <span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(85, 85, 85);">Exception</span> <span style="color:rgb(85, 85, 85);">e</span><span style="color:rgb(85, 85, 85);">)</span> <span style="color:rgb(85, 85, 85);">{</span>
+        <span style="color:rgb(153, 153, 153);">//异常处理</span>
+    <span style="color:rgb(85, 85, 85);">}</span>
+<span style="color:rgb(85, 85, 85);">}</span>
+</pre></div>
+
+
+<p style="margin:0.8em 0px;margin-bottom:0.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">实现中将请求参数和返回的类型定义好，调用PostEngine对象进行处理。</span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">接口层的核心基本上就是这些了。</span>
+</p>
+
+
+<blockquote style="box-sizing:border-box;margin:1.6em 0px;padding:0px 0px 0px 1.2em;border-left:0.4em solid rgb(221, 221, 221);color:rgb(85, 85, 85);min-height:20px;">
+<h2 style="text-rendering:optimizeLegibility;line-height:1.2em;font-size:1.65em;margin:1em 0px;">核心层</h2>
+</blockquote>
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">核心层介于接口层和界面层之间，主要处理业务逻辑，集中做数据处理。向上，给界面层提供数据处理的接口，称为Action；向下，调用接口层向服务器请求数据。向上的Action中定义的方法类似如下：</span>
+</p>
+
+<div style="background:rgb(238, 238, 221);"><pre style="font-family:Inconsolata, monospace, sans-serif;box-sizing:border-box;border:1px solid rgb(227, 237, 243);width:100%;padding:10px;margin:1.6em 0px;font-size:0.9em;white-space:pre;overflow:auto;background:rgb(247, 250, 251);border-radius:3px;"><span></span><span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(167, 167, 167);font-weight:bold;">void</span> <span style="color:rgb(0, 139, 69);">getCustomer</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">loginName</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(85, 85, 85);">CallbackListener</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">Customer</span><span style="color:rgb(85, 85, 85);">&gt;</span> <span style="color:rgb(85, 85, 85);">callbackListener</span><span style="color:rgb(85, 85, 85);">);</span>
+</pre></div>
+
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">这是一个获取用户信息的方法，因为需要向接口层请求服务器Api数据，所以添加了callback监听器，在callback里对返回的数据结果进行操作。CallbackListener就定义了一个成功和一个失败的方法，代码如下：</span>
+</p>
+
+<div style="background:rgb(238, 238, 221);"><pre style="font-family:Inconsolata, monospace, sans-serif;box-sizing:border-box;border:1px solid rgb(227, 237, 243);width:100%;padding:10px;margin:1.6em 0px;font-size:0.9em;white-space:pre;overflow:auto;background:rgb(247, 250, 251);border-radius:3px;"><span></span><span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">interface</span> <span style="color:rgb(0, 139, 69);font-weight:bold;">CallbackListener</span><span style="color:rgb(85, 85, 85);">&lt;</span><span style="color:rgb(85, 85, 85);">T</span><span style="color:rgb(85, 85, 85);">&gt;</span> <span style="color:rgb(85, 85, 85);">{</span>
+    <span style="color:rgb(153, 153, 153);">/**</span>
+<span style="color:rgb(153, 153, 153);">     * 请求的响应结果为成功时调用</span>
+<span style="color:rgb(153, 153, 153);">     * @param data  返回的数据</span>
+<span style="color:rgb(153, 153, 153);">     */</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(167, 167, 167);font-weight:bold;">void</span> <span style="color:rgb(0, 139, 69);">onSuccess</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(85, 85, 85);">T</span> <span style="color:rgb(85, 85, 85);">data</span><span style="color:rgb(85, 85, 85);">);</span>
+
+    <span style="color:rgb(153, 153, 153);">/**</span>
+<span style="color:rgb(153, 153, 153);">     * 请求的响应结果为失败时调用</span>
+<span style="color:rgb(153, 153, 153);">     * @param errorEvent 错误码</span>
+<span style="color:rgb(153, 153, 153);">     * @param message    错误信息</span>
+<span style="color:rgb(153, 153, 153);">     */</span>
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(167, 167, 167);font-weight:bold;">void</span> <span style="color:rgb(0, 139, 69);">onFailure</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">errorEvent</span><span style="color:rgb(85, 85, 85);">,</span> <span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">message</span><span style="color:rgb(85, 85, 85);">);</span>
+<span style="color:rgb(85, 85, 85);">}</span>
+</pre></div>
+
+
+<p style="margin:0.8em 0px;margin-bottom:0.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">接口的实现基本分为两步：</span>
+</p>
+
+
+<ol style="margin:0.8em 0px;">
+<li>参数检查，检查参数的合法性，包括非空检查、边界检查、有效性检查等；
+</li>
+<li>使用异步任务调用接口层的Api，返回响应结果。
+</li>
+</ol>
+
+<p style="margin:0.8em 0px;margin-bottom:0.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">需要注意的是，Action是面向界面的，界面上的数据可能需要根据不同情况调用不同的Api。</span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">后续扩展可以在这里添加缓存，但也要视不同情况而定，比如有些变化太快的数据，添加缓存就不太适合了。</span>
+</p>
+
+
+<blockquote style="box-sizing:border-box;margin:1.6em 0px;padding:0px 0px 0px 1.2em;border-left:0.4em solid rgb(221, 221, 221);color:rgb(85, 85, 85);min-height:20px;">
+<h2 style="text-rendering:optimizeLegibility;line-height:1.2em;font-size:1.65em;margin:1em 0px;">界面层</h2>
+</blockquote>
+
+<p style="margin:0.8em 0px;margin-bottom:0.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">界面层处于最上层，其核心就是负责界面的展示。</span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">因为公司有为不同商户定制不同app的需求，因此，这里就需要建立多个app的界面，这是一个很麻烦的事情，还好，Android Studio提供了很方便的方法可以大大减少工作量，主要通过设置Gradle，不同app可以添加不同的productFlavors。</span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">界面层package的定义我也并不按照旧版的功能模块划分，而根据不同类型划分，主要分为以下几个包：</span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;text-indent:0px;"><img src="Android项目重构之路架构篇_files/Image [1].jpg" type="image/jpeg" data-filename="" alt="" height="139" style="max-width:100%;height:auto;" title="" width="150"/></span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">其中，activity、adapter、fragment各自都有一个基类，做统一的处理，比如定义了一些共用的常量、对象和方法等。</span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">界面层是最复杂，最容易变得混乱不堪，最容易出问题的层级。所以，从架构到代码，很多东西都需要设计好，以及规范好，才能保证程序易维护、易扩展。后续的文章里将会详细分享下我在这方面的经验。</span>
+</p>
+
+
+<blockquote style="box-sizing:border-box;margin:1.6em 0px;padding:0px 0px 0px 1.2em;border-left:0.4em solid rgb(221, 221, 221);color:rgb(85, 85, 85);min-height:20px;">
+<h2 style="text-rendering:optimizeLegibility;line-height:1.2em;font-size:1.65em;margin:1em 0px;">模型层</h2>
+</blockquote>
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">模型层横跨所有层级，封装了所有数据实体类，基本上也是跟json的obj数据一致的，在接口层会将obj转化为相应的实体类，再通过Action传到界面层。另外，模型层还定义了一些常量，比如用户状态、支付状态等。在Api里返回的是用1、2、3这样定义的，而我则用枚举类定义了这些状态。用枚举类定义，就可以避免了边界的检查，同时也更明了，谁会记得那么多1、2、3都代表什么状态呢。然而用枚举类定义的话，就必须能将1、2、3转化为相应的枚举常量。这里，我提供两种实现方式：</span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">1.使用gson的@SerializedName标签，比如0为FALSE，1为TRUE，则可以如下定义：</span>
+</p>
+
+<div style="background:rgb(238, 238, 221);"><pre style="font-family:Inconsolata, monospace, sans-serif;box-sizing:border-box;border:1px solid rgb(227, 237, 243);width:100%;padding:10px;margin:1.6em 0px;font-size:0.9em;white-space:pre;overflow:auto;background:rgb(247, 250, 251);border-radius:3px;"><span></span><span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">enum</span> <span style="color:rgb(85, 85, 85);">BooleanType</span> <span style="color:rgb(85, 85, 85);">{</span>
+    <span style="color:rgb(112, 122, 124);">@SerializedName</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(205, 85, 85);">&quot;0&quot;</span><span style="color:rgb(85, 85, 85);">)</span>
+    <span style="color:rgb(85, 85, 85);">FALSE</span><span style="color:rgb(85, 85, 85);">,</span>
+    <span style="color:rgb(112, 122, 124);">@SerializedName</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(205, 85, 85);">&quot;1&quot;</span><span style="color:rgb(85, 85, 85);">)</span>
+    <span style="color:rgb(85, 85, 85);">TRUE</span>
+<span style="color:rgb(85, 85, 85);">}</span>
+</pre></div>
+
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">2.通过定义一个value，如下：</span>
+</p>
+
+<div style="background:rgb(238, 238, 221);"><pre style="font-family:Inconsolata, monospace, sans-serif;box-sizing:border-box;border:1px solid rgb(227, 237, 243);width:100%;padding:10px;margin:1.6em 0px;font-size:0.9em;white-space:pre;overflow:auto;background:rgb(247, 250, 251);border-radius:3px;"><span></span><span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(139, 0, 139);font-weight:bold;">enum</span> <span style="color:rgb(85, 85, 85);">BooleanType</span> <span style="color:rgb(85, 85, 85);">{</span>
+    <span style="color:rgb(85, 85, 85);">FALSE</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(205, 85, 85);">&quot;0&quot;</span><span style="color:rgb(85, 85, 85);">),</span>
+    <span style="color:rgb(85, 85, 85);">TRUE</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(205, 85, 85);">&quot;1&quot;</span><span style="color:rgb(85, 85, 85);">);</span>
+    
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">private</span> <span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">value</span><span style="color:rgb(85, 85, 85);">;</span>
+
+    <span style="color:rgb(85, 85, 85);">BooleanType</span><span style="color:rgb(85, 85, 85);">(</span><span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(85, 85, 85);">value</span><span style="color:rgb(85, 85, 85);">)</span> <span style="color:rgb(85, 85, 85);">{</span>
+        <span style="color:rgb(139, 0, 139);font-weight:bold;">this</span><span style="color:rgb(85, 85, 85);">.</span><span style="color:rgb(101, 139, 0);">value</span> <span style="color:rgb(85, 85, 85);">=</span> <span style="color:rgb(85, 85, 85);">value</span><span style="color:rgb(85, 85, 85);">;</span>
+    <span style="color:rgb(85, 85, 85);">}</span>
+
+    <span style="color:rgb(139, 0, 139);font-weight:bold;">public</span> <span style="color:rgb(85, 85, 85);">String</span> <span style="color:rgb(0, 139, 69);">getValue</span><span style="color:rgb(85, 85, 85);">()</span> <span style="color:rgb(85, 85, 85);">{</span>
+        <span style="color:rgb(139, 0, 139);font-weight:bold;">return</span> <span style="color:rgb(85, 85, 85);">value</span><span style="color:rgb(85, 85, 85);">;</span>
+    <span style="color:rgb(85, 85, 85);">}</span>
+<span style="color:rgb(85, 85, 85);">}</span>
+</pre></div>
+
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">通过gson的方式，直接访问TRUE或FALSE就会自动序列化为1或0；如果通过第二种方式，因为没有序列化，则需要通过getValue方式获取1或0。</span>
+</p>
+
+
+<h2 style="text-rendering:optimizeLegibility;line-height:1.2em;font-size:1.65em;margin:1em 0px;">结束</h2>
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">以上就是最基本的架构了，讲得比较简单，只列了几个核心的东西。并没有进一步去扩展，扩展是下一步的事情了，后续的文章里会慢慢展开。</span>
+</p>
+
+
+<hr style="border-bottom-color:initial;display:block;border-width:1px 0px 0px;border-right-style:initial;border-bottom-style:initial;border-left-style:initial;border-right-color:initial;height:1px;border-left-color:initial;border-image:initial;border-top-style:solid;border-top-color:rgb(239, 239, 239);margin:3.2em 0px;padding:0px;"/>
+
+<p style="margin:0.8em 0px;margin-bottom:2.2em;">
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;">扫描以下二维码即可关注订阅号。</span>
+    <span style="margin-top:0px;margin-bottom:0.6em;display:block;line-height:1.75;text-indent:0px;"><img src="Android项目重构之路架构篇_files/Image [2].jpg" type="image/jpeg" data-filename="" alt="" height="430" style="max-width:100%;height:auto;" title="" width="430"/></span>
+</p></div>
+
+  <div style="padding:0px 0px 60px;border-bottom:1px solid rgb(242, 242, 242);">
+    <div style="padding-bottom:15px;font-size:13px;"><a href="http://keeganlee.me/tags/Android" style="border:1px solid rgba(0, 0, 0, 0.15);display:inline-block;outline:0px;border-radius:999em;background:transparent;font-style:normal;text-align:center;white-space:nowrap;cursor:pointer;position:relative;opacity:1;transition:all 0.15s linear;text-decoration:none;font-weight:400;font-size:12px;color:rgba(0, 0, 0, 0.44);margin:0px 5px;padding:6px 12px;">Android</a>
+
+<a href="http://keeganlee.me/tags/%E6%9E%B6%E6%9E%84" style="border:1px solid rgba(0, 0, 0, 0.15);display:inline-block;outline:0px;border-radius:999em;background:transparent;font-style:normal;text-align:center;white-space:nowrap;cursor:pointer;position:relative;opacity:1;transition:all 0.15s linear;text-decoration:none;font-weight:400;font-size:12px;color:rgba(0, 0, 0, 0.44);margin:0px 5px;padding:6px 12px;">架构</a>
+
+
+    </div>
+
+
+    <div style="max-width:100%;height:25px;color:rgb(187, 187, 187);font-size:12px;margin-top:10px;"><i style="font-stretch:normal;-webkit-font-smoothing:antialiased;font-style:normal;font-variant:normal;font-weight:normal;display:inline-block;line-height:1;font-family:FontAwesome;font-size:inherit;text-rendering:auto;margin-right:3px;"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:1;font-family:FontAwesome;font-size:inherit;"></span></i>
+<span style="margin-right:15px;">2015-06-05</span>
+<i style="font-stretch:normal;-webkit-font-smoothing:antialiased;font-style:normal;font-variant:normal;font-weight:normal;display:inline-block;line-height:1;font-family:FontAwesome;font-size:inherit;text-rendering:auto;margin-right:3px;"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:1;font-family:FontAwesome;font-size:inherit;"></span></i>
+<a href="http://keeganlee.me/post/android/20150605#comments" style="opacity:1;transition:all 0.15s linear;text-decoration:none;color:rgb(187, 187, 187);">179 Comments</a>
+
+    </div>
+
+  </div>
+
+</div></div></div></div></div></div><br/></div></span>
+</div></body></html> 
