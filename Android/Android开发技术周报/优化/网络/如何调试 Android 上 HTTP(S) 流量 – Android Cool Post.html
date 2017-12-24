@@ -1,0 +1,127 @@
+<html>
+<head>
+  <title>如何调试 Android 上 HTTP(S) 流量 – Android Cool Posts</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1236"/>
+<h1>如何调试 Android 上 HTTP(S) 流量 – Android Cool Posts</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>如何调试 Android 上 HTTP(S) 流量</h1><div><div></div></div></div>
+
+	<div>
+		<div>
+
+<p>在Android开发中我们常常会和API 打交道，可能你不想，但是这是避不开的。大部分情况下，调试发送网络请求和接收响应的过程都是十分痛苦的。</p>
+<p>有多少次我们经过调试发现API的调用失败仅仅是因为我们的编码错了或者丢失了一个HTTP头部参数？在调试的过程中，我们发现出现错误的原因千奇百怪。<strong>总之我们要看到最终的请求是什么样子的不是一件容易的事情，响应也是如此</strong>。</p>
+<h2>如果碰到困难，请使用代理</h2>
+<p>解决这样的问题有各种各样的方法和门道，但是我今天要分享的是在我看来最快，最容易也是最可行的方法。</p>
+<p>由于调试HTTP请求和响应是相当繁琐的（调试HTTPS更加繁琐），因此在这种前提下你能使用的最好工具就是<strong>代理</strong>。当然，你肯定知道什么是代理，所以我就不啰嗦它的定义了。</p>
+<p>现有的代理工具中它们的用法，特性以及操作系统的兼容性都各不相同，如何选择一款合适的代理呢？要我说，简单点，就用<strong>mitmproxy</strong>。</p>
+<h2>mitmproxy</h2>
+<p>我已经无法用语言来形容mitmproxy的方便和强大了。用<a href="https://mitmproxy.org/" target="_blank">mitmproxy</a> 官网上的介绍一句话，就是“<em>an interactive, SSL-capable man-in-the-middle proxy for HTTP with a console interface</em>”。没错，你可以通过控制台来操作它；没错，它还支持HTTPS；没错，它允许“对流量进行拦截，检测，修改和回放”；没错，它还是跨平台的，因为它是用Python写的。对了，我说了它是<strong>完全免费</strong>的这件事了吗？</p>
+<p>使用它也是相当容易的。一旦你安装了它，便可通过在控制台输入以下命令启动它：</p>
+<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>mitmproxyIP_ADDR</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>代理已经在运行，你可以开始拦截网络流量了。接下来你就需要配置Android手机，将所有的流量都重定向到之前命令里设置的代理服务器地址上去（IP_ADDR + PORT）。</p>
+<h2>代理设置App： “Proxy Settings”</h2>
+<p>现在我们需要在Android手机上进行代理配置。具体步骤如下：</p>
+<ol>
+<li>进入Android的Wi-Fi设置</li>
+<li>长按当前连接的网络</li>
+<li>选择“修改网络”选项</li>
+<li>勾选“显示高级选项”</li>
+<li>启用代理服务器并将代理设置为“手动”</li>
+<li>输入之前设置好的的IP地址和端口。</li>
+</ol>
+<p>如果要禁用代理同理。现在Android端的设置就大功告成了。</p>
+<p>是不是觉得上面的步骤有点头疼？不急！幸亏还有<a href="https://play.google.com/store/apps/details?id=com.lechucksoftware.proxy.proxysettings" target="_blank">Proxy Settings</a> 这个App。用了<a href="https://play.google.com/store/apps/details?id=com.lechucksoftware.proxy.proxysettings" target="_blank">Proxy Settings</a>，上面繁琐的步骤就变得异常简单了。有了这个轻量级的App，你只需<strong>轻轻一点</strong>，便可轻松地开启或禁用网络连接里的代理设置。</p>
+</div>
+<div>
+<div>
+<div>
+<div>
+<div><a href="http://greenrobot.me/wp-content/uploads/2015/01/17jjILA3xVYwv70_PAuGxpw.jpeg" target="_blank"><div><img src="如何调试 Android 上 HTTP(S) 流量 – Android Cool Post_files/271.jpg" type="image/jpeg" data-filename="271.jpg" alt="Proxy Settings 的使用截图" height="237" width="576"/></div></a><br/>
+<div>Proxy Settings 的使用截图</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+<div>
+<p>通过<a href="https://play.google.com/store/apps/details?id=com.lechucksoftware.proxy.proxysettings" target="_blank">Proxy Settings</a> ，你可以创建多个代理配置。当你想要启用其中一个，只需点击当前连接的网络，启用代理，并选择你需要的配置。如果你要禁用代理，点击连接，并禁用它。</p>
+<p>就这么简单，对了，它还不需要root权限哦？</p>
+<h2>那如何调试 HTTPS?</h2>
+<p>正如前面所提到的，mitmproxy还支持HTTPS拦截。这个特性让你在保持API endpoint 不变的情况下调试生产环境里的API变得异常方便。然而由于HTTPS的<a href="http://en.wikipedia.org/wiki/HTTP_Secure#Server_setup" target="_blank">工作方式</a>，我们需要<strong>安装一个自定义的SSL证书</strong>，让mitmproxy对所拦截的流量进行解密。</p>
+<p>听起来HTTPS拦截的步骤好像有点麻烦，其实很简单。你只需按照mitmproxy官网的这篇<a href="https://mitmproxy.org/doc/certinstall/android.html" target="_blank">设置指南</a>便可轻易地完成设置。记得在启动mitmproxy的时候需要额外添加一个参数，如下命令所示：</p>
+<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>mitmproxyIP_ADDR—upstream</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p><strong>不过此处还有个小问题。</strong>Android是以一种加密的形式来保存SSL证书的，而这种加密的形式即用户设置的手机解锁信息。也就是说，你在Android上安装任何SSL证书之前，系统都会提示你设置解锁手机的方式，比如输入PIN码，密码或者是某种图案。</p>
+<h2>调试3G/4G</h2>
+<p>3G/4G这种情况下设置代理更难了。系统设置中没有为3G/4G连接提供代理设置接口。但是！你可以通过你的手机“移动热点”功能来实现在3G/4G这种情况下设置代理。你要准备的就是：</p>
+<ol>
+<li>一台可以连接3G/4G网络的Android手机</li>
+<li>一台开启了“开发者模式”的手机（另一台了）</li>
+<li>你的笔记本电脑</li>
+</ol>
+<p>接下来的步骤就简单啦：</p>
+<ol>
+<li>在第一台手机上激活“移动热点”功能</li>
+<li>将你的笔记本电脑和第二台手机（“开启了开发者模式”）连上移动热点</li>
+<li>在笔记本电脑上启动 mitmproxy，并将IP地址设为hotspot所对应的（通常是192.168.43.xxx 之类的）</li>
+<li>在第二台手机上使用Proxy Settings设置代理</li>
+</ol>
+<p>OK，在3G/4G这种情况下设置代理就是这样子的。</p>
+<p>到目前为止，我还试过其他两种代理工具，<a href="http://www.charlesproxy.com/" target="_blank">Charles</a>和<a href="http://www.telerik.com/fiddler" target="_blank">Fiddler</a>。 但是<strong>mitmproxy完爆他们两个。</strong><a href="http://www.charlesproxy.com/" target="_blank">Charles</a> 可能是在功能，灵活性以及操作系统支持这几个方面和mitmproxy最接近的，但是它一不免费，二不开源。 对于 <a href="http://www.telerik.com/fiddler" target="_blank">Fiddler</a>, 它只能在Windows平台上使用。</p>
+<p><strong>mitmproxy + Proxy Settings </strong>的结合让我省了不少心，我希望它们也能为你所用。</p>
+<p>如果你有更好的解决方法，记得告诉我。<img src="如何调试 Android 上 HTTP(S) 流量 – Android Cool Post_files/263a.png" type="image/png" data-filename="263a.png" alt="☺" height="72" width="72"/></p>
+<p>本文翻译自音乐App <a href="https://play.google.com/store/apps/developer?id=musiXmatch" target="_blank">musiXmatch</a> 公司高级Android工程<a href="https://twitter.com/rotxed" target="_blank">Sebastiano Gottardo</a>。原文地址：<a href="https://medium.com/@rotxed/how-to-debug-http-s-traffic-on-android-7fbe5d2a34" target="_blank">https://medium.com/@rotxed/how-to-debug-http-s-traffic-on-android-7fbe5d2a34</a></p>
+<p>UPDATE：有同学反应对这个工具到底怎么使用不是很清楚，于是我打算在本文基础上再增加一些实践相关的文字，后来发现篇幅过于臃肿，干脆新写了<a href="http://greenrobot.me/devpost/how-to-debug-android-http-get-started/" target="_blank">一篇关于mitmproxy实践的文章</a>，希望能给大家一些启发。</p>
+</div>
+	</div>
+
+	
+	<div>
+		<a href="https://greenrobot.me/devpost/how-to-debug-http-and-https-traffic-on-android/" target="_blank"><span>2015年1月25日</span><span>2015年1月27日</span></a><a href="https://greenrobot.me/author/android/" target="_blank">android</a><a href="https://greenrobot.me/category/devpost/" target="_blank">Android开发博文</a><a href="https://greenrobot.me/tag/android/" target="_blank">Android</a>、<a href="https://greenrobot.me/tag/http-debug/" target="_blank">http debug</a>、<a href="https://greenrobot.me/tag/mitmproxy/" target="_blank">mitmproxy</a>、<a href="https://greenrobot.me/tag/proxy/" target="_blank">proxy</a>、<a href="https://greenrobot.me/tag/proxy-settings/" target="_blank">proxy settings</a>、<a href="https://greenrobot.me/tag/%e4%bb%a3%e7%90%86/" target="_blank">代理</a>			</div>
+
+</div></div></div><br/></div></span>
+</div></body></html> 
