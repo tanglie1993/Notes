@@ -1,0 +1,159 @@
+<html>
+<head>
+  <title>WebView缓存原理分析和应用</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2952"/>
+<h1>WebView缓存原理分析和应用</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>WebView缓存原理分析和应用</h1><div><div></div></div></div>
+        
+
+        <div>
+          
+
+          
+            <span>
+            
+              
+            
+              
+              
+                <span>分类于</span>
+              
+              
+                
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span>
+                
+                
+                
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      
+    
+
+    
+
+      
+      
+
+      
+        <h1>一、背景</h1><p>现在的App开发，或多或少都会用到Hybrid模式，到了WebView这边，经常会加载一些js文件（例如和WebView用来Native通信的bridge.js），而这些js文件不会经常发生变化，所以我们希望js在WebView里面加载一次之后，如果js没有发生变化，下次就不用再发起网络请求去加载，从而减少流量和资源的占用。那么有什么方式可以达到这个目的呢？先得从WebView的缓存原理入手。</p>
+<h1>二、WebView的缓存类型</h1><p>WebView主要包括两类缓存，<strong>一类是浏览器自带的网页数据缓存</strong>，这是所有的浏览器都支持的、由HTTP协议定义的缓存；<strong>另一类是H5缓存</strong>，这是由web页面的开发者设置的，H5缓存主要包括了App Cache、DOM Storage、Local Storage、Web SQL Database 存储机制等，这里我们主要介绍App Cache来缓存js文件。</p>
+
+<h1>三、浏览器自带的网页数据缓存</h1><h2>1.工作原理</h2><p>浏览器缓存机制是通过HTTP协议Header里的Cache-Control（或Expires）和Last-Modified（或 Etag）等字段来控制文件缓存的机制。关于这几个字段的作用和浏览器的缓存更新机制，大家可以看看这两篇文章(<a href="http://bugly.qq.com/bbs/forum.php?mod=viewthread&amp;tid=267" target="_blank">H5 缓存机制浅析 移动端 Web 加载性能优化</a>，<a href="http://www.jianshu.com/p/5e7075f4875f" target="_blank">Android：手把手教你构建 WebView 的缓存机制 &amp; 资源预加载方案</a>)，里面有详细的介绍。下面从我实际应用的角度，介绍一下通常会在HTTP协议中遇到的Header。</p>
+<p>这两个字段是<strong>接收响应时，浏览器决定文件是否需要被缓存；或者需要加载文件时，浏览器决定是否需要发出请求</strong>的字段。</p>
+<ul>
+<li><p><strong>Cache-Control:max-age=315360000，</strong>这表示缓存时长为315360000秒。如果315360000秒内需要再次请求这个文件，那么浏览器不会发出请求，直接使用本地的缓存的文件。这是HTTP/1.1标准中的字段。</p>
+</li>
+<li><p><strong>Expires: Thu, 31 Dec 2037 23:55:55 GMT，</strong>这表示这个文件的过期时间是2037年12月31日晚上23点55分55秒，在这个时间之前浏览器都不会再次发出请求去获取这个文件。这是HTTP/1.0中的字段，如果客户端和服务器时间不同步会导致缓存出现问题，因此才有了上面的Cache-Control，当它们同时出现在HTTP Response的Header中时，Cache-Control优先级更高。 </p>
+</li>
+</ul>
+<p>下面两个字段是<strong>发起请求时，服务器决定文件是否需要更新</strong>的字段。</p>
+<ul>
+<li><p><strong>Last-Modified:Wed, 28 Sep 2016 09:24:35 GMT，</strong>这表示这个文件最后的修改时间是2016年9月28日9点24分35秒。这个字段对于浏览器来说，会在下次请求的时候，作为Request Header的If-Modified-Since字段带上。例如浏览器缓存的文件已经超过了Cache-Control（或者Expires），那么需要加载这个文件时，就会发出请求，请求的Header有一个字段为<code>If-Modified-Since：Wed, 28 Sep 2016 09:24:35 GMT</code>，服务器接收到请求后，会把文件的Last-Modified时间和这个时间对比，如果时间没变，那么浏览器将返回<code>304 Not Modified</code>给浏览器，且content-length肯定是0个字节。如果时间有变化，那么服务器会返回<code>200 OK</code>，并返回相应的内容给浏览器。</p>
+</li>
+<li><p><strong>ETag:”57eb8c5c-129”，</strong>这是文件的特征串。功能同上面的Last-Modified是一样的。只是在浏览器下次请求时，ETag是作为Request Header中的<code>If-None-Match:&quot;57eb8c5c-129&quot;</code>字段传到服务器。服务器和最新的文件特征串对比，如果相同那么返回<code>304 Not Modified</code>，不同则返回<code>200 OK</code>。当ETag和Last-Modified同时出现时，任何一个字段只要生效了，就认为文件是没有更新的。</p>
+</li>
+</ul>
+<h2>2.WebView如何设置才能支持上面的协议</h2><p>由上面的介绍可知，只要是个主流的、合格的浏览器，都应该能够支持HTTP协议层面的这几个字段。这不是我们开发者可以修改的，也不是我们应该修改的配置。在Android上，我们的WebView也支持这几个字段。但是我们可以通过代码去<strong>设置WebView的Cache Mode</strong>，而使得协议生效或者无效。WebView有下面几个Cache Mode：</p>
+<ul>
+<li>LOAD_CACHE_ONLY: 不使用网络，只读取本地缓存数据。</li>
+<li>LOAD_DEFAULT: 根据cache-control决定是否从网络上取数据。 </li>
+<li>LOAD_CACHE_NORMAL: API level 17中已经废弃，从API level 11开始作用同LOAD_DEFAULT模式 </li>
+<li>LOAD_NO_CACHE: 不使用缓存，只从网络获取数据。</li>
+<li>LOAD_CACHE_ELSE_NETWORK，只要本地有，无论是否过期，或者no-cache，都使用缓存中的数据。本地没有缓存时才从网络上获取。</li>
+</ul>
+<p>设置WebView缓存的Cache Mode示例代码如下：</p>
+<div><table><tbody><tr><td><pre>1<br/>2<br/></pre></td><td><pre>WebSettings settings = webView.getSettings();<br/>settings.setCacheMode(WebSettings.LOAD_DEFAULT);<br/></pre></td></tr></tbody></table></div>
+<p>网上很多人都说根据网络条件去选择Cache Mode，当有网络时，设置为LOAD_DEFAULT，当没有网络时设置为LOAD_CACHE_ELSE_NETWORK。但是在我的业务中，js文件的更新都是非覆盖式的更新，也就是时候每次改变js文件的时候，文件的url地址一定会发生变化，所以我希望浏览器能够缓存下来js，并且一直使用它，那么我就给它只设置为LOAD_CACHE_ELSE_NETWORK。当然如果你要是可以改js的cdn服务器的Cache-Control字段，那也行啊，用LOAD_DEFAULT就ok了。至于文件是应该采用覆盖式or非覆盖式的更新，不是我今天要讨论的内容，在web前端领域，这是一个可以聊聊的topic。</p>
+<blockquote>
+<p>关于iOS的WebView，我同事在实际测试的时候竟然发现，控制文件缓存的Response Header是Expires字段。。而且iOS无法针对整个WebView设置Cache Mode，只能针对每一个URLRequest去设置。。后续有机会要学习一下iOS那块的情况。</p>
+</blockquote>
+<h2>3.在手机里面的存储路径</h2><p>浏览器默认缓存下来的文件是怎么被存储到了哪里呢？这个问题在接触到WebView以来，就一直是一个谜题。这次由于工作的需要，我特意root了两台手机，一台红米1（Android 4.4）和一台小米4c（Android 5.1），在root高系统版本（6.0和7.1）的两台Nexus都以失败告终之后，我决定还是先看看4.4和5.1系统上，WebView自带的缓存存到了哪里。</p>
+<p>首先，不用思考就知道，这些文件一定是在<strong>/data/data/包名/</strong>目录下，在我之前的一篇博客里面提到过，这是每一个应用自己的内部存储目录。</p>
+<p>接着，我们打开终端，使用adb连接手机，然后按照下面命令操作一下。</p>
+<div><table><tbody><tr><td><pre>1<br/>2<br/>3<br/>4<br/>5<br/>6<br/>7<br/>8<br/>9<br/>10<br/>11<br/></pre></td><td><pre>// 1.先进入shell<br/>adb shell<br/>// 2.开启root账号 <br/>su<br/>// 3.修改文件夹权限<br/>chmod 777 data/data/你的应用包名/<br/>// 4.修改子文件夹的权限，因为Android命令行不支持向Linux那样的-R命令实现递归式的chmod。。。<br/>chmod 777 data/data/你的应用包名/*<br/>// 5.所以如果你对应用目录层级更深，你就要进一步地chmod。。。<br/>chmod 777 data/data/你的应用包名/*/*<br/>// 6.直到终端里提示你说，no such file or directory时，说明chmod完了，所有的内部存储里面的文件夹和文件都可以看到了，如果大家有更好的方法请一定告诉我，多谢了~<br/></pre></td></tr></tbody></table></div>
+<ul>
+<li>Android 4.4的目录：<code>/data/data/包名/app_webview/cache/</code>，如下图所示的第二个文件夹。</li>
+</ul>
+<p><a href="https://ww4.sinaimg.cn/large/006tNc79ly1ffjvarjyijj30jg05k0yr.jpg" target="_blank"></a></p><div><a href="https://ww4.sinaimg.cn/large/006tNc79ly1ffjvarjyijj30jg05k0yr.jpg" target="_blank"><img src="WebView缓存原理分析和应用_files/006tNc79ly1ffjvarjyijj30jg05k0yr.jpg" type="image/jpeg" data-filename="006tNc79ly1ffjvarjyijj30jg05k0yr.jpg" alt="Android4.4系统WebView自带缓存路径" height="165" width="576"/></a></div><p></p>
+<p>可能你注意到了，第一个文件夹是叫Application Cache，我们后面再说它。</p>
+<ul>
+<li>Android 5.1的目录：<code>/data/data/包名/cache/org.chromium.android_webview/</code>下面，如下图所示。</li>
+</ul>
+<p><a href="https://ww2.sinaimg.cn/large/006tNc79ly1ffjvztg93zj30jg0a247x.jpg" target="_blank"></a></p><div><a href="https://ww2.sinaimg.cn/large/006tNc79ly1ffjvztg93zj30jg0a247x.jpg" target="_blank"><img src="WebView缓存原理分析和应用_files/006tNc79ly1ffjvztg93zj30jg0a247x.jpg" type="image/jpeg" data-filename="006tNc79ly1ffjvztg93zj30jg0a247x.jpg" height="298" width="576"/></a></div><p></p>
+<p>但是在5.1系统上，<code>/data/data/包名/app_webview/</code>文件夹依然存在，只是4.4系统上面存储WebView自带缓存的<code>app_webview/cache</code>文件夹不再存在了（注意下App Cache目录还在），如下图所示。</p>
+<p><a href="https://ww3.sinaimg.cn/large/006tNc79ly1ffjw46ygoqj30jg06443v.jpg" target="_blank"></a></p><div><a href="https://ww3.sinaimg.cn/large/006tNc79ly1ffjw46ygoqj30jg06443v.jpg" target="_blank"><img src="WebView缓存原理分析和应用_files/006tNc79ly1ffjw46ygoqj30jg06443v.jpg" type="image/jpeg" data-filename="006tNc79ly1ffjw46ygoqj30jg06443v.jpg" alt="Android5.1系统WebView自带缓存路径" height="181" width="576"/></a></div><p></p>
+<p>综上所述，WebView自带的浏览器协议支持的缓存，在不同的系统版本上，位置是不一样的。也许除了我root过的4.4、5.1以外，其他版本系统的WebView自带缓存还可能存在于不同的目录里面。</p>
+<p>另外一个是关于<strong>缓存文件的存储格式和索引格式</strong>，在不同的手机上可能也有差别，因为之前看到网上的人都说有叫<strong>webview.db</strong>或者<strong>webviewCache.db</strong>的文件，这个文件呢，还不是在<code>app_webview/cache</code>或者<code>org.chromium.android_webview</code>下面，而是在<code>/data/data/包名/database/</code>里面。但是，我这两台root过的手机都没有看到这种文件，而且我把<code>/data/data/包名/</code>下面所有的db文件都打开看了，并没有发现有存储url记录的table。。</p>
+<p>实际上，以5.1系统为例，我看到了<code>/data/data/包名/cache/org.chromium.android_webview/</code>下面有叫<strong>index</strong>和<strong>/index-dir/the-real-index</strong>的文件，以及一堆名称为<strong>md5+下划线+数字</strong>的文件，上面的图中也可以看得到，这块的原理仍然有些疑问，也希望专业的大神可以解答一下。</p>
+<h1>四、H5的缓存</h1><p>讲完了WebView自带的缓存，下面讲一下H5里面的App Cache。这个Cache是由开发Web页面的开发者控制的，而不是由Native去控制的，但是Native里面的WebView也需要我们做一下设置才能支持H5的这个特性。</p>
+<h2>1.工作原理</h2><p>写Web页面代码时，指定manifest属性即可让页面使用App Cache。通常html页面代码会这么写：</p>
+<div><table><tbody><tr><td><pre>1<br/>2<br/></pre></td><td><pre>&lt;html manifest=&quot;xxx.appcache&quot;&gt;<br/>&lt;/html&gt;<br/></pre></td></tr></tbody></table></div>
+<p>xxx.appcache文件用的是相对路径，这时appcache文件的路径是和页面一样的。也可以使用的绝对路径，但是域名要保持和页面一致。</p>
+<p>完整的xxx.appcache文件一般包括了3个section，基本格式如下：</p>
+<div><table><tbody><tr><td><pre>1<br/>2<br/>3<br/>4<br/>5<br/>6<br/>7<br/>8<br/>9<br/></pre></td><td><pre>CACHE MANIFEST<br/># 2017-05-13 v1.0.0<br/>/bridge.js<br/><br/>NETWORK:<br/>*<br/><br/>FALLBACK:<br/>/404.html<br/></pre></td></tr></tbody></table></div>
+<ul>
+<li>CACHE MANIFEST下面文件就是要被浏览器缓存的文件</li>
+<li>NETWORK下面的文件就是要被加载的文件</li>
+<li>FALLBACK下面的文件是目标页面加载失败时的显示的页面</li>
+</ul>
+<p><strong>AppCache工作的原理：</strong>当一个设置了manifest文件的html页面被加载时，CACHE MANIFEST指定的文件就会被缓存到浏览器的App Cache目录下面。当下次加载这个页面时，会首先应用通过manifest已经缓存过的文件，然后发起一个加载xxx.appcache文件的请求到服务器，如果xxx.appcache文件没有被修改过，那么服务器会返回<code>304 Not Modified</code>给到浏览器，如果xxx.appcache文件被修改过，那么服务器会返回<code>200 OK</code>，并返回新的xxx.appcache文件的内容给浏览器，浏览器收到之后，再把新的xxx.appcache文件中指定的内容加载过来进行缓存。</p>
+<p>可以看到，AppCache缓存需要在每次加载页面时都发出一个xxx.appcache的请求去检查manifest文件是不是有更新（byte by byte）。根据这篇文章（<a href="http://bugly.qq.com/bbs/forum.php?mod=viewthread&amp;tid=267" target="_blank">H5 缓存机制浅析 移动端 Web 加载性能优化</a>）的介绍，AppCache有一些坑的地方，且官方已经不推荐使用了，但目前主流的浏览器依然是支持的。文章里主要提到下面这些坑：</p>
+<ul>
+<li>要更新缓存的文件，需要更新包含它的 manifest 文件，那怕只加一个空格。常用的方法，是修改 manifest 文件注释中的版本号。如：# 2012-02-21 v1.0.0</li>
+<li>被缓存的文件，浏览器是先使用，再通过检查 manifest 文件是否有更新来更新缓存文件。这样缓存文件可能用的不是最新的版本。</li>
+<li>在更新缓存过程中，如果有一个文件更新失败，则整个更新会失败。</li>
+<li>manifest 和引用它的HTML要在相同 HOST。</li>
+<li>manifest 文件中的文件列表，如果是相对路径，则是相对 manifest 文件的相对路径。</li>
+<li>manifest 也有可能更新出错，导致缓存文件更新失败。</li>
+<li>没有缓存的资源在已经缓存的 HTML 中不能加载，即使有网络。例如：[url=]<a href="http://appcache-demo.s3-website-us-east-1.amazonaws.com/without-network/[/url" target="_blank">http://appcache-demo.s3-website-us-east-1.amazonaws.com/without-network/[/url</a>]</li>
+<li>manifest 文件本身不能被缓存，且 manifest 文件的更新使用的是浏览器缓存机制。所以 manifest 文件的 Cache-Control 缓存时间不能设置太长。</li>
+</ul>
+<h2>2.WebView如何设置才能支持AppCache</h2><p>WebView默认是没有开启AppCache支持的，需要添加下面这几行代码来设置：</p>
+<div><table><tbody><tr><td><pre>1<br/>2<br/>3<br/>4<br/>5<br/></pre></td><td><pre>WebSettings webSettings = webView.getSettings();<br/>webSettings.setAppCacheEnabled(true);<br/>String cachePath = getApplicationContext().getCacheDir().getPath(); // 把内部私有缓存目录'/data/data/包名/cache/'作为WebView的AppCache的存储路径<br/>webSettings.setAppCachePath(cachePath);<br/>webSettings.setAppCacheMaxSize(5 * 1024 * 1024);<br/></pre></td></tr></tbody></table></div>
+<p>注意：WebSettings的setAppCacheEnabled和setAppCachePath都必须要调用才行。</p>
+<h2>3.存储AppCache的路径</h2><p>按照Android SDK的API说明，setAppCachePath是可以用来设置AppCache路径的，但是我实际测试发现，不管你怎么设置这个路径，设置到应用自己的内部私有目录还是外部SD卡，都无法生效。AppCache缓存文件最终都会存到<code>/data/data/包名/app_webview/cache/Application Cache</code>这个文件夹下面，在上面的Android 4.4和5.1系统目录截图可以看得到，<strong>但是如果你不调用setAppCachePath方法，WebView将不会产生这个目录</strong>。这里有点让我觉得奇怪，我猜测可能从某一个系统版本开始，为了缓存文件的完整性和安全性考虑，SDK实现的时候就吧AppCache缓存目录设置到了内部私有存储。</p>
+<h1>五、总结</h1><h2>相同点</h2><p>WebView自带的缓存和AppCache都是可以用来做文件级别的缓存的，基本上比较好地满足对于非覆盖式的js、css等文件更新。</p>
+<h2>不同点</h2><ul>
+<li>WebView自带的缓存是是协议层实现的（浏览器内核标准实现，开发者无法改变）；而AppCache是应用层实现的。</li>
+<li>WebView的缓存目录在不同系统上可能是不同的；而对于AppCache而言，AppCache的存储路径虽然有方法设置，但是最终都存储到了一个固定的内部私有目录下。</li>
+<li>WebView自带的缓存可以在缓存生效的时候不用再发HTTP请求；而AppCache一定会发出一个manifest文件的请求。</li>
+<li>WebView自带的缓存可以通过设置CacheMode来改变WebView的缓存机制；而AppCache的缓存策略是由manifest文件控制的，也就是说是由web页面开发者控制的。</li>
+</ul>
+<p>最后说一下，其实很多时候，这两类缓存是共同在工作的，当manifest文件没有控制某些资源加载时，例如我上面写的xxx.appcache文件里，NETWORK section下面用的是*号，意思是所有不缓存的文件都要去网络加载。此时，这些资源就会走到WebView自带的缓存机制去，结合WebView的CacheMode，我们实际上对这些文件进行了一次WebView自带的缓存。搞清楚这两类缓存的原理有利于我们更好的设计自己的页面和App，尽可能减少网络请求，提高App运行效率。</p>
+
+      
+    </div></div></div><br/></div></span>
+</div></body></html> 

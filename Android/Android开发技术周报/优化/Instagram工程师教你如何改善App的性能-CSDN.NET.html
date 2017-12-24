@@ -1,0 +1,46 @@
+<html>
+<head>
+  <title>Instagram工程师教你如何改善App的性能-CSDN.NET</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1397"/>
+<h1>Instagram工程师教你如何改善App的性能-CSDN.NET</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>Instagram工程师教你如何改善App的性能</h1><div><div></div></div></div>
+				
+				
+				<div>
+					
+				<strong>摘要：</strong>扁平化设计最核心的地方就是放弃一切装饰效果，诸如阴影、透视、纹理、渐变等等能做出3D 效果的元素一概不用，所有的元素的边界都干净俐落，扁平化设计不仅是一个美丽的外表，它带来的还有性能上的提升。				</div>
+				
+				<p>【编者按】扁平化设计由于其简洁的外表，更少的按钮和选项使得界面干净整齐，从而减少认知障碍的产生。扁平化设计更是功能上的简化于与重组，相比于拟物化而言，扁平风格的一个优势就在于它可以更加简单直接的将信息和事物的工作方式展示出来。本文来自Instagram一名工程师的分享。</p><p><b>以下为译文：</b></p><p>扁平化设计仅仅只是一个漂亮的外表，还是一个性能利器，从而触发一场UI革命？实践证明是后者。</p>
+<p>
+    <a href="http://tylerkieft.com/" target="_blank">Tyler Kieft
+    </a>是Instagram一名工程师，他详细解释了这其中的缘由，更详细的内容请关注他在<a href="http://atscaleconference.com/" target="_blank">@scale会议</a>上的演讲: <a href="https://www.youtube.com/watch?v=GHTO2WKDO6I#t=8927" target="_blank">标准安卓手机上的Instagram </a>。这个演讲是由Facebook提供的，是“如何在实际情况下设计移动应用程序”系列的一部分，这里的“实际情况”是指那些手机速度更慢、屏幕更小、网络比美国更慢的地方。</p>
+<p>为标准手机设计App和高端手机并不一样，Instagram团队需要重新思考他们的设计。从Tyler的谈话中得到的启示之一是转变到扁平化设计，因为这将让应用程序更美观、更实用、并且还能大大提高性能。</p>
+<p>这的确出乎我的意料，我曾经认为扁平化设计只是构建更美观的UI。现在想想真是愚蠢之极。感谢Tyler如此详细的解释了扁平化设计的好处， Instagram说明了一切。</p>
+<p>扁平化设计是反拟物化，它采用简单的元素、简单的排版、单调的颜色以及简单的设计。</p>
+<p>使用扁平化设计，Instagram可以减少120 ms的冷启动时间，同时应用程序更美观、更好用、并且更专注将内容传送到不同大小的手机上。</p>
+<p>那么扁平化设计是如何实现的呢？</p>
+<h2>转变到扁平化设计</h2>
+<ul><li>为了更专注性能，Instagram重写他们的UI。</li><li>Instagram在2012年发布Android版本时，只有3个人的团队，花了大约4个月完成。其中两个工程师，一个设计师。Android版本使用了和iOS版本相同的设计。</li><li>使用的丰富的渐变特性和大量的UI元素。</li><li>过渡到扁平化设计后，产品更简单和更美观。没有更多的渐变，没有更多的阴影。</li><li>通过采用扁平化设计，他们得到的经验是：</li></ul><ul><li>扁平化设计使开发量更小，开发代码更快、更新产品更快，这对开发人员来说是个好消息。</li><li>扁平化设计带来的是性能的提升，不仅开发人员做的少，而且速度更快。</li></ul><ul><li>新Android版本的目标就是利用他们从iOS7扁平化设计中学习到的经验来重新设计：</li></ul><ul><li>让它更扁平、更快。这不是重写，导航模式并没有改变。</li><li>要有强烈的屏幕空间意识。用全新的眼光看待每一块屏幕，尽量让设计能更好地适应所有的屏幕尺寸。</li><li>让它更美观。这是Instagram团队所做一切的基础。</li></ul><ul><li>整体效果发生了显著的简化，那么发生了那些变化呢？</li></ul><ul><li>去掉所有的渐变和光滑按钮。让图标回归鲜明的轮廓，取代渐变效果。保留纯色和扁平形状，以便UI融入背景。</li><li>去掉评论图标，使评论占据屏幕的全部宽度，给予评论更多的文本空间。屏幕上重点强调内容，让小屏幕手机用户有更多的空间来读正文内容。</li><li>拍照功能的重新布局。在小手机上，动作按钮设计在屏幕的顶部，而大屏幕手机所有的命令在底部。</li><li>App上不必要的UI全部去掉，让用户更多的关注内容。chrome搜索屏幕从三层减为两层。这给了小手机很多空间，给内容很多空间。</li></ul><h2><b>为什么扁平化设计</b>
+    </h2>
+<ul><li>APK将更小，这对小型网络非常适合。神奇的是Asset tinting（我从来没听说过的东西）。Asset
+    tinting意味着assets，在这种情况下是图像、可以以编程方式着色。例如，一个灰色的心可以通过编程方式变为红色。</li><li>加载较少的assets。这意味着UI显示更快并且以更少的内存来存储位图。每个需要被显示的assets必须以闪存的方式读取并且解码成一个位图。越少这么做，App就会越快。</li><li>更快的迭代时间。如果你想改变颜色或重新开发，你不需要一个设计师了，需要的事更改代码和编译。</li></ul><ul><li>在扁平化设计之前，需要29个不同的assetsfeed screen。扁平化设计之后，只用了8仅凭这些，就在所有设备上减掉120
+    ms的冷启动时间。</li><li>扁平化设计之后，整个App更快了。更少的assets被加载，整个App变得更灵巧，速度变得更快了。</li></ul><h2>改善冷启动时间</h2>
+<ul><li>冷启动时间是指应用程序启动和响应的时间。目标就是让应用程序启动更快，让用户在低端手机上有一个好的体验。</li><li>几年前，在低端三星Y系列手机上 Instagram的启动时间是3秒，在高端三星S5上，启动时间是750 ms。</li><li>现在三星Y系列上 Instagram启动需要1.5秒。在三星S5上是400 ms。</li></ul><ul><li>配置App。</li></ul><ul><li>找出是什么减慢了这个App的速度。</li><li>在Android上你可以使用method tracing，以及timing statements，两者兼用会事半功倍。</li></ul><ul><li>修复最慢的部分。</li></ul><ul><li>延迟加载。将项目从冷启动路径删除。</li><li>重写代码。例如，缓慢的JSON解析代码重写后会更快。</li><li>遵从后台线程。能在后台完成的不要在UI线程上做。</li></ul><ul><li>迭代。再次启动配置步骤。</li></ul><ul><li>App-wide 单例模式被发现是缓慢的。</li></ul>
+
+<ul><li>很多重度单例模式先于App启动：HTTP客户机、Cookie存储、图像缓存、视频缓存。真的不需要这些东西来显示UI给用户。它们可以并行地在后台加载。</li><li>Two-part 延迟加载</li></ul><ul><li><p>在后台初始化单例模式，不要让程序员必须检查一个单例模式是否是可用的。</p></li><li>在UI线程上创建足够的对象，以便完善公共API功能。将功夫用到后台线程上。缓存从磁盘存储打开和阅读，客户端证书在后台加载。Cookies反序列化和解码在后台。通过这些改变，UI将更快地出现在屏幕上。</li></ul><ul><li>Newsview变慢。通过method tracing发现。</li></ul><ul><li>Newsview，显示你所有的喜好和评论，最初作为webview编写。它需要在启动时加载，以便尽可能快的显示用户数据。</li><li>问题是没有控制webview，它有它自己的堆栈和缓存系统。转换到本地，需要2 - 4周。本地转换后的冷启动时间减少了30%。</li></ul><ul><li>快速冷启动时间是可以实现的，通过配置、修复、迭代。</li><li>审慎使用像素。看看每一个屏幕不需要什么。其他国家用户手机的屏幕显著小于美国的。</li><li>移动手机喜欢简单的设计，移动开发者也是如此，他们喜欢更简单、更快的设计。</li></ul>
+
+原文链接：
+<a href="http://highscalability.com/blog/2014/9/29/instagram-improved-their-apps-performance-heres-how.html" target="_blank">Instagram Improved Their App's Performance. Here's How.</a> （责编/魏伟）<br/><br/></div></div></div><br/></div></span>
+</div></body></html> 

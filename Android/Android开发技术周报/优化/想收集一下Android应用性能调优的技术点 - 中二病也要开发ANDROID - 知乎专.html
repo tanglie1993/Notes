@@ -1,0 +1,31 @@
+<html>
+<head>
+  <title>想收集一下Android应用性能调优的技术点 - 中二病也要开发ANDROID - 知乎专栏</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1177"/>
+<h1>想收集一下Android应用性能调优的技术点 - 中二病也要开发ANDROID - 知乎专栏</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>想收集一下Android应用性能调优的技术点</h1><div><div></div></div></div>
+
+      <div>
+        
+        
+        
+        <span>7 个月前</span>
+      </div>
+    
+
+    
+
+    <p>作者：Kaede<br/>链接：<a href="https://link.zhihu.com/?target=https%3A//github.com/kaedea" target="_blank">kaedea (Kaede Akatsuki) · GitHub</a></p><p>最近一个星期居然没有产品的需求，本来打算涂几个妹子过双11，突然想到许多新人进项目组后会把项目以前踩的坑给再次踩一边，特别是一些会引发性能问题的“有坏味道”的代码，虽然一点有问题的代码暂时不管也不会有多大的影响，但是“千里之堤，毁于蚁穴”，一旦问题严重了就不好处理了。不能指望每次都做好完整的Code Review，最好的做法是把“性能优化”的技术点总结一下，输出一个文档，给那些新加入的小伙伴们看看，免得重复踩坑。</p><p>其实性能调优涉及到多方面的工作，一晚上也只能想到这么多，而且都是一些老生常谈、炒冷饭的东西，<strong>这个贴的目的在于想骗一些高质量的干货</strong>（我从未见过如此厚颜无耻之人+脑补诸葛孔明表情图），然后我再整合进来，接下来再把每一点都讲详细一点，配合项目中遇到的实例案例进行分析，最好再写个DEMO之类的放到Github偏偏粉之类的。</p><img src="想收集一下Android应用性能调优的技术点 - 中二病也要开发ANDROID - 知乎专_files/45cc0c38989c77ad571d0b0accb4e17e_b.png" type="image/png" data-filename="45cc0c38989c77ad571d0b0accb4e17e_b.png" height="191" width="258"/><p>请大家补充要点啊，我一并处理。以下只是一时想到写的笔记，详细的分析还需要一点时间。</p><ul><li><p>保持APP的高度响应，不要在UI线程做耗时操作，多使用异步任务</p></li><li><p>使用线程时要做好线程控制；使用队列、线程池</p></li><li><p>谨慎使用糟糕的AysncTask、Timer</p></li><li><p>警惕异步任务引起的内存泄露</p></li><li><p>应该异步任务分类，比如HTTP，图片下载，文件读写，每一类的异步任务维护一个任务队列，而不是每一个任务都开一个线程（Volley表示我一个可以搞定这些全部 _(:з」∠)_）</p></li><li><p>这些常用的任务应该做好优先级处理（一般JSON数据优先于图片等静态数据的请求）</p></li><li><p>一般异步任务应该开启一个SingleAsyncTask，保证一时只有一个线程在工作</p></li><li><p>HTTP和图片下载尽量使用同一套网络请求</p></li><li><p>使用MVP模式规范大型Activity类的行为，避免异步任务造成的内存泄露</p></li></ul><h3>避免内存泄露</h3><ul><li><p>了解虚拟机内存回收机制</p></li><li><p>频繁GC也会造成卡顿，避免不必要的内存开销</p></li><li><p>错误的引用姿♂势造成的内存泄露（啊~要泄了~）</p></li><li><p>常见的Activity泄露（单例、Application、后台线程、无限动画、静态引用）</p></li><li><p>Bitmap泄露（HoneyComb这个问题之前压力好大）</p></li><li><p>尽量使用IntentService代替Service，前者会自动StopItself</p></li><li><p>排查内存泄露问题的方法（我一直以来都是简单暴力的人肉dump检查大法）</p></li><li><p>使用LeakCanary自动检查Activity泄露问题</p></li><li><p>对内存负载要保持敏感（Sharp）</p></li></ul><ul><li><p>布局优化、减少层次，Include Merge</p></li><li><p>使用ViewStub避免不必要的LayoutInflate，使用GONE代替重复LayoutInflate同一个布局</p></li><li><p>避免过度绘制，应该减少不必要的布局背景；布局层次太深会造成过度绘制以及Measure、Layout等方法时间复杂度的指数增长</p></li><li><p>使用过渡动画，比如给图片的呈现加一个轻量的淡入效果会让视觉上变得流畅许多</p></li><li><p>避免过度的动画，不要让一个界面同时出现多出动画，比如List滚动时Item项要停止播放动画或者GIF</p></li><li><p>复杂动画使用SurfaceView或TextureView</p></li><li><p>尽量提供多套分辨率的图片，使用矢量图</p></li></ul><h3>Adapter优化</h3><ul><li><p>复用convertView，用ViewHolder代替频繁findViewById</p></li><li><p>不要重复setListener，要使用v.getId来复用Listener，不然会创建一堆Listener导致频繁GC</p></li><li><p>多布局要采用MutilItemView，而不是使用一个大布局然后动态控制需要现实的部分</p></li><li><p>不要在getView方法做做耗时的操作</p></li><li><p>快速滚动列表的时候，可以停止加载列表项的图片，停止列表项的动画，不要在这时候改变列表项的布局</p></li><li><p>尽量用RecyclerView（增量Notify和RecycledViewPool带你飞）</p></li></ul><ul><li><p>算法优化，减少时间复杂度，参考一些经典的优化算法</p></li><li><p>尽量使用int，而不是float或者double</p></li><li><p>尽量采用基本类型，避免无必要的自动装箱和拆箱，浪费时间和空间</p></li><li><p>选用合适的集合类（尽量以空间换时间）、选用Android家的SparseArray,SparseBooleanArray和LongSparseArray</p></li><li><p>避免创建额外的对象（StringBuilder）</p></li><li><p>使用SO库完成一些比较独立的功能（高斯模糊）</p></li><li><p>预处理（提前操作）一些比较耗时的初始化工作统一放到启动图处理</p></li><li><p>懒加载（延迟处理）规避Activity的敏感生命周期</p></li><li><p>Log工具类，要在编译时删掉调试代码，而不是在运行时通过判断条件规避</p></li><li><p>优先使用静态方法、公有方法还是私有方法？速度区别很大哦</p></li><li><p>类内部直接对成员变量进行操作，不要使用getter/setter方法，调用方法耗额外的时间</p></li><li><p>给内部类访问的外部类成员变量要声明称包内可访问，而不是私有，不然编译的时候还是会自动创建用于访问外部类成员变量的方法</p></li><li><p>遍历集合时，使用i++代替Iterator，后者需要额外的对象操作，应在循环体内避免这种情况</p></li><li><p>如果一个基本类型或者String的值不会改变，尽量用final static，编译时会直接用变量的值替换变量，也就不需要在查询变量的值了</p></li></ul><ul><li><p>数据库优化：使用索引、使用异步线程</p></li><li><p>网络优化 …… 一堆优秀的轮子</p></li><li><p>避免过度使用依赖注入框架，大量的反射</p></li><li><p>不过过度设计/抽象，多态看起来很有设计感，代价就是额外的代码、空间、时间</p></li><li><p>尽量不要开启多进程，进程的开销很大</p></li></ul><h3>APK瘦身</h3><ul><li><p>使用zipalign工具优化APK</p></li><li><p>适当有损图片压缩、使用矢量图</p></li><li><p>删除项目中冗余的资源，之前写过一些删除没有res资源的脚本</p></li><li><p>动态加载模块化，项目拆分啊！</p></li></ul><h3>性能问题的排查方法</h3><ul><li><p>GPU条形图，没事开来看看淘宝</p></li><li><p>过度绘制颜色，嗯，不要一篇姨妈红就好</p></li><li><p>LeakCanary，自动检测Activity泄露，挺好用的</p></li><li><p>TraceView（Device Monitor），Systrace，分析哪些代码占用的CPU时间太大，屡试不爽</p></li><li><p>Lint，检查不合理的res资源</p></li><li><p>layoutopt（还是optlayout？），对当前布局提出优化建议，已被lint替代，但是还能用</p></li><li><p>HierarchyViewer，查看手机当前界面的布局层次，布局优化时常用（只用于模拟器，真机上用要ROOT，不想ROOT加得使用ViewServer）</p></li><li><p>StrictMode，UI操作、网络操作等容易出现性能问题的地方，如果出现异常情况StrictMode会报警</p></li></ul><p><strong>欢迎各位补充</strong></p></div></div></div><br/></div></span>
+</div></body></html> 

@@ -1,0 +1,88 @@
+<html>
+<head>
+  <title>Android App 性能优化实践 - 推酷</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1202"/>
+<h1>Android App 性能优化实践 - 推酷</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>Android App 性能优化实践</h1><div><div></div></div></div>
+        
+        
+             
+ <p>本文记录了Android App优化需要用到的工具和以及实践中的Tips。也算对我这半年来部分工作的总结。</p>  
+  
+ <p> <a href="http://developer.android.com/tools/help/hierarchy-viewer.html" target="_blank">Hierarchy Viewer</a> 是 Android SDK 自带的 Layout 嵌套检查工具，以可视化的布局角度直观获取 Layout 布局设计和各种属性信息，来帮助我们完成优化布局的设计。需要注意的是，出于安全考虑 Hierarchy Viewer 只能连接Android开发版手机(需要安装ViewServer)或是模拟器 。 </p> 
+ <p> </p><div><img src="Android App 性能优化实践 - 推酷_files/URn6by.png!web.png" type="image/png" data-filename="URn6by.png!web.png" height="223" width="550"/></div> <p></p> 
+ <p>注意上图右半部分显示的时间</p> 
+ <ul> 
+  <li>Measure： 0.977ms</li> 
+  <li>Layout： 0.167ms</li> 
+  <li>Draw： 2.717ms</li> 
+ </ul> 
+ <p>我们知道Android View在绘制图形的时候主要耗时的操作就在 Measure、Layout 和 Draw 这三个过程；并且任何一个 View 绘制时间不能超过 16.7ms(每秒60帧才能保证流畅度)。</p> 
+ <p>如果 UI 出现卡顿或掉帧，那么 Hierarchy Viewer 这个工具及其有用，可以分析当前 View 是哪些 View 以及是 View 的哪个过程加载延迟，通过这些信息基本可定位到局部 Code。</p> 
+ <h4>如何让QC快速追踪和定位性能问题？</h4> 
+ <p> 当然使用 Android 开发者工具里的 <a href="http://developer.android.com/about/versions/jelly-bean.html" target="_blank"> <strong>Profile GPU rendering</strong> </a> 工具(Android4.1以上)。它能够从屏幕上活动的所有Android Activity生成性能视图，图中的绿线代表 <strong>16ms</strong> ，频繁超过此线的 Activity 就要排查性能问题了。 </p> 
+ <h4>如何定位到某个方法？</h4> 
+ <p> 用 Hierarchy Viewer 知道是哪一个子 View 耗时比较多，找到此 View 的Code，那么如何定位到具体某个方法里呢？ 当然需要 <a href="http://developer.android.com/tools/debugging/debugging-tracing.html" target="_blank">traceview</a> 工具。traceview 工具十分强大，可以轻松把每个方法占用 CPU 时间计算出来，找到占用时间最长的方法，然后分析此方法即可~ </p> 
+ <p> <a href="http://developer.android.com/tools/debugging/improving-w-lint.html" target="_blank"> <strong>Lint</strong> </a> 工具已经集成于 Android Studio，同样是非常强大的工具。它会给出 Layout 优化提示(既包括图片资源、layout文件，也有定义的String常量和Color常量以及Layout写法不规范)，告诉你哪些资源没有被引用，Manifest文件的错误等；我主要用 lint 来哪些资源文件没有被引用到(给APK瘦身)，以及部分代码不规范的地方。 </p> 
+ <h4>内存优化工具</h4> 
+ <p>Memory Monitor：查看整个app所占用的内存，以及发生GC的时刻，短时间内发生大量的GC操作是一个危险的信号(发生内存抖动)。 Allocation Tracker：追踪内存的分配。 Heap Tool：查看当前内存快照，便于对比分析哪些对象有可能是泄漏了的。</p> 
+  
+  
+ <p> <code>&lt;include&gt;</code> 标签 ，将布局中公共部分提取出来共用；例如网易新闻一条新闻的标题栏和评论界面的标题栏。 </p> 
+ <p> <code>&lt;viewstub&gt;</code> 标签 ，同 include，可引入布局，但是默认情况引入的布局不会占用资源，在解析当前 Layout 时节省计算、内存资源。当需要加载此 View 的时候，需要动态 inflate 起来。 </p> 
+ <p>Tips：将一个view设置为GONE不会被系统解析，从而提高layout解析速度，而VISIBLE和INVISIBLE这两个可见性属性会被正常解析。</p>  
+ <p> <a href="http://developer.android.com/training/improving-layouts/reusing-layouts.html" target="_blank"> <strong> <code>&lt;merge&gt;</code> 标签 </strong> </a> ，解决 Layout 嵌套过多的问题，通过工具通过 hierarchy viewer 可直观的显示出来。 </p> 
+  
+ <p>减少 inflate 次数：inflate 是比较耗资源的，当内存够用时，可以降 View 缓存起来，下次直接使用；用空间换时间。</p> 
+ <p> ListView 优化，请见我另外一篇博客。 </p> 
+ <p> 关于 Layout 优化，推荐一篇博客，给我很大帮助， <a href="http://www.trinea.cn/android/performance/" target="_blank">性能优化系列</a> 。 </p> 
+ <h2> 代码Tips </h2> 
+ <p> <a href="http://www.trinea.cn/android/java-android-performance/" target="_blank">性能优化之Java(Android)代码优化</a> ，这篇博客详细介绍了如何进行代码优化，包括缓存、数据存储、异步、数据库和网络等操作的优化。 </p> 
+ <p> 关于缓存，上文没有提到一个重要的库：DiskLruCache；DiskLruCache 是关于数据硬盘缓存的， <a href="http://blog.csdn.net/guolin_blog/article/details/28863651" target="_blank">Android DiskLruCache完全解析，硬盘缓存的最佳方案</a> 这篇博客详细介绍了 DiskLruCache 使用方法和注意事项。 </p> 
+ <p> 避免随意使用静态变量，当某个对象被定义为stataic变量所引用，虚拟机通常是不会回收这个对象所占有的内存。 </p> 
+ <p> 避免过多过常的创建java对象，JVM 创建和回收耗时，频繁使用对象，最好创建缓存；每次回收对象，都是 STW(Stop the World),所以如果对象过多，可能引起卡顿(大于16ms，引起掉帧)。可用 Memory Monitor 或 Allocation Tracker 工具来查看这类问题。 </p> 
+ <p> 多使用局部变量，函数执行完，就释放内存被虚拟机回收。 </p> 
+ <p> 使用StringBuilder和StringBuffer进行字符串连接，尤其在做 SQL 拼装的时候。 </p> 
+ <p> 单线程应尽量使用HashMap, ArrayList，如果不确定是单线程还是多线程，建议还是用 ConcurrentHashMap... </p> 
+ <p> 尽量在finally块中释放资源，例如很多 Cursor。 </p> 
+ <p> 慎用异常，创建一个异常时，需收集一个栈记录(stack track)，用于描述异常是在何处创建的。构建这些此栈时需要为运行时栈做一份快照，这一部分开销很大。 </p> 
+ <h2> View绘制 </h2> 
+ <h4>过度绘制问题</h4> 
+ <p>为什么会出现过度绘制：多个 View 重叠，复杂 Layout 叠加；导致 GPU 需要绘制多层，有些时候非常耗时。</p> 
+ <p> <a href="http://www.androidperformance.com/android-performance-optimization-overdraw-1.html" target="_blank">Android性能优化之过渡绘制</a> ，这篇博客作者用实例来解决过度绘制的问题，解决过度绘制问题时，作者也使用了我们上面介绍的几个工具。 </p> 
+ <p> View局部更新 </p> 
+ <p> 一些复杂的 View，如果每次 View 有局部更新都要重新绘制 View的话，GPU 会显得力不从心。通过 <a href="http://developer.android.com/reference/android/graphics/Canvas" target="_blank">canvas.clipRect() 方法</a> 来让系统识别可绘制区域。这个方法可以指定一块矩形区域，只有在这个区域内才会被绘制，其他的区域会被忽视。clipRect方法节约了CPU与GPU资源，不会绘制clipRect区域外的地方，仅仅绘制内容在矩形区域内的组件。 </p> 
+  
+ <p>尽量减少唤醒屏幕的次数与持续的时间(屏幕是用电大户)，用WakeLock来处理唤醒的问题，能够正确执行唤醒操作并根据设定及时关闭操作进入睡眠状态，使用 wakelock.acquice() 方法，一定要加上超时处理(例如释放锁)。</p> 
+ <p>等到设备处于充电状态或者电量充足的时候才进行耗时耗电操作(如分享传送数据、图片处理等)</p> 
+ <p>触发网络请求的操作，每次都会保持无线信号持续一段时间，我们可以把零散的网络请求打包进行一次操作，避免过多的无线信号引起的电量消耗(例如APP的数据采集)。</p> 
+ <p> Battery Historian Tool(Android 5.0)这个工具可以详细查看各类应用的用电情况。 </p> 
+  
+ <p> 出现卡顿的根本原因：系统绘制 View 超过 <strong>16ms</strong> ，出现掉帧才导致卡顿或不流畅。解决方法： </p> 
+ <ul> 
+  <li>Hierarchy Viewer，Profile GPU rendering，traceview</li> 
+  <li>抽象布局标签，使用标签 include、viewstub、merge</li> 
+  <li>多使用缓存</li> 
+  <li>尽量避免过度绘制</li> 
+  <li>自定义复杂 View，动态更新 View 内容</li> 
+  <li>正确使用 wakelock，保持 App 用电量</li> 
+ </ul> 
+ <h3>Reference</h3> 
+ <p> <a href="https://www.youtube.com/playlist?list=PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE" target="_blank">Android Performance Patterns</a> </p> 
+ <p> <a href="http://www.androidperformance.com/android-performance-optimization-overdraw-2.html" target="_blank">Android性能优化之过渡绘制</a> </p> 
+ <p> <a href="http://hukai.me/android-performance-patterns/" target="_blank">Android性能优化典范</a> </p> 
+ <p> <a href="http://blog.venmo.com/hf2t3h4x98p5e13z82pl8j66ngcmry/performance-tuning-on-android" target="_blank">Performance Tuning On Android</a> </p> 
+</div></div></div><br/></div></span>
+</div></body></html> 

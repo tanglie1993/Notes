@@ -1,0 +1,213 @@
+<html>
+<head>
+  <title>第三方库和SDK中隐藏的性能问题</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1772"/>
+<h1>第三方库和SDK中隐藏的性能问题</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>第三方库和 SDK 中常见的性能问题</h1><div><div></div></div></div>
+
+<p>我们一直在向开发者们强调第三方库和 SDK 中存在的几个常见问题，然而其中的一部分问题依然存在，因此，在使用第三方库和 SDK 时，对它们的性能问题保持警惕非常重要。</p>
+
+<ol>
+  <li>
+    <p><a href="http://blog.nimbledroid.com/2016/04/06/slow-ClassLoader.getResourceAsStream.html" target="_blank">ClassLoader.getResourceAsStream</a> 是第三方库和 SDK 中最常见的性能问题了。如果一个库的文件格式是 JAR 而不是 <a href="http://tools.android.com/tech-docs/new-build-system/aar-format" target="_blank">AAR</a>) 格式，那 ClassLoader.getResourceAsStream 就是读取资源文件的唯一途径了。开发者选择以 JAR 格式打包库文件有很多原因，通常是为了为 Java 和 Android 平台提供统一的库文件。</p>
+  </li>
+  <li>
+    <p><a href="http://blog.nimbledroid.com/2016/03/21/ways-to-hang-main-thread.html" target="_blank">主线程内的“夯方法”</a> 是另一个常见的性能问题。通常库都需要一个初始化的过程，所以会有一个初始化方法来进行初始化操作，这个过程可能会耗时较长。例如广告 SDK 可能需要获取已安装 APP 的列表，用来避免显示已安装 APP 的广告。A/B 测试的 SDK 可能需要从服务器获取开关参数。如果开发者在调用这些初始化方法时不小心使用了主线程，那 APP 的性能就会受到很大的影响。</p>
+  </li>
+  <li>
+    <p><a href="http://blog.nimbledroid.com/2016/02/23/slow-Android-reflection.html" target="_blank">反射</a> 是又一个常见的问题。库的开发者常常利用反射使得库更容易被其他人使用。例如可能有的 APP 只需要加入几个注解就可以创建一个 REST 客户端或者 DAO 对象了。不幸的是，对反射的使用如果不小心，就很容易严重降低 APP 的性能</p>
+  </li>
+</ol>
+
+<h3>实际榜单 APP 所使用的第三方库和 SDK</h3>
+
+<p>第三方库和 SDK 中的性能问题非常普遍，下面是存在上述问题的 SDK 以及受其影响的 APP：</p>
+
+
+
+<h4><a href="https://home.tapjoy.com/" target="_blank">Tapjoy</a> </h4>
+
+<p>Tapjoy 受到了 ClassLoader.getResourceAsStream 的影响。下面是一个例子（textPlus 5.9.9）：</p>
+
+<div>
+<a href="https://nimbledroid.com/play/com.gogii.textplus?p=2DGMyC8vIXa2qh#Icicle%20Graph" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image.png" type="image/png" data-filename="" alt="tapjoy" height="263" width="576"/></div>
+</a>
+<div>调用 com.tapjoy.TapjoyConnect.requestTapjoyConnect 耗时 1729ms</div>
+</div>
+
+<p>其他受到影响的 APP 包括：
+<a href="https://nimbledroid.com/play/com.sirma.mobile.bible.android?p=2DGoBb49fTWxds#Icicle%20Graph" target="_blank">Bible 5.11.3</a>,
+<a href="https://nimbledroid.com/play/com.digidust.elokence.akinator.freemium?p=2LBUuOaCBZDgpV#Icicle%20Graph" target="_blank">Akinator FREE 4.04</a>,
+<a href="https://nimbledroid.com/play/com.malangstudio.alarmmon?p=2LAqpm0PD8TX4x#Icicle%20Graph" target="_blank">AlarmMon 6.1.8</a>,
+<a href="https://nimbledroid.com/play/com.famousbluemedia.yokee?p=2LBqiESOTDBpeo#Icicle%20Graph" target="_blank">Yokee 2.0.205</a>,
+<a href="https://nimbledroid.com/play/com.keek?p=2L9LbaHXBzulDt#Icicle%20Graph" target="_blank">Keek 5.0.6</a>,
+<a href="https://nimbledroid.com/play/com.ismaker.android.simsimi?p=2DGRIRVLsdilC7#Icicle%20Graph" target="_blank">SimSimi 6.6.1.3</a>,
+<a href="https://nimbledroid.com/play/com.onemanwithcamera.instafish?p=2DGeHZz1RqCN0S#Icicle%20Graph" target="_blank">InstaFisheye 2.6.8</a>,
+<a href="https://nimbledroid.com/play/com.jaumo?p=2Ma1AUxPhwGGsb#Icicle%20Graph" target="_blank">Jaumo 3.5.3</a>,
+<a href="https://nimbledroid.com/play/com.dietcoacher.sos?p=2DGIdLTWxjac4a#Icicle%20Graph" target="_blank">My Diet Coach 4.2.8</a>,
+<a href="https://nimbledroid.com/play/com.outfit7.talkingangelafree?p=2DGei9TBXrL0rQ#Icicle%20Graph" target="_blank">Talking Angela 2.4</a>, 和
+<a href="https://nimbledroid.com/play/com.motionportrait.ZombieBooth?p=2DGc92SLyqPcth#Icicle%20Graph" target="_blank">ZombieBooth 4.32</a>.</p>
+
+<h4><a href="http://www.startapp.com/" target="_blank">Startapp</a> </h4>
+
+<p>Startapp 受到了主线程内“夯方法”以及 ClassLoader.getResource 的影响。下面是例子之一（Lovely Photo Frames
+4.0.2）：</p>
+
+<div>
+<a href="https://nimbledroid.com/play/com.tndev.loveframes?p=2DGw3u0vMD99QC#Icicle%20Graph" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image [1].png" type="image/png" data-filename="" alt="Startapp" height="323" width="576"/></div>
+</a>
+<div>调用 com.startapp.android.publish.StartAppAd.init 耗时 698ms</div>
+</div>
+
+<p>其他受到影响的 APP 包括：
+<a href="https://nimbledroid.com/play/com.fantasticdroid.flashalerts?p=2DGLDh68ScVc9D#Icicle%20Graph" target="_blank">Flash Alerts 2.2</a> 和
+<a href="https://nimbledroid.com/play/com.bruce.android.noid?p=2DGG0VKivuOx40#Icicle%20Graph" target="_blank">Voice Changer 29</a></p>
+
+<h4><a href="https://www.heyzap.com/" target="_blank">Heyzap</a> </h4>
+
+<p>Heyzap 受到了主线程内“夯方法”的影响，下面是例子之一（Mackolik 3.3.6），其中调用了3次 packageManager.getInstalledPackages() 方法，耗时约<strong>236ms</strong>：
+</p>
+
+<div>
+<a href="https://nimbledroid.com/play/com.kokteyl.mackolik?p=2DGUfGU6NOjRu7#Icicle%20Graph" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image [2].png" type="image/png" data-filename="" alt="Heyzap" height="223" width="576"/></div>
+</a>
+<div>调用 com.heyzap.sdk.ads.HeyzapAds.start 耗时 241ms</div>
+</div>
+
+<h4><a href="http://www.yume.com/" target="_blank">Yume</a> </h4>
+
+<p>Yume 和其他 SDK 一样，也使用了 ClassLoader.getResource 方法。以下是例子之一（Talking James Squirrel 3.26.0）：</p>
+
+
+
+<div>
+<a href="https://nimbledroid.com/play/com.kauf.talking.baum.TalkingJamesSquirrel?p=2L9rN3y7GP1kMc#Icicle%20Graph" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image [3].png" type="image/png" data-filename="" alt="Yume" height="387" width="576"/></div>
+</a>
+<div>调用 com.kauf.marketing.YuMe.init 耗时 2152ms</div>
+</div>
+
+<p>其他受到影响的 APP 包括： <a href="https://nimbledroid.com/play/com.kauf.talking.baum.TalkingBabsyBaby?p=2L9hfZQZEGmaSK#Icicle%20Graph" target="_blank">Talking Babsy Baby: Baby Games 3.30.0</a></p>
+
+<h4><a href="http://www.joda.org/joda-time/" target="_blank">Joda-Time</a> </h4>
+
+<p>Joda-Time 同样存在 ClassLoader.getResource 调用问题，下面是例子之一（Yahoo Fantasy Sports 6.4.0）：</p>
+
+<div>
+<a href="https://nimbledroid.com/play/com.yahoo.mobile.client.android.fantasyfootball?p=2DH2RIaB5laac7#Icicle%20Graph" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image [4].png" type="image/png" data-filename="" alt="Joda-Time" height="168" width="576"/></div>
+</a>
+<div>调用 org.joda.time.DateTimeZone 初始化函数耗时 2259ms</div>
+</div>
+
+<p>其他受到影响的 APP 包括：<a href="https://nimbledroid.com/play/tunein.player?p=2DHCUbrou1eJEx#Icicle%20Graph" target="_blank">TuneIn Radio - Radio &amp; Music 13.6.1</a>, <a href="https://nimbledroid.com/play/com.babycenter.pregnancytracker?p=2LBnxsElZyNUT9#Icicle%20Graph" target="_blank">My Pregnancy Today Tracker 1.17.1</a>, <a href="https://nimbledroid.com/play/com.livescore?p=2DGVxmu3MDptDJ#Icicle%20Graph" target="_blank">LiveScore 2.1.4</a>, <a href="https://nimbledroid.com/play/com.vevo?p=2DGyyFLprtETqF#Icicle%20Graph" target="_blank">Vevo - Watch HD Music Videos 2.1.8</a>, <a href="https://nimbledroid.com/play/com.bitsmedia.android.muslimpro?p=2DGFb9Ipti2hoi#Icicle%20Graph" target="_blank">Muslim Pro: Prayer Times Quran 7.0.6</a>, 和 <a href="https://nimbledroid.com/play/com.timehop?p=2DGvNGHPt4RT7M#Icicle%20Graph" target="_blank">Timehop 3.1.1</a></p>
+
+<h4><a href="http://ormlite.com/" target="_blank">OrmLite</a> </h4>
+
+<p>Ormlite 同样存在 ClassLoader.getResource 调用问题，下面是例子之一（Anghami 1.8.58），耗时整整一秒：</p>
+
+
+
+<div>
+<a href="https://nimbledroid.com/play/com.anghami?p=2LBsjI2ZPUecOx#Summary" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image [5].png" type="image/png" data-filename="" alt="ormlite" height="241" width="576"/></div>
+</a>
+<div>调用 com.j256.ormlite.android.apptools.OpenHelperManager.getHelper 耗时 830ms</div>
+</div>
+
+<p>其他受到影响的 APP 包括：<a href="https://nimbledroid.com/play/com.booking?p=2LAevyLAo1Ej3X#Icicle%20Graph" target="_blank">Booking.com Hotel Reservations 8.4.2</a>, <a href="https://nimbledroid.com/play/com.nike.plusgps?p=2L8gQfE5v08CUl#Icicle%20Graph" target="_blank">Nike+ Running 1.7.3</a>, <a href="https://nimbledroid.com/play/com.mapmyrun.android2?p=2L9oXPW7IW8m4C#Icicle%20Graph" target="_blank">Run with Map My Run 3.10.0</a>, <a href="https://nimbledroid.com/play/com.schibsted.bomnegocio.androidApp?p=2DGm4LHVlSa3AC#Icicle%20Graph" target="_blank">OLX Brasil - Comprar e Vender 10.1.3.28</a>, 和 <a href="https://nimbledroid.com/play/com.didilabs.kaavefali?p=2LRJ9SvzEgS0qH#Icicle%20Graph" target="_blank">Kaave 1.8.0</a></p>
+
+<h4><a href="http://www.activeandroid.com/" target="_blank">Activeandroid</a> </h4>
+
+<p>ActiveAndroid 使用了反射，对 APP 性能产生了严重的影响，下面是例子之一（Myntra 2.4.0）：</p>
+
+
+
+<div>
+<a href="https://nimbledroid.com/play/com.myntra.android?p=2MaFbQjkB3NqbR#Icicle%20Graph" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image [6].png" type="image/png" data-filename="" alt="activeandroid" height="314" width="576"/></div>
+</a>
+<div>调用 com.activeandroid.ActiveAndroid.initialize 耗时 1421ms</div>
+</div>
+
+<p>其他受到影响的 APP 包括：<a href="https://nimbledroid.com/play/com.scribd.app.reader0?p=2DGmfF1rC8PO85#Icicle%20Graph" target="_blank">Scribd - A World of Books 3.11</a></p>
+
+<h4><a href="https://jersey.java.net/" target="_blank">Jersey</a> </h4>
+
+<p>Jersey 对反射的使用也严重降低了 APP 的性能，例如 Photobucket 3.3.6：</p>
+
+
+
+<div>
+<a href="https://nimbledroid.com/play/com.photobucket.android?p=2DGhhgjWGOFDjP#Icicle%20Graph" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image [7].png" type="image/png" data-filename="" alt="com.photobucket.android Iricle Graph" height="479" width="576"/></div>
+</a>
+<div>调用 com.photobucket.api.client.jersey.UserClient 的构造函数耗时 660ms</div>
+</div>
+
+<h4><a href="https://aws.amazon.com/mobile/sdk/" target="_blank">AWS Android SDK</a> </h4>
+
+<p>AWS Android 也使用了 ClassLoader.getResource，严重降低了 APP 的性能，例如 Moovit 4.2.7.137：</p>
+
+
+
+<div>
+<a href="https://nimbledroid.com/play/com.tranzmate?p=2DGwZ5zKNRvuiz#Icicle%20Graph" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image [8].png" type="image/png" data-filename="" alt="AWS" height="188" width="576"/></div>
+</a>
+<div>调用 com.amazonaws.auth.CognitoCachingCredentialsProvider 的初始化函数耗时 2371ms</div>
+</div>
+
+<h4><a href="http://www.slf4j.org/" target="_blank">SLF4J</a> </h4>
+
+<p>意料之中的是 SLF4J 也使用了 ClassLoader.getResource：</p>
+
+<div>
+<a href="https://nimbledroid.com/play/com.amazon.kindle?p=2LBiUc6W69S6El#Icicle%20Graph" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image [9].png" type="image/png" data-filename="" alt="slf4j" height="169" width="576"/></div>
+</a>
+<div>调用 org.slf4j.LoggerFactory.getLogger 耗时 678ms</div>
+</div>
+
+<h4><a href="http://logback.qos.ch/" target="_blank">Logback</a> </h4>
+
+<p>Logback 同样存在 ClassLoader.getResource 的问题，例如 Audible 1.9.0：</p>
+
+
+
+<div>
+<a href="https://nimbledroid.com/play/com.audible.application?p=2DGEBvcEuZEQyT#Icicle%20Graph" target="_blank">
+<div><img src="第三方库和SDK中隐藏的性能问题_files/Image [10].png" type="image/png" data-filename="" alt="logback" height="202" width="576"/></div>
+</a>
+<div>调用 org.slf4j.LoggerFactory.getLogger 耗时 1561ms</div>
+</div>
+
+<p>其他受到影响的 APP 包括：<a href="https://nimbledroid.com/play/com.gowiper.android?p=2LBWGdxbz40SmJ#Icicle%20Graph" target="_blank">Wiper 2.5</a>, <a href="https://nimbledroid.com/play/co.happybits.anyvideo.kik?p=2L8vo56hU6F8Fy#Icicle%20Graph" target="_blank">Marco Polo: PTT Video Chat 1.2.19</a>, 和 <a href="https://nimbledroid.com/play/com.talkatone.android?p=2DGtmqxauAdlG0#Icicle%20Graph" target="_blank">Talkatone: FREE Texts &amp; Calls 4.3</a></p>
+
+<div>
+  
+  <div>
+    <h4>建议：使用第三方库和 SDK 之前务必测量其性能</h4>
+  </div>
+</div>
+
+
+
+                            
+                        </div></div></div><br/></div></span>
+</div></body></html> 
