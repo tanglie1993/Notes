@@ -1,0 +1,541 @@
+<html>
+<head>
+  <title>[Android 之美] 那些你不知道的APK 瘦身，让你的APK更小 - fuchenxuan blog - 博客频道 - CSDN.NET</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2397"/>
+<h1>[Android 之美] 那些你不知道的APK 瘦身，让你的APK更小 - fuchenxuan blog - 博客频道 - CSDN.NET</h1>
+
+<div>
+<span><div style="position:relative;"><div>
+<div>
+  <div>
+    <div>
+      <div>
+        <div>
+          <div><div><div><div><h1>[Android 之美] APK 瘦身，减少APK的大小</h1><div></div></div>
+
+<div>
+  <p>让我们的apk文件尽可能更小，移除那些未使用的代码和资源文件。本章节介绍了如何做到让APK更小，性能更好，下载转化率会更高，以及如何指定在构建APK过程中保留或移除项目中的代码和资源，在我们还没有分析APK大小之前，项目中存在一些资源放置处理不当，没有统一的规范，依赖管理不合理，资源重叠，dex方法数过多、文件过大等问题，导致整个APK文件也比较大，对于下载转化率必然有一定的影响。 <div></div>
+  那么公司要求我们的产品APK体积大小要优化到3M左右。经过我们的努力终于达到要求，然而我们发现还能再小。</p>
+</div>
+
+<h1>分析APK的大小</h1>
+
+<p>古人云：工欲善其事，必先利其器，我们得先有利器，下面就是我们常用的分析APK大小工具的利器做一些简单的介绍和使用，帮助我们分析造成APK体积较大的元凶，以便于我们从那些方面入手优化。</p>
+
+
+
+<h3>使用Android Studio 2.2</h3>
+
+<p><a href="http://lib.csdn.net/base/android" target="_blank" title="Android知识库">Android</a> Studio 2.2 新功能直接能分析APK的大小，双击打开就能看到那些占用APK比例大，方法数等。</p>
+
+<p></p><div><img src="[Android 之美] 那些你不知道的APK 瘦身，让你的APK更小 - fuchenx_files/Image.png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p>
+
+<ul>
+<li>分析任何的APK</li>
+<li>查看APK下载包的大小，解压后的实际大小</li>
+<li>反编译资源文件，还原layout中的资源id，代码</li>
+<li>分析dex，显示每部分的方法数，直接查看那些library体积比较大</li>
+</ul>
+
+<p>使用方法：Build -&gt; Analyz APK</p>
+
+<p>有了<code>Analyz APK</code>这个利器，以下工具也可以基本不用了</p>
+
+
+
+<h3>NimbleDroid</h3>
+
+<p><a href="https://nimbledroid.com/" target="_blank">NimbleDroid</a> 是美国哥伦比亚大学的博士创业团队研发出来的自动化分析Android app性能指标的系统，分析的方式有静态和动态两种方式，其中静态分析可以分析出APK安装包中大文件排行榜，各种知名SDK的大小以及占代码整体的比例，各种类型文件的大小以及占排行，各种知名SDK的方法数以及占所有dex中方法数的比例,针对缓慢的方法，缓慢的第三方SDK和内存泄漏。 <div></div>
+测量生成的速度、网络、内存和磁盘使用率。总之有非常多分析App性能的功能，如果要做性能优化，也可以尝试使用<a href="https://nimbledroid.com/" target="_blank">NimbleDroid</a>。</p>
+
+<p>查看详细的方法耗时</p>
+
+<p></p><div><img src="[Android 之美] 那些你不知道的APK 瘦身，让你的APK更小 - fuchenx_files/Image [1].png" type="image/png" data-filename=""/></div><p></p>
+
+<p>具体使用方法请看官网： <div></div>
+<a href="https://nimbledroid.com/" target="_blank">https://nimbledroid.com/</a></p>
+
+<p>不过需要注意的是<a href="http://blog.csdn.net/vfush/article/details/52266843" target="_blank"><strong>不要上传任何未发布的产品</strong></a>。</p>
+
+
+
+<h3>ClassShark</h3>
+
+<p>ClassShark 是一款查看Android执行文件（apk）的浏览工具，目前有两个android App（Apk）和桌面（jar）的版本。 <div></div>
+使用这款工具，可以很方便的打开APK/Class/Jar/res <div></div>
+等 文件和分析里面的内容。</p>
+
+<p>具体源码与使用方法详细在github中： <div></div>
+<a href="https://github.com/google/android-classyshark" target="_blank">https://github.com/google/android-classyshark</a></p>
+
+<p>通过以上任一工具分析我们知道我们项目中主要是以下文件占用APK大小：</p>
+
+<ul>
+<li><p><strong>classes.dex</strong> <div></div>
+ classes.dex是<a href="http://lib.csdn.net/base/javaee" target="_blank" title="Java EE知识库">Java</a>源码编译后生成的java字节码文件，</p></li>
+<li><p><strong>res</strong> <div></div>
+主要是存放我们的图片资源</p></li>
+<li><p><strong>resources.arsc</strong> <div></div>
+编译后的二进制资源文件，非常多无效资源文件(语言)</p></li>
+<li><p><strong>assets</strong> <div></div>
+主要存放了我们的缓存数据文件，已做最优化压缩，我们考虑能否云端存放。</p></li>
+<li><p><strong>lib</strong> <div></div>
+    主要是存放我们的so库，目前我们已经优化了</p></li>
+</ul>
+
+<p>既然知道了那些数据导致我们APK体积大，那么我们就着手瘦身了。</p>
+
+
+
+<h1>对APK进行瘦身</h1>
+
+
+
+<h2>对资源进行极限压缩</h2>
+
+<p>对资源进行极限压缩，主要是对如：res里面用到的图片资源文件和assets文件夹下的一些html，db等一些缓存预留在APK的数据文件</p>
+
+<ul>
+<li>assets资源压缩，使用7zip或者lzma压缩方式最高，把文件打包压缩</li>
+<li>res 图片资源的压缩，使用tinypng优化Android的资源图片，通常我们可以在保证图片不失真的情况下，多压缩几次。目前tinypng已经支持png和jpg图片、.9图的压缩  </li>
+<li>将非alpha的图转换成jpg形式</li>
+</ul>
+
+<p>通过以上方法我们图片降低了79%的大小。</p>
+
+
+
+<h3>使用WEBP，SVG图片资源格式</h3>
+
+<ul>
+<li>WebP是谷歌研发出来的一种图片数据格式，它是一种支持有损压缩和无损压缩的图片文件格式，如果应用支持到Android 4.0+，那么我们可以使用WebP格式代替PNG，我们的资源大小能降低50%多。或者有些资源可以使用SVG图片资源更小。 <div></div>
+以下是他们的对比图：</li>
+</ul>
+
+<p></p><div><img src="[Android 之美] 那些你不知道的APK 瘦身，让你的APK更小 - fuchenx_files/Image [2].png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p>
+
+<p>这里提供方便转换的WEBP资源的工具：</p>
+
+
+
+
+
+<h3>利用AndResGuard资源压缩打包工具</h3>
+
+<p><a href="http://lib.csdn.net/base/wechat" target="_blank" title="微信开发知识库">微信</a>中的资源混淆工具主要为了混淆资源ID长度(例如将res/drawable/icon.png,png变成混淆为r/s/a.png)，同时利用7z深度压缩、对png的存储方式做了改变占用内存更小，大大减少了安装包体积</p>
+
+<p>具体源码与使用方法详细在github中：</p>
+
+<p><a href="https://github.com/shwenzhang/AndResGuard" target="_blank">https://github.com/shwenzhang/AndResGuard</a></p>
+
+
+
+<h2>清除你的代码和资源</h2>
+
+<p>通过上面的图片资源极限压缩能对APK减小不少，但这往往这些还是不够的，项目里还有很多未使用的资源文件，重复的资源等，这里主要参考Google官方文档<a href="https://developer.android.com/studio/build/shrink-code.html#shrink-code" target="_blank">https://developer.android.com/studio/build/shrink-code.html#shrink-code</a> 部分，利用Android Plugin开启gradle 的<code>Code shrinking</code>和<code>ProGuard</code>结合使用。</p>
+
+<ul>
+<li><p><code>ProGuard</code>能够检测和删除未使用的类，字段，方法，和从你的打包应用程序的属性，包括那些包含代码库，<a href="https://stuff.mit.edu/afs/sipb/project/android/sdk/android-sdk-linux/tools/proguard/docs/index.html#manual/introduction.html" target="_blank">ProGuard</a>是一个混淆优化字节码的工具,能够删除一些未使用的代码，混淆使用的类，字段，方法和短名称，经过混淆处理也能够使APK源代码得到保护</p></li>
+<li><p><code>Code shrinking</code>是一个Android Plugin for Gradle，从您的打包的应用程序中删除未使用的资源，包括代码库中的未使用的资源。它工作在与代码缩小，这样，一旦未使用的代码已被删除，任何资源不再引用可以安全地删除。</p></li>
+</ul>
+
+<p>该功能需要依赖于：</p>
+
+<ul>
+<li>SDK Tools 25.0.10 或更高</li>
+<li>Android Plugin for Gradle 2.0.0 或更高</li>
+</ul>
+
+
+
+<h3>清除无用代码</h3>
+
+<p>code shrinking需要结合ProGuard使用，添加<code>minifyEnabled</code> <code>true</code>在你的<code>build.gradle</code>文件中。</p>
+
+<div>
+  <p>需要注意code shrinking会减慢Gradle 编译，应避免使用它在您的调试版本中使用它。Android Studio禁用ProGuard使用 <a href="https://developer.android.com/tools/building/building-studio.html#instant-run" target="_blank">Instant Run</a>.。 <div></div>
+  例如，以下从<code>build.gradle</code>文件片段，使<code>code shrinking</code>为发布版本</p>
+</div>
+
+
+
+<pre><code>android {
+    buildTypes {
+        release {
+            minifyEnabled 
+            proguardFiles getDefaultProguardFile(‘proguard-androidtxtproguard-rulespro'
+        }
+    }
+    ...
+}
+</code></pre>
+
+<p>其中<code>getDefaultProguardFile(‘proguard-android.txt')</code>默认ProGuard设置来自于Android SDK <code>tools/proguard/</code>中的文件夹</p>
+
+<div>
+  <p>更多的减少代码可以尝试使用相同位置的<code>proguard-android-optimize.txt</code>文件（这样能让我们的APK又减少了0.5M以上）proguard-rules.pro是你自定义的proguard规则。</p>
+</div>
+
+<p>那么我们怎么知道每一次build，删除了和未删除那些资源和代码呢，ProGuard会输出以下文件在<code>/build/outputs/mapping/release/</code>:</p>
+
+<ul>
+<li><strong>dump.txt</strong> <div></div>
+描述.apk文件中所有类文件间的内部结构</li>
+<li><strong>mapping.txt</strong> <div></div>
+列出了原始的类，方法和字段名与混淆后代码间的映射。这个文件很重要，当你从release版本中收到一个bug报告时，可以用它来翻译被混淆的代码。</li>
+<li><strong>seeds.txt</strong> <div></div>
+列出了未被混淆的类和成员</li>
+<li><strong>usage.txt</strong> <div></div>
+列出了从.apk中删除的代码</li>
+<li><strong>resources.txt</strong> <div></div>
+列出resource被保留的资源</li>
+</ul>
+
+
+
+<h5>自定义混淆规则</h5>
+
+<p>在某些情况下，默认的混淆器配置文件<code>proguard-android.txt</code>文件是会移除所有只有未使用的代码，但也有可能会误删除了你需要的代码，所以要注意以下几种情况：</p>
+
+<ul>
+<li>在<code>AndroidManifest.xml</code>配置的文件类</li>
+<li>使用了JNI 的接口方法</li>
+<li>运行时反射调用方法(不过现在ProGuard已经可以处理这种了)</li>
+</ul>
+
+<p>添加-keep来忽略一下防止被混淆的代码到proguard-rules.pro文件中，比如：</p>
+
+<p><code>-keep public class MyClass</code></p>
+
+<p>另外也可以使用<a href="https://developer.android.com/reference/android/support/annotation/Keep.html" target="_blank">@Keep </a>注解在你的需要忽略的代码中，需要<a href="https://developer.android.com/tools/support-library/features.html#annotations" target="_blank">Annotations Support Library</a>的支持</p>
+
+<p>有关自定义proguard-rules.pro文件的更多信息，可以参考<a href="http://stuff.mit.edu/afs/sipb/project/android/sdk/android-sdk-linux/tools/proguard/docs/index.html#manual/introduction.html" target="_blank">ProGuard Manual.</a>这里<a href="http://stuff.mit.edu/afs/sipb/project/android/sdk/android-sdk-linux/tools/proguard/docs/index.html#manual/troubleshooting.html" target="_blank">Troubleshooting</a>列出了一些常见的问题。</p>
+
+
+
+<h3>清除无用的资源文件</h3>
+
+<p><code>Resource shrinking</code> 需要和<code>Code shrinking</code> 一起使用。在代码中删除所有未使用的代码后，<code>Resource shrinking</code>才可以知道哪些资源APK程序仍然使用，你必须先删除未使用的代码，Resource才会成为无用的，从而被清除掉。</p>
+
+<p>添加<code>shrinkResources</code> <code>true</code>属性在你的 build.gradle文件中，相应代码块如下：</p>
+
+
+
+<pre><code>android {
+    
+    buildTypes {
+        release {
+            shrinkResources true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
+        }
+    }
+}
+</code></pre>
+
+<div>
+  <p><code>resource shrinker</code> 目前还不支持移除定义在values/目录下的资源文件(strings,dimensions,styles,colors),因为Android Asset Packaging Tool（AAPT）不允许Gradle Plugin指定预定义的版本资源<a href="https://code.google.com/p/android/issues/detail?id=70869" target="_blank">[issue 70869]</a></p>
+</div>
+
+
+
+<h5>指定要忽略的资源文件</h5>
+
+<p>如果我们希望保留或丢弃特定的资源，需要在项目中创建一个XML文件，并使用<code>resources</code>标签，并指定每个资源保存在工具中<code>tools:keep</code>和每个资源在工具中丢弃 <code>tools:discard</code>。两个属性都可以使用逗号(,)分隔符声明资源名称列表。也可以使用* 作为匹配符，匹配名称。</p>
+
+<p>相应代码块如下：</p>
+
+
+
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;resources xmlns:tools=&quot;http://schemas.android.com/tools&quot;
+    tools:keep=&quot;@layout/l_used*_c,@layout/l_used_a,@layout/l_used_b*&quot;
+    tools:discard=&quot;@layout/unused2&quot; /&gt;
+</code></pre>
+
+<p>需要在项目resources目录保存res/raw/keep.xml文件，build的时候该文件不会被打包到APK里面。</p>
+
+
+
+<h5>启用严格的检测</h5>
+
+<p>通常情况下，<code>resource shrinker</code>可以准确地确定资源使用。如果你使用<code>Resources.getIdentifier()</code>动态获取指定资源的Id，在默认情况下，这样资源具有匹配名称的格式为潜在的使用，无法去除。</p>
+
+<p>例如，下面的代码将导致所有img_前缀的资源都无法去除。</p>
+
+
+
+<pre><code>
+String name = String.format(&quot;img_%1d&quot;, angle + );
+res = getResources().getIdentifier(name, &quot;drawable&quot;, getPackageName());
+</code></pre>
+
+<p><code>resource shrinker</code> 也通过搜索代码中是否包含资源名来判断是否在build的时候删除。</p>
+
+
+
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;resources xmlns:tools=&quot;http://schemas.android.com/tools&quot;
+    tools:shrinkMode=&quot;strict&quot; /&gt;
+</code></pre>
+
+<p>在 resource 文件中指定 shrinkMode，你可以指定 Gradle 在处理该资源文件时候的方式，默认的值为 safe，你也可以将它指定为 strict（只会保留有明确引用的资源，以及处理被 <code>tools:keep</code> 和 <code>tools:discard</code> 标注的资源）</p>
+
+<p>在后面<strong>查看资源回收</strong>情况，我们会讲到，会遇到有些xml 无法被清除的问题，使用shrinkMode可以解决这个问题。</p>
+
+
+
+<h3>清除未使用的替代资源</h3>
+
+<p>Gradle <code>resource shrinker</code> 只删除你在代码中未使用资源，这意味着它不会删除不同的设备配置的可替代资源。如果有必要，你可以使用<code>Android Gradle plugin</code> 的<code>resconfigs</code>属性删除替代资源文件。</p>
+
+<p>例如：我们项目中适配10种国家语言，而项目依赖了v7、v4等其他support包里面包含20种国家语言，那么我们可以通过resconfigs 删除剩余的可替代资源文件，这对于我们APK大小可减少了不少，</p>
+
+<p>以下代码说明了如何限制你的语言资源，只是英语和法语：</p>
+
+
+
+<pre><code>android {
+    defaultConfig {
+        
+        resConfigs , 
+    }
+}
+</code></pre>
+
+<p>像上面那样通过<code>resconfig</code>属性指定的语言。未指定的语言的任何资源都被删除。</p>
+
+<p>同样的图片资源我们也可以这么做，例如：我们提供一套xxhdpi的图片资源，其他的都过滤清除掉，这样大量清除了support，其他第三方library的资源文件，关于这个待会我们在后面会说。</p>
+
+
+
+<h3>合并重复的资源</h3>
+
+<p>默认情况下，Gradle也将同名的资源，比如相同的名字，可能是在不同的资源文件夹下，这样子不能通过shrinkResources属性来去除。</p>
+
+<p>只有当两个或多个文件共享相同的资源名称、类型和限定符时才发生资源合并，关于资源的合并优先级如下：</p>
+
+<p>Gradle 主要从以下位置合并资源：</p>
+
+<ul>
+<li>src/main/res/ 主要资源</li>
+<li>Gradle 使用variant(build type 和 build flavors) </li>
+<li>Library的依赖使用</li>
+</ul>
+
+<p>Gradle合并重复资源优先顺序为：</p>
+
+<p>Dependencies → Main → Build flavor → Build type</p>
+
+<p>例如：如果一个重复的资源在你的mian res中和一个Build flavor指定 ，Gradle 会优先选择Build flavor</p>
+
+
+
+<h4>查看资源回收</h4>
+
+<p>当你Gradle <code>resource shrinker</code>，Gradle Console 输出日志，移除APK资源的信息。例如:</p>
+
+
+
+<pre><code>:android:shrinkDebugResources
+Removed unused resources: Binary resource data reduced from 2570KB to 1711KB: Removed 33%
+:android:validateDebugSigning
+</code></pre>
+
+<p>APK构建完成后会Gradle会生成一个resource.txt 在 /build/outputs/mapping/release/ 中，这个文件包括详细信息，如资源参考其他资源和使用或删除资源的详细信息等。</p>
+
+<p>例如：找出为什么<code>@drawable/ic_plus_anim_016</code>，仍然包含在你的APK中，在resource.txt 搜索该文件名，你可能会发现它是被另一个资源引用，如下：</p>
+
+
+
+<pre><code>16 [QUIET] [system.out] @drawable/add_schedule_fab_icon_anim : reachable=true
+::48.009 [QUIET] [system.out]     @drawable/ic_plus_anim_016
+</code></pre>
+
+<p>现在需要知道为什么<code>@drawable/add_schedule_fab_icon_anim</code> 仍然在使用，搜索我们可以知道应该有代码引用着<code>add_schedule_fab_icon_anim</code>。</p>
+
+<p>如果你不使用严格的检查（就是上面讲的<code>shrinkMode</code>），同样的我们如果我们在drawable中使用了字符串’#FFFFFF‘ 这样的使用<code>resource shrinker</code>也不能将他移除在APK中，通常我们可以在Gradle Console中看到以下信息：</p>
+
+
+
+<pre><code>10 [QUIET] [system.out] Marking drawable:ic_plus_anim_016:2130837506
+     because  format-string matches string  constant ic_plus_anim_%1$.
+</code></pre>
+
+<p>那么这种情况我们如何解决呢，可以通过以下方法来清理：</p>
+
+<ul>
+<li>使用tools:discard，在 tools:shrinkMode=”strict” 的时候生效，指定某资源文件需要删除。在你确定该资源文件无效的时候使用。</li>
+<li><p>利用Lint找出未使用的资源并清理掉</p>
+
+<div>
+  <p>在Android Studio中打开“Analyze” 然后选择”Inspect Code…”，范围选择整个项目，然后点击”OK”</p>
+</div></li>
+</ul>
+
+<p>到这里APK的大小又小了不少。</p>
+
+
+
+<h2>使用APK Splits构建APK</h2>
+
+<p>虽然我们上面很好的使用了<code>resource shrinker</code>可以回收一些未使用的资源(v7、v4、google Service 等Libarry资源)，但有些资源仍然未被清除。</p>
+
+<p>例如：那些未使用的多套替代资源，或者是library内部隐患着引用着的资源而我们却没有使用到。或者是我们要根据用户的手机去提供不同版本的APK，如分辨率(xxhdpi,mhdpi等)，so库等。那么我们可以使用<code>APK Splits</code>大大的减少一些无用的资源，这里我们主要参考了<a href="http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits" target="_blank">http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits</a> 文档。</p>
+
+<p><code>APK Splits</code>比起使用 flavors，能让应用程序更有效地构建一些形式的多个apk。</p>
+
+<p>多 apk 只支持以下类型：</p>
+
+
+
+<p>使用新的<code>APK Splits</code>，构建同一个应用程序的hdpi版本和mdpi版本，能够共享很多的任务 （如 javac，dx，proguard）。此外，它会被认为是一个单一的variant，并且同一个<a href="http://lib.csdn.net/base/softwaretest" target="_blank" title="软件测试知识库">测试</a>程序将会被用来测试每​​个多APK。</p>
+
+
+
+<h3>按屏幕密度拆分</h3>
+
+
+
+<pre><code>android {
+  
+  splits {
+    density {
+      enable true
+      exclude &quot;ldpi&quot;, &quot;tvdpi&quot;, &quot;xxxhdpi&quot;
+      compatibleScreens 'small', 'normal', 'large', 'xlarge'
+    }
+  }
+</code></pre>
+
+<ul>
+<li>enable： 启用屏幕密度拆分机制</li>
+<li>exclude： 默认情况下所有屏幕密度都包括在内，你可以移除一些密度。</li>
+<li>include： 表示要包括哪些屏幕密度</li>
+<li>reset()： 重置屏幕密度列表为只包含一个空字符串 （这能够实现，在与include一起使用时可以表示使用哪一个屏幕密度，而不是要忽略哪一些屏幕密度）</li>
+<li>compatibleScreens：表示兼容屏幕的列表。这将会注入到manifest中匹配的   节点。这个设置是可选的。</li>
+</ul>
+
+<p>构建完成后可以在out/apk/目录下看到多个版本的APK</p>
+
+
+
+<h3>按 ABI 拆分</h3>
+
+
+
+<pre><code>android {
+  
+  splits {
+    abi {
+      enable true
+      reset()
+      include 'x86', 'armeabi-v7a', 'mips'
+      universalApk true
+    }
+  }
+}
+</code></pre>
+
+<ul>
+<li>enable： 启用ABI拆分机制</li>
+<li>exclude： 默认情况下所有ABI都包括在内，你可以移除一些ABI。</li>
+<li>include：指明要包含哪些ABI</li>
+<li>reset()：重置ABI列表为只包含一个空字符串（这可以实现，在与include一起使用来可以表示要使用哪一个ABI，而不是要忽略哪一些ABI）</li>
+<li>universalApk：指示是否打包一个通用版本（包含所有的ABI）。默认值为 false。</li>
+</ul>
+
+<p>例如：我们项目主要提供xxhdpi的图片资源，而项目中引用到了很多第三方库(v7、v4、google Service 等Libarry资源)我们无法使用到，那么我们可以通过这种方法来去除那些资源。这样我们的APK又减小了非常多。</p>
+
+
+
+<h3>使用多版本的APK</h3>
+
+<p><code>Multiple APK Support</code>是一个在Google Play，可以发布不同的应用程序，分别针对不同的设备配置特征。每个APK是一个完整的、独立的应用程序版本，但他们分享在Google Play相同的应用程序清单，必须共享相同的包名和与签名。Google Play 会自动给你匹配相应的APK，这样我们的APK 就可以是分不同版本构建需要资源文件，从而减小APK的大小。</p>
+
+<p>通过发布有多个APK，我们可以：</p>
+
+<ul>
+<li>支持不同OpenGL的APK</li>
+<li>支持不同的屏幕尺寸和密度的APK</li>
+<li>支持不同的设备功能的APK</li>
+<li>支持不同的平台版本的APK</li>
+<li><p>支持不同的CPU<a href="http://lib.csdn.net/base/architecture" target="_blank" title="大型网站架构知识库">架构</a>，每个apk（如ARM、x86，MIPS等)的APK</p>
+
+<p>更多相关信息请参考<a href="https://developer.android.com/google/play/publishing/multiple-apks.html#Concepts" target="_blank">https://developer.android.com/google/play/publishing/multiple-apks.html#Concepts</a></p></li>
+</ul>
+
+<p>目前我们基于这个方案做了不同屏幕的APK。</p>
+
+
+
+<h2>资源动态加载</h2>
+
+<p>我们可以在项目中使用资源动态加载形式，例如：表情，语言，离线库等资源动态加载，减小APK的大小。</p>
+
+
+
+<h2>依赖库优化</h2>
+
+<ul>
+<li>如果应用支持的最低版本是API14，那就不要使用android support库，或者分开使用android support库，用哪个引入哪个库(android-support-ui/android-support-core 等)虽然现在支持还不太好，Google servie 也是如此。</li>
+<li>使用更轻量级的库代替，或者优化library的大小，不然自己写更好。</li>
+<li>删除armable-v7包下的so、删除x86包下的so，基本上armable的so也是兼容armable-v7的，armable-v7a的库会对图形渲染方面有很大的改进，不过最好的是根据上面我们说的提供多版本APK，对不同的平台精简，再或者动态的加载so。</li>
+<li>使用H5编写界面，图片云端获取</li>
+<li>资源缓存库不放在assets下，云端获取更新。</li>
+</ul>
+
+
+
+<h2>支持插件化</h2>
+
+<p>未来对于一些独立业务模块，可以做成插件化动态加载，用户需要使用时，只需下载少部分插件。</p>
+
+
+
+<h2>使用ReDex优化</h2>
+
+<p>ReDex是Facebook开源一个减小<a href="http://lib.csdn.net/base/android" target="_blank" title="Android知识库">安卓</a>app大小以提高性能的工具，内嵌以及清除僵尸代码这样的优化来减小字节码，主要是对Dex进行了优化，能让APK 运行更快，不过需要多测试是否会崩溃。</p>
+
+<p>教程很简单具体更详细的内容请参考： <div></div>
+<a href="https://code.facebook.com/posts/998080480282805/open-sourcing-redex-making-android-apps-smaller-and-faster/" target="_blank">https://code.facebook.com/posts/998080480282805/open-sourcing-redex-making-android-apps-smaller-and-faster/</a></p>
+
+<p>github地址： <div></div>
+<a href="https://github.com/facebook/redex.git" target="_blank">https://github.com/facebook/redex.git</a></p>
+
+<p>关于APK瘦身我们就总结到这了，应该还有很多更好的方案，若有错漏，欢迎补充。</p>
+
+<p>更多Android 之美，请阅读<a href="http://blog.csdn.net/vfush/article/details/51508098" target="_blank">《Android 之美 从0到1 – 高手之路》</a>系列文章</p>
+
+<div>
+  <p>水平有限，若有错漏，欢迎指正，批评，如需转载，请注明出处–<a href="http://blog.csdn.net/vfush" target="_blank">http://blog.csdn.net/vfush</a>，谢谢！</p>
+  
+  <p>作者：fuchenxuan <div></div>
+  出处：<a href="http://blog.csdn.net/vfush" target="_blank">http://blog.csdn.net/vfush</a> <div></div>
+  欢迎访问我的个人站点：<a href="http://fuchenxuan.cn/" target="_blank">http://fuchenxuan.cn</a> <div></div>
+  转载请注明出处–<a href="http://blog.csdn.net/vfush" target="_blank">http://blog.csdn.net/vfush</a></p>
+</div>
+
+<p><a href="http://blog.csdn.net/vfush/article/details/51508098" target="_blank"></a></p><div><a href="http://blog.csdn.net/vfush/article/details/51508098" target="_blank"><img src="[Android 之美] 那些你不知道的APK 瘦身，让你的APK更小 - fuchenx_files/Image [3].png" type="image/png" data-filename="" alt="Android 之美 从0到1"/></a></div><p></p></div></div></div>
+          <ol></ol>
+        </div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+
+
+</div></div></div></span>
+</div></body></html> 

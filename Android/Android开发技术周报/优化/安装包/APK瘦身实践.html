@@ -1,0 +1,97 @@
+<html>
+<head>
+  <title>APK瘦身实践</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1745"/>
+<h1>APK瘦身实践</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>开始魔鬼瘦身</h1><div><div></div></div></div><h3>1. tinypng有损压缩</h3><p>android打包本身会对png进行无损压缩，不信大家可以看看apk中的图片的大小实际上比你代码工程里的图片要小（针对没进行过无损压缩的那些png图）。<br/>所以，纯粹的进行无损压缩并不会对apk的减小有任何效果，这是我特别想在这里强调的一个经验。<br/>现在大家主流的比较喜欢用的tinypng其实是有损压缩：</p>
+<blockquote>
+<p><a href="https://tinypng.com/" target="_blank">https://tinypng.com/</a><br/>[原文] TinyPNG uses smart lossy compression techniques to reduce the file size of your PNG files…<br/>[翻译] TinyPNG使用智能有损压缩技术，来减少PNG文件的大小…</p>
+</blockquote>
+<p>通过tinypng确实能在尽量少的损失下再减小apk，如果图片资源多或者大的话，效果还是很明显的。<br/>具体减少多少，因为这个处理过程我们是间隔做的，无法准确给出结果，就按200k～500k算吧。</p>
+<h3>2. png换成jpg</h3><p>经验发现，一些背景，启动页，宣传页的PNG图片比较大，这些图片图形比较复杂，如果转用有损JPG可能只有不到一半（当然是有损，不过通过设置压缩参数可以这种损失比较小到忽略）。<br/>因为都是大图，所以这种方式能有效减小apk的大小。<br/>这种情况下的apk的减小是不可估量的。</p>
+<h3>3. jpg换成webp</h3><p>如果png大图转成jpg还是很大，或者想压的更小，而尽量不降低画质，那么可以考虑一下webp。</p>
+<blockquote>
+<p>android 4.0+才原生支持webp, 但是我们的app是兼容2.3+，所以4.0以下的设备将无法看到图片。</p>
+<ol>
+<li>考虑到我们4.0以下的所有设备比例之和大约在0.44%，非常少</li>
+<li>4.0以下的设备不会崩溃</li>
+</ol>
+<p>我们选择不对4.0以下做webp兼容处理，不显示就不显示。否则，要引入webp相关so文件增大apk大小。</p>
+</blockquote>
+<p>通过把下面四张大图换成webp，webp的quality参数按50配置(据说官方评测75是最佳值)，清晰度勉强可以接受，这个值大家具体按产品要求来定。<br/><a href="http://jayfeng.com/images/apk_reduce_big_jpg_webp.png" target="_blank"></a></p><div><a href="http://jayfeng.com/images/apk_reduce_big_jpg_webp.png" target="_blank"><img src="APK瘦身实践_files/Image.png" type="image/png" data-filename="" alt="jpg大图转webp" height="173" width="576"/></a></div><br/>其中安装jpg转webp工具:<p></p><div><table><tbody><tr><td></td><td><pre>brew install webp<br/></pre></td></tr></tbody></table></div><p>转换命令如下</p><div><table><tbody><tr><td></td><td><pre>cwebp -q &lt;quality&gt; input.jpg -o output.webp<br/>// Example:<br/>cwebp -q 50 a.jpg -o a.webp<br/></pre></td></tr></tbody></table></div><p>更多下载：<a href="https://developers.google.com/speed/webp/docs/precompiled" target="_blank">https://developers.google.com/speed/webp/docs/precompiled</a></p>
+<p>最终，apk减小了188k。</p>
+<p>补充：<br/>在4.0 ~ 4.2.1的设备上无法显示带有透明度的webp，比如，把png转成webp则无法显示，但是如果把png先转成jpg再转成webp则能正常显示了，但会丢失透明度。参考链接：<a href="http://developer.android.com/guide/appendix/media-formats.html" target="_blank">http://developer.android.com/guide/appendix/media-formats.html</a></p>
+<h3>4. 大图缩小</h3><p>如果经过上面的步骤，依然存在大图的话，说明确实图有点大了，可能真的有点大了！<br/>所以，要考虑的问题是，是否有必要保证如此的大小？能否缩小？<br/>如果这方面能减小的话，apk瘦身的效果必然又会上一个档次。<br/>这种情况下的apk的减小是不可估量的。</p>
+<h3>5. 覆盖aar里的一些默认的大图</h3><p>一些aar库里面包含根本就没有用的图。最典型的是support-v4兼容库中包含一些“可能”用到的图片，实际上在你的app中不会用到。<br/><a href="http://jayfeng.com/images/apk_reduce_support_res_override.png" target="_blank"></a></p><div><a href="http://jayfeng.com/images/apk_reduce_support_res_override.png" target="_blank"><img src="APK瘦身实践_files/Image [1].png" type="image/png" data-filename="" alt="support库资源替换" height="354" width="576"/></a></div><br/>我没有把所有图都替换掉，只是把几张大一点点的图（选中的那些图）用1x1的图片替换，如果9patch图的话，要做成3x3的9patch图替换。<br/>support库可能还算好的，就怕有些库引用了一些大图而不自知，可以在<span>/build/intermediates/exploded-aar/下的各个aar库的res目录查找检验。<br/>apk减小了18k。</span><p></p>
+<h3>6. 删除armable-v7包的so</h3><p>感谢@杨辉__ ,@kymjs张涛的提醒，armable-v7和armable文件夹可以只保留armable。<br/>当然，armable-v7a的库会对图形渲染方面有很大的改进，因为我们主要是一些业务上动态库，所以删掉无大碍。<br/><a href="http://jayfeng.com/images/apk_reduce_armable_v7_so.png" target="_blank"></a></p><div><a href="http://jayfeng.com/images/apk_reduce_armable_v7_so.png" target="_blank"><img src="APK瘦身实践_files/Image [2].png" type="image/png" data-filename="" alt="armable-v7a的so文件列表" height="216" width="559"/></a></div><br/>apk减小了191k。<p></p>
+<h3>7. 微信资源压缩打包</h3><p>这个方案网上一直在说，之前一直没有需求或者动力实践，在这里感谢一下@裸奔的凯子哥的推荐和交流，他那边的apk可以压小1M，效果还是比较惊人的。<br/>这个步骤我是在后面很多步压缩之后测试的，每个阶段的压缩结果都会有些许出入，所以数据仅供参考。<br/><a href="http://jayfeng.com/images/apk_reduce_wechat_7zip.png" target="_blank"><img src="APK瘦身实践_files/Image [3].png" type="image/png" data-filename="" alt="微信压缩方案结果比较" height="86" width="896"/></a><br/>通过正常压缩，apk包减小了464k。<br/>如果开启7zip，apk包减小了594k。<br/>apk减小了594k。</p>
+<p>PS: 官方已经发布AndResGuard到gradle中，非常方便：</p><div><table><tbody><tr><td></td><td><pre>apply plugin: 'AndResGuard'<br/><br/>buildscript {<br/>    dependencies {<br/>        classpath 'com.tencent.mm:AndResGuard-gradle-plugin:1.1.7'<br/><br/><br/>andResGuard {<br/>    mappingFile = <br/>    use7zip = <br/>    useSign = <br/>    keepRoot = false<br/>    // add &lt;your_application_id&gt;.R.drawable.icon into whitelist.<br/>    // because the launcher will get thgge icon with his name<br/>    def packageName = &lt;your_application_id&gt;<br/>    whiteList = [<br/>        //for your icon<br/>        packageName + &quot;.R.drawable.icon&quot;,<br/>        //for fabric<br/>        packageName + &quot;.R.string.com.crashlytics.*&quot;,<br/>        //for umeng update<br/>        packageName + &quot;.R.string.umeng*&quot;,<br/>        packageName + &quot;.R.string.UM*&quot;,<br/>        packageName + &quot;.R.string.tb_*&quot;,<br/>        packageName + &quot;.R.layout.umeng*&quot;,<br/>        packageName + &quot;.R.layout.tb_*&quot;,<br/>        packageName + &quot;.R.drawable.umeng*&quot;,<br/>        packageName + &quot;.R.drawable.tb_*&quot;,<br/>        packageName + &quot;.R.anim.umeng*&quot;,<br/>        packageName + &quot;.R.color.umeng*&quot;,<br/>        packageName + &quot;.R.color.tb_*&quot;,<br/>        packageName + &quot;.R.style.*UM*&quot;,<br/>        packageName + &quot;.R.style.umeng*&quot;,<br/>        packageName + &quot;.R.id.umeng*&quot;<br/><br/>compressFilePattern = [<br/>        &quot;*.png&quot;,<br/>        &quot;*.jpg&quot;,<br/>        &quot;*.jpeg&quot;,<br/>        &quot;*.gif&quot;,<br/>        &quot;resources.arsc&quot;<br/><br/>sevenzip {<br/>        artifact = 'com.tencent.mm:SevenZip:1.1.7'<br/>        //path = &quot;/usr/local/bin/7za&quot;<br/><br/><br/></pre></td></tr></tbody></table></div><p>会生成一个andresguard/resguard的Task，自动读取release签名进行重新混淆打包。</p>
+<p>详情参考：<a href="https://github.com/shwenzhang/AndResGuard" target="_blank">Android资源混淆工具使用说明</a><br/>原理介绍：<a href="http://mp.weixin.qq.com/s?__biz=MzAwNDY1ODY2OQ==&amp;mid=208135658&amp;idx=1&amp;sn=ac9bd6b4927e9e82f9fa14e396183a8f#rd" target="_blank">安装包立减1M–微信Android资源混淆打包工具</a></p>
+<h3>8. proguard深度混淆代码</h3><p>之前为了简单起见，很多包都直接忽略了，现在启动严格模式，把能混淆的都混淆了：<br/><a href="http://jayfeng.com/images/apk_reduce_proguard_package.png" target="_blank"><img src="APK瘦身实践_files/Image [4].png" type="image/png" data-filename="" alt="release版本混淆效果" height="108" width="926"/></a><br/>采用微信压缩方案最终效果比较：<br/><br/>apk减小了215k。</p>
+<p>PS:混淆后，一定要经过严格测试，有时候甚至很难发现错误，比如我开启严格混淆，用了一段时间之后慢慢发现了两个bug，排除了两个包程序才正常。</p>
+<h3>9. 深度清理代码和资源</h3><p>有意思的是，无论何时何地去清理代码和资源，总能有新的发现:</p>
+<blockquote>
+<ul>
+<li>新发现或者新引入的无用图片</li>
+<li>这几张图怎么一样</li>
+<li>这个类好像没有用</li>
+<li>没用的类相关的图片也没用</li>
+<li>有些图片可以用着色方案替换</li>
+<li>有些图片可以用shape来代替</li>
+<li>hdpi里的ic_luancher.png好像也可以删掉</li>
+
+</ul>
+</blockquote>
+<p>apk减小了66k。</p>
+<h3>10. proguard去符号表</h3><p>之前为了保留调试信息，我们是在Proguard保留了符号表的：</p><div><table><tbody><tr><td></td><td><pre>-keepattributes SourceFile,LineNumberTable<br/></pre></td></tr></tbody></table></div><p>官方渠道我觉得还是尽量保留这个，现在针对推广渠道，只能采用特殊手段，注释这一行。<br/>apk减小了230k。<br/>ps:以后友盟上看推广渠道的bug要辛苦一点，手动上传mapping.txt了。</p>
+<h3>11. provided关键字</h3><p>可以对仅在运行时需要的库设置provided关键字，实际并不被打包：</p><div><table><tbody><tr><td></td><td><pre>provided 'com.android.support:support-annotations:22.0.0'<br/></pre></td></tr></tbody></table></div><p>我没有发现这样的场景，如果说有的话，就是support-annotations，但是经过后来的测试验证，support-annotations本来就会在release版本中被minifyEnabled掉，所以对support-annotations设置provided是没有意义的。<br/>如果有实际场景，欢迎留言说明，不甚感激。<br/>apk没有减小。</p>
+<h3>12. 表情包在线化</h3><p>虽然应用的表情不多，只有50来个，但是如果能把这部分表情放到网上，不仅能有效减小apk大小，还可以方便后期扩展支持：<br/><a href="http://jayfeng.com/images/apk_reduce_emoji_list.png" target="_blank"></a></p><div><a href="http://jayfeng.com/images/apk_reduce_emoji_list.png" target="_blank"><img src="APK瘦身实践_files/Image [5].png" type="image/png" data-filename="" alt="表情列表" height="406" width="576"/></a></div><br/>打包成emoji_v1.zip, 大小是202k。<br/>现在把emoji_v1.zip放到网上，按需下载后使用，最终对比结果如下：<br/><a href="http://jayfeng.com/images/apk_reduce_emoji_result.png" target="_blank"><img src="APK瘦身实践_files/Image [6].png" type="image/png" data-filename="" alt="表情包在线化成效" height="83" width="879"/></a><br/>apk减小了193k。<p></p>
+<h3>13. 全版本兼容的着色方案</h3><p>考虑着色方案主要目的是更方便支持多主题，减轻UI工作量，减少工程里一大堆selector文件等，然后才是，顺便的减小一下apk大小。<br/>通过着色方案，我们去除了10多张纯色的按下状态图片和对应的xml等等。<br/>apk减小了15k。</p>
+<p>PS: 具体实现可以参考 <a href="http://www.race604.com/tint-drawable/" target="_blank">http://www.race604.com/tint-drawable/</a> ，而我也把它集成到了我的LessCode库中了：<a href="https://github.com/openproject/LessCode/blob/master/lesscode-core/src/main/java/com/jayfeng/lesscode/core/DrawableLess.java" target="_blank">DrawableLess.java</a></p>
+<h3>14. 去除重复库</h3><p>发现两个地方：</p>
+<blockquote>
+<ul>
+<li>现在发现七牛的SDK引用了android-async-http-1.4.6.jar，虽然不大，只有95.4k，但是感觉完全可以写一个轻量级的jar，控制在10～20k就足够了，具体可以在现有的网络库上实现。</li>
+<li>自己工程使用的是UIL，但是引入的第三方库引用了picasso，两个重复的图片下载库也是完全没用必要的。</li>
+</ul>
+</blockquote>
+<p>现在还没有处理这块，新任务介入，延期优化，敬请期待。</p>
+<h3>15. 去除无用库</h3><p>这是一个很基本的点，但是确很容易被人忽视，当你仔细回顾的时候，有一些鸡肋的功能或者库，是几无用处的。不如干脆去掉。<br/>比如，在很早的时候，我就把我们app里的sharesdk删除了，因为对于我们的产品定位和推广来看，这毫无意义。<br/>这种情况下的apk的减小是不可估量的。</p>
+<h3>16. 去除百度统计</h3><p>这个视具体情况决定。<br/>因为我们的APP里面包含友盟和百度两套统计系统，早期老板要求，事实上后面已经很少看这方面的数据，百度统计的数据几乎没用人去看，可以暂时先去除。<br/>原本的百度统计的jar有130多k，去除之后的apk的减小会远远没有这么多。<br/>apk减小了20k。</p>
+<h3>17. 使用更小的库</h3><p>使用更小的库不应该成为你选择方案的决定性因素，但是可以作为参考因素（freso确实太大了，这个大小也可以成为决定性因素）。<br/>图片下载，网络请求，json解析等等的库和它的竞品都有多大，你心里有数吗？<br/>以工具库为例，网上有很多工具库，但是往往它们的大小很难控制。</p>
+<blockquote>
+<ul>
+<li>xutils-3.2.6.aar – 843.8k</li>
+<li>lite-common-1.1.3.jar – 148.1k</li>
+<li>lesscode-core-0.8.2.aar – 64k</li>
+
+</ul>
+</blockquote>
+<p>上面最后一个库LessCode是我自己收集的工具类集合，非常小：<a href="https://github.com/openproject/LessCode" target="_blank">LessCode</a>，混淆后只有不到50k大小。<br/>不仅提高了开发效率，减少了冗余代码，而且能避免引用一些其他大型的库，有效避免包的增大。<br/>比如，我们碰到过这样的一个bug，快速点击按钮多次触发跳转，现在RxJava结合RxBind有这样的一个场景解决方案，如果引入这些库的话必然会增大apk大小，实际上就几行代码，我把这样的解决方案集成到了LessCode，下次别的项目碰到这样的问题不用再犹豫是否要引入一个这么大的库了。<br/>这些小的工具库，建议根据自己的经验人手总结一个，不求全，但求精！<br/>这种情况下的apk的减小是不可估量的。</p>
+<h3>18. 插件化</h3><p>尴尬的是，我们所呈现的功能大部分都是重要的不可分割的功能，很难从业务上分离出来。<br/>今年预计要实践一个轻量级的插件化方案，用别人的也好，自己写也好，希望能解决或者优化一些安装包加载多模块，或者主题切换，或者热修复的问题。<br/>这里作为候选方案备用。<br/>这种情况下的apk的减小是不可估量的。</p>
+<h3>19. 功能业务取舍</h3><p>一开始考虑瘦身，领导是允许适当的砍掉一些功能，因为4M的目标我们已经实现了，所以现在还没有到砍功能的地步。<br/>这里作为候选方案备用。<br/>这种情况下的apk的减小是不可估量的。</p>
+<h3>20. Facebook的redex优化字节码</h3><p>redex是facebook发布的一款android字节码的优化工具，需要按照说明文档自行配置一下。</p><div><table><tbody><tr><td></td><td><pre>redex input.apk -o output.apk --sign  &lt;KEYSTORE&gt;  &lt;KEYALIAS&gt; -p &lt;KEYPASS&gt;<br/></pre></td></tr></tbody></table></div><p>下面我们来看看它的效果，仅redex的话，减小了157k：<br/><a href="http://jayfeng.com/images/apk_reduce_redex.png" target="_blank"><img src="APK瘦身实践_files/Image [7].png" type="image/png" data-filename="" alt="only redex" height="50" width="562"/></a><br/>如果先进行微信混淆，再redex，减小了565k，redex只贡献了10k：<br/><a href="http://jayfeng.com/images/apk_reduce_resguard_redex.png" target="_blank"><img src="APK瘦身实践_files/Image [8].png" type="image/png" data-filename="" alt="only redex" height="50" width="719"/></a><br/>如果先进行redex，在进行微信混淆，减小了711k，redex贡献了157k：<br/><a href="http://jayfeng.com/images/apk_reduce_redex_resguard.png" target="_blank"><img src="APK瘦身实践_files/Image [9].png" type="image/png" data-filename="" alt="only redex" height="71" width="778"/></a><br/>最后一种的效果是最好的，这是很容易解释的，如果最后是redex的重新打包则浪费了前面的7zip压缩，所以为了最优效果要注意顺序。<br/>另外，据反应redex后会有崩溃的现象，这个要留意一下，我这里压缩之后都是可以正常运行的。</p>
+<p>详情参考：<a href="https://github.com/facebook/redex" target="_blank">ReDex: An Android Bytecode Optimizer</a></p>
+<p>文章发出后，收到了一些朋友的建议，补充几点。</p>
+<h3>1. 去除无用的语言资源</h3><p>感谢@牧志轩的建议，通过配置resConfigs可以选择只打包哪几种语言，进而去掉各种aar包中全世界的语言，尤其是support包中的。<br/><a href="http://jayfeng.com/images/apk_reduce_resconfig_default.png" target="_blank"></a></p><div><a href="http://jayfeng.com/images/apk_reduce_resconfig_default.png" target="_blank"><img src="APK瘦身实践_files/Image [10].png" type="image/png" data-filename="" alt="没选择语言的语言包" height="634" width="323"/></a></div><br/>选择保留什么语言要根据产品的用户和市场来定，如果只选择默认英语和中文语言，配置如下<p></p><div><table><tbody><tr><td></td><td><pre>android {<br/>    defaultConfig {<br/>        resConfigs &quot;zh&quot;<br/><br/><br/></pre></td></tr></tbody></table></div><p>看看效果：<br/><a href="http://jayfeng.com/images/apk_reduce_resconfig_result.png" target="_blank"><img src="APK瘦身实践_files/Image [11].png" type="image/png" data-filename="" alt="只选择默认英文和中文的语言包效果" height="91" width="904"/></a><br/>如果不采用微信压缩方案结果对比，apk减小了197k。<br/>如果采用微信压缩（开启7zip）对比结果，apk只减小了16k，因为微信对resources.arsc进行了强力压缩，厉害！<br/>apk减小了16k。</p>
+<h3>2. 删除x86包的so</h3><p>再次感谢@杨辉__的建议，x86的包删除了之后，测试反应好像有些机器容易崩溃，未能经过严格测试，所以主版本又复原了，只在个别渠道执行这条措施。<br/>一般情况下不会有问题，测试了一下效果，apk减小了78k。<br/>这里作为候选方案备用。</p>
+<h3>3. 其他人的经验分享（持续更新）</h3><ul>
+<li>蘑菇街伯约写了篇文章<a href="http://blog.csdn.net/UsherFor/article/details/46827587" target="_blank">《如何将apk大小减少6M》</a>，有些细节说的更清楚，特此记录。</li>
+</ul>
+<p>最终，我们成功的把apk压到了2.9M，如果把上面遗漏的步骤继续再做，应该还能再减小一点。<br/>客户反应压的好小，领导简直不敢相信～<br/>瘦身不难，难的是魔鬼瘦身！</p>
+
+      
+    </div></div></div><br/></div></span>
+</div></body></html> 

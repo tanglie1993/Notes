@@ -1,0 +1,233 @@
+<html>
+<head>
+  <title>APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3583"/>
+<h1>APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div><div style="font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;word-wrap:break-word;line-height:1.6em;font-size:14px;"><div><div><div>
+    <h2 style="margin-top:0px;font-size:13px;font-weight:bold;"><a href="http://www.cnblogs.com/alisecurity/p/5341218.html" style="color:rgb(51, 102, 153);text-decoration:underline;">APK瘦身记，如何实现高达53%的压缩效果</a></h2>
+    <div><div style="margin-bottom:20px;word-break:break-word;"><p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;color:#3366ff;"><strong><span style="line-height:150%;font-family:'Microsoft YaHei';font-size:16px;">作者：非戈@阿里移动安全</span></strong></span></p>
+<h2 style="margin-top:10px;font-size:21px;font-weight:bold;line-height:1.5;margin:10px 0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><strong>1</strong><strong>、我是怎么思考这件事情的</strong></span></h2>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">APK是Android系统安装包的文件格式，关于这个话题其实是一个老生常谈的题目，不论是公司内部，还是外部网络，前人前辈已经总结出很多方法和规律。不过随着移动端技术近两年的飞速发展，一些新的思维方式和优化方法也逐渐涌现和成熟起来。笔者在实践过程中踩过一些坑，收获了一些经验，在这里做个思考和总结，所以随笔给大家，希望对大家从事相关工作的时候有所帮助和参考，同时也是抛砖引玉，希望大家共同探讨这个开放性的话题。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">关于为什么APK要瘦身，这个不多说，只从三个方面唠叨一下，对于用户（或者客户）来说，APK越大，在下载安装过程中，他们耗费的流量会越多，安装等待时间也会越长；对于产品本身，意味着下载转化率会越低（因为竞品中，用户有更多机会选择那个体验最好，功能最多，性能最好，包最小的）；对于研发来说，是一种优化改进技术的机会。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">欲瘦身，我们先找找胖的原因和问题。按目标－路径－资源的思维模式，找原因和问题有如下几条路径，一是拍脑袋，按自己的经验和判断，甚至是主观想象；二是去搜索引擎找关键字，逛各种技术论坛听技术大牛们怎么说，看各类技术文章抽取提炼；三是用一种可测量的工具或者方法发现问题。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">前两种不赘述，我这里说说第三种方法。用一种可测量的工具或者方法来分析，所谓工欲善其事，必先利其器。这个器可以可以自己锻造，也可以用现成的。这里推荐一个在线apk分析工具，因为是外部工具，所以大家请在使用过程中，不要上传未发布出去的产品，为了数据安全，笔者这里拿一个github上开源的Android项目作为瘦身示例。</span></p>
+<h2 style="margin-top:10px;font-size:21px;font-weight:bold;line-height:1.5;margin:10px 0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">2、寻找问题</span></h2>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><a href="https://nimbledroid.com/" style="color:rgb(7, 93, 179);text-decoration:underline;">NimbleDroid</a> 是美国哥伦比亚大学的博士创业团队研发出来的分析Android app性能指标的系统，分析的方式有静态和动态两种方式，其中静态分析可以分析出APK安装包中大文件排行榜，各种知名SDK的大小以及占代码整体的比例，各种类型文件的大小以及占排行，各种知名SDK的方法数以及占所有dex中方法数的比例，废话不多说，下面上高清无码大图看看颜值吧。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">如果想使用分析功能分析自己的产品，请登录并上传自己产品的apk包，所有功能目前均免费使用，如果是想分析Google Play上已经发布的产品，可以直接点击&quot;Play Apps&quot;查看，还可以使用搜索功能根据应用名和包名查看结果。再次强调下，请不要上传任何未发布的产品。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">登录</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144740582-811735321.png" type="image/png" data-filename="910134-20160331144740582-811735321.png" alt="" height="454" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">上传apk文件</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144747410-1436018047.png" type="image/png" data-filename="910134-20160331144747410-1436018047.png" alt="" height="654" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">分析结果摘要，可以看到一些概览的信息，apk文件大小，总的方法数</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144755660-1409496808.png" type="image/png" data-filename="910134-20160331144755660-1409496808.png" alt="" height="268" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">文件大小分析详情页，大文件列表，这里列出的是apk文件中超过100k的文件排行，这里的文件大小指的是apk文件中的大小</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144804332-1423240587.png" type="image/png" data-filename="910134-20160331144804332-1423240587.png" alt="" height="373" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">各种知名SDK的大小以及占代码整体的比例，这里目前能识别出Android Support，Jackson JSON parser, Google Play Services, Paypal, Glide, OkHttp, Facebook SDK, Fabric, Gson等等，Application表示App中自己编写的代码部分</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144818316-1897318563.png" type="image/png" data-filename="910134-20160331144818316-1897318563.png" alt="" height="271" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">各种类型文件的大小以及排行</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144829441-1977193329.png" type="image/png" data-filename="910134-20160331144829441-1977193329.png" alt="" height="401" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">各种知名SDK占所有dex中方法数的比例</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144838035-1585602191.png" type="image/png" data-filename="910134-20160331144838035-1585602191.png" alt="" height="273" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">各种知名SDK的方法数排行榜</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"> <img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144844160-1746353843.png" type="image/png" data-filename="910134-20160331144844160-1746353843.png" alt="" height="468" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"> </p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">看完这个apk内剖图是不是有一种神清气爽的感觉！我把这个分析工具比做我们家买的智能体重秤，可以称体重，脂肪含量，骨重，骨密度，肌肉含量等等，那么，我们是不是发现了一些问题，进而把这些问题和我们之前靠经验和一拍脑袋的原因可以用逻辑联系在一起。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">那么，我们接下来可以通过分析数据整理出我们的优化目标</span></p>
+<ol style="padding-left:40px;">
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">大文件排行榜里，有11张png文件的大小超过了100k，记住，这可是压缩之后的啊；</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">大文件排行榜里，resources.arsc的大小接近2M，这也是一个优化点；</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">大文件排行榜里，classes.dex接近3M，classes.dex是代码的载体，这块的优化需要细分，再去看看细分SDK的排行榜；</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">组件占比环图里，Android Support, Jackson JSON Parser和Google Play Services是三方库的前三甲；</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">文件类型排行榜里，png, dex 和arsc是前三甲；</span></li>
+</ol>
+<h2 style="margin-top:10px;font-size:21px;font-weight:bold;line-height:1.5;margin:10px 0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">3、梳理优化目标</span></h2>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">所以我们的目标是没有蛀牙，不对，是下面的目标：</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">1. png图片优化；</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">2. resources.arsc文件的优化；</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">3. 代码优化</span></p>
+<p style="margin:10px auto;text-indent:0px;"> </p>
+<h3 style="font-size:16px;font-weight:bold;line-height:1.5;margin:10px 0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">3.1图片优化的尝试</span></h3>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">首先是第一个目标，图片的优化，慢点，我们看看这些图为什么这么大先，准确的说，为什么这些图在apk（其实就是zip文件）里这么大，好了，上工具分析。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">这次用了一些简单的工具组合，系统自带的cmd就好。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144910504-1728120539.jpg" type="image/jpeg" data-filename="910134-20160331144910504-1728120539.jpg" alt="" height="66" style="border:0px;height:auto;max-width:300px;" width="873"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">命令执行的结果如下</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144922129-216480196.png" type="image/png" data-filename="910134-20160331144922129-216480196.png" alt="" height="289" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">恩，所有的png文件居然是STORE的方式存储到apk里的，关于zip里的STORE和DEFLATE，<a href="https://en.wikipedia.org/wiki/Zip_(file_format" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">详见</a> )</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">通俗的说，当文件是STORED的方式存储到zip，表示这个文件并没有经过压缩，如果是Defl:N的方式，表示通过DEFLATED normal的方式压缩存储到zip。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">这看起来有点不合理，png原封不动的放入zip，当然最后产出的apk会比较大。那么，如何解决呢？笔者首先尝使用android gradle plugin的方式，发现aaptOptions和packagingOptions都未能解决问题。在github上发现一个开源项目<a href="https://github.com/shwenzhang/AndResGuard" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">AndResGuard</a>，试了集成到项目中，再看结果如下：</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">优化前：</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144949973-997123161.png" type="image/png" data-filename="910134-20160331144949973-997123161.png" alt="" height="39" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">10536027字节</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">优化后：</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331144957035-1263490661.png" type="image/png" data-filename="910134-20160331144957035-1263490661.png" alt="" height="187" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">普通zip压缩： 8786265字节 （压缩了将近17%）</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">采用7zip压缩：8567150字节 （压缩了将近19%）</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"> </span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">再看看这个工具做了什么，对比下开启资源混淆前后</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">优化前</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331145023082-1040242526.png" type="image/png" data-filename="910134-20160331145023082-1040242526.png" alt="" height="651" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">优化后</span></p>
+<p style="margin:10px auto;text-indent:0px;"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331145033488-1412036910.png" type="image/png" data-filename="910134-20160331145033488-1412036910.png" alt="" height="494" style="border:0px;height:auto;max-width:300px;" width="700"/></p>
+<ol style="padding-left:40px;">
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">资源（png, xml, jpg等）名称混淆，资源路径名称混淆以及名称长度压缩；</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">原来以STORED形式存储到zip中的png文件被改成了DEFLATED（普通压缩存储）方式；</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">意外发现resources.arsc, META-INF/*.SF 以及 META-INF/*.MF变小了，而且是解压之后的文件大小也变小了。</span></li>
+</ol>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">用apk反编译神器<a href="https://github.com/skylot/jadx.git" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">jadx</a>内窥apk寻找真相</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331145045363-318028842.png" type="image/png" data-filename="910134-20160331145045363-318028842.png" alt="" height="635" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"> </span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">原来apk中资源（png, xml，以及properties文件）的相对路径会存放到META-INF/*.SF 以及META-INF/*.MF中并为每个资源文件计算SHA1值并存储在这两个文件中，至于为啥这么做以及这两个SHA1有啥区别和作用请参考网络上关于这方面知识的文章，已超出本文的主题所以这里不再赘述。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">对于resources.arsc文件</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331145126551-493010436.png" type="image/png" data-filename="910134-20160331145126551-493010436.png" alt="" height="448" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">很容易看出来它是资源文件索引表，所以，看到这里大家应该明白这三个文件为啥会变小了吧。</span></p>
+<p style="margin:10px auto;text-indent:0px;"> </p>
+<h3 style="font-size:16px;font-weight:bold;line-height:1.5;margin:10px 0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">3.2一次意外的发现</span></h3>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">顺着resources.arsc往下看，发现一个有趣的东西，</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331145145910-1210174570.png" type="image/png" data-filename="910134-20160331145145910-1210174570.png" alt="" height="1387" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">这又将成为一个优化点，去除那些没用的翻译资源，引入一些第三方的SDK，往往这些SDK带了很多翻译资源在里面，比如android support库，去掉后我们来看看效果。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">假设我们只保留英文，当然只是个实验，现实中看具体情况了，</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">采用7zip压缩：8220738字节 （压缩了将近22%，再增加3个点）</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">当然，真实的项目里不可能这样，但是蚊子肉也是肉啊！</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">其实，我想说的是这提供了一种优化思路，就是利用gradle的配置干掉无用的资源，同样的可以用在so本地库上，分辨率（gradle配置已deprecated）上。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">gradle配置示例如下：</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331145208332-1698765065.jpg" type="image/jpeg" data-filename="910134-20160331145208332-1698765065.jpg" alt="" height="134" style="border:0px;height:auto;max-width:300px;" width="873"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">记得包在android{}中间哦。那么，有人要问了，abi里肿么没有x86？据说intel提供了一个解决方案叫houdini，是一个运行在x86设备上的中间件，可以将arm转码为x86的指令，不过效率很低，有些运算型的，比如计算MD5和SHA1，甚至不如java，笔者曾经做过测试对比，又是另外一个话题，此处不赘述，感兴趣的读者可以移步。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">到此为止，我们已经在朝第一个目标迈进，不经意间发现了第一个目标和第二个目标之间的关系，所以利用资源混淆工具，达成了第二个目标。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">利用7zip压缩，我们对整个包进行了2个点的压缩，这是一个超出预期的成果。</span></p>
+<p style="margin:10px auto;text-indent:0px;"> </p>
+<h3 style="font-size:16px;font-weight:bold;line-height:1.5;margin:10px 0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">3.3图片优化的方法</span></h3>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">关于第一个目标，我们的路径还没有结束，拍脑袋想出来的路径是压缩png，非alpha图转成jpg，还有什么？所以去各种技术论坛逛了一圈，请教了各种技术大牛，梳理的路径如下：</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">1. 手动lint检查，手动删除代码中没有引用到的资源，实际效果不等。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">在Android Studio中打开“Analyze” 然后选择&quot;Inspect Code...&quot;，范围选择整个项目，然后点击&quot;OK&quot;</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">配置如下图</span></p>
+<p style="margin:10px auto;text-indent:0px;"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331145226098-38444778.png" type="image/png" data-filename="910134-20160331145226098-38444778.png" alt="" height="554" style="border:0px;height:auto;max-width:300px;" width="700"/></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">2. gradle脚本中开启shrinkResources</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">脚本参考如下</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331145240551-1477807195.jpg" type="image/jpeg" data-filename="910134-20160331145240551-1477807195.jpg" alt="" height="225" style="border:0px;height:auto;max-width:300px;" width="832"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">shrinkResources配合minifyEnabled使用效果更佳，详见<a href="http://tools.android.com/tech-docs/new-build-system/resource-shrinking" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">shrinkResources用法以及注意</a></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">采用7zip压缩：8115283字节 （压缩了将近23%，再增加1个点）</span></p>
+<p style="margin:10px auto;text-indent:0px;"> </p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">3. 使用图片压缩工具，压缩png图的大小，将非alpha的图转换成jpg形式，关于这点同事以及网络上的大牛们已经整理的很详细了，我这里做简单总结，欲知详情，请见附录的参考。</span></p>
+<ul style="margin-left:30px;padding-left:0px;">
+<li style="list-style-type:disc;"><span style="line-height:150%;font-family:'Microsoft YaHei';">使用tinypng，我只想说咱们在公司做产品，此方案慎用，上传任何未发布产品的内容到外部网络，都有可能引起数据泄漏，所以慎用此方案。下面说替代方案。</span></li>
+<li style="list-style-type:disc;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><a href="http://wasted.werk01.de/" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">WASTED</a></span></li>
+<li style="list-style-type:disc;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><a href="http://pngquant.org/" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">pngquant</a></span></li>
+<li style="list-style-type:disc;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><a href="https://pngmini.com/" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">ImageAlpha</a></span></li>
+<li style="list-style-type:disc;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><a href="https://imageoptim.com/" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">ImageOptim</a></span></li>
+<li style="list-style-type:disc;"><span style="line-height:150%;font-family:'Microsoft YaHei';">以上工具太散，有没有集成化的工具，答案是“有”，@心伦 童鞋开发的<a href="http://web.npm.alibaba-inc.com/package/@ali/imagemin" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">imagemin</a></span></li>
+<li style="list-style-type:disc;"><span style="line-height:150%;font-family:'Microsoft YaHei';">@姐夫童鞋开发的<a href="http://gitlab.alibaba-inc.com/zhefu.wzf/MSImageResourcesHelper" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">MSImageResourcesHelper</a></span></li>
+<li style="list-style-type:disc;"><span style="line-height:150%;font-family:'Microsoft YaHei';">png转成jpg格式 具体效果不等。</span></li>
+</ul>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"> 4. </span><span style="line-height:150%;font-family:'Microsoft YaHei';">终极大杀器，png转成webp，关于webp，更多详情请参考<a href="https://developers.google.com/speed/webp/" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">谷歌官方文档</a>以及<a href="http://developer.android.com/guide/appendix/media-formats.html" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">安卓开发者在线参考</a></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">先上效果图：</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/910134-20160331145308519-1024937088.png" type="image/png" data-filename="910134-20160331145308519-1024937088.png" alt="" height="202" style="border:0px;height:auto;max-width:300px;" width="700"/></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">采用7zip压缩：4926912字节 （压缩了将近53%，再增加30个点）</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">没看错吧，是30个点，目前apk的大小是原始apk大小的一半不到，而我做的，一行代码木有改动，仅用了一些工具而已！</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">说人话，我木有吃减肥药，木有绝食，体重却轻了一半！！！</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">但是，目前却没能用到项目中，因为有两个坑</span></p>
+<ul style="margin-left:30px;padding-left:0px;">
+<li style="list-style-type:disc;"><span style="line-height:150%;font-family:'Microsoft YaHei';">在三星的部分机型上，部分有alpha背景部分的图会有一条很明显的黑线，这里就不上图了，这个问题目前通过白名单的方式不去做成webp的图来处理；</span></li>
+<li style="list-style-type:disc;"><span style="line-height:150%;font-family:'Microsoft YaHei';">在小米2刷成4.xx的手机上，未能正确识别xml文件中描述的webp图片，导致界面起来后加载xml布局文件，文件加载webp失败，报错说resource file not found，导致app发生崩溃。跟踪发现是小米机器代理了类Resource为MIUIResource，但是这个MIUIResource未能正确识别webp，所以导致加载资源文件失败，初步判定，目前暂时没有解决方案，所以只能忍痛放弃这个优化方案。</span></li>
+</ul>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">关于第一个目标，图片资源的优化，就写到这里了。</span></p>
+<p style="margin:10px auto;text-indent:0px;"> </p>
+<h3 style="font-size:16px;font-weight:bold;line-height:1.5;margin:10px 0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">3.4代码优化</span></h3>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">第二个目标已达成，剩下第三个目标，代码的优化，梳理如下优化路径：</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">1. 开启proguard的代码优化</span></p>
+<p align="left" style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">将proguardFiles getDefaultProguardFile('proguard-android.txt'),'proguard-project.txt'</span></p>
+<p align="left" style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">改为proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),'proguard-project.txt'</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">开启代码优化后的注意点请参见附录。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">2. 去除无用的库</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">如果apk支持的最低版本是API14,而代码中没有用到高于api14的api就可以考虑拿掉整个android support库。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">3. 用更小的库替代方案</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">如果只用到了谷歌统计，那么就不要把整个google play services都集成进来，只集成需要的部分。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">4.定期清理废弃的代码</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">定期删除无用的逻辑和过期的业务功能模块，以及废弃的A/B test代码。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">5.业务模块采用插件化框架，代码动态从云端拉取</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">插件化，这是另外一个课题了，这里不赘述。</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">apk瘦身记最终的成果</span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><strong>10536027</strong><strong>字节压缩到</strong><strong>4926912</strong><strong>字节</strong><strong>, </strong><strong>压缩了将近</strong><strong>53%</strong></span></p>
+<p style="margin:10px auto;text-indent:0px;"> </p>
+<h2 style="margin-top:10px;font-size:21px;font-weight:bold;line-height:1.5;margin:10px 0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">总结</span></h2>
+<ol style="padding-left:40px;">
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">脚本中开启资源混淆和资源压缩</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">用7zip代替zip</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">gradle脚本中开启代码混淆优化和无用资源删除</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">用更小的图，使用压缩工具压缩图片大小</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">去除无用的资源，语言，本地so库，二方三方库和分辨率</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">用更小的库</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">尝试将android support库彻底踢出你的项目</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">定期清理代码</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">尝试用H5编写界面，图片云端获取</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">尝试插件化业务模块</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';">寻找到zip文件夹中所有用STORE形式存储的文件（不限于raw目录下），尝试压缩，以及替代方案加载这些资源</span></li>
+<li style="list-style-type:decimal;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><strong>尝试</strong><strong>webp</strong><strong>的图片加载方案，寻求突破</strong></span></li>
+</ol>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><strong>最后，继续学习和尝试新的优化方案</strong></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">以此文献给“唯瘦身与产品不可辜负”的技术们！！！</span></p>
+<p style="margin:10px auto;text-indent:0px;"> </p>
+<h2 style="margin-top:10px;font-size:21px;font-weight:bold;line-height:1.5;margin:10px 0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';">附录</span></h2>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><a href="http://blog.csdn.net/UsherFor/article/details/46827587" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">如何做到将apk大小减少6M</a></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><a href="http://www.jayfeng.com/2016/03/01/Android-APP%E7%BB%88%E6%9E%81%E7%98%A6%E8%BA%AB%E6%8C%87%E5%8D%97/" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">Android APP终极瘦身指南</a></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"><a href="http://www.jayfeng.com/2015/12/29/APK%E7%98%A6%E8%BA%AB%E5%AE%9E%E8%B7%B5/" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">APK瘦身实践</a></span><span style="line-height:150%;font-family:'Microsoft YaHei';"> </span></p>
+<hr/>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;color:#ff0000;"><strong><span style="line-height:150%;font-family:'Microsoft YaHei';font-size:16px;">作者：非戈@阿里移动安全，更多技术干货，请访问<a href="http://jaq.alibaba.com/community/index.htm" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank"><span style="line-height:150%;color:#ff0000;">阿里聚安全博客</span></a></span></strong></span></p>
+<p style="margin:10px auto;text-indent:0px;"><span style="line-height:150%;font-family:'Microsoft YaHei';"> </span></p></div>
+<div style="clear:both;"></div>
+<div style="margin-top:20px;">
+<div style="margin-bottom:10px;">分类: <a href="http://www.cnblogs.com/alisecurity/category/845079.html" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank">阅读</a></div>
+<div style="margin-top:0px;">标签: <a href="http://www.cnblogs.com/alisecurity/tag/%E9%98%BF%E9%87%8C/" style="color:rgb(7, 93, 179);text-decoration:underline;">阿里</a>, <a href="http://www.cnblogs.com/alisecurity/tag/%E7%A7%BB%E5%8A%A8%E5%AE%89%E5%85%A8/" style="color:rgb(7, 93, 179);text-decoration:underline;">移动安全</a>, <a href="http://www.cnblogs.com/alisecurity/tag/%E6%BC%8F%E6%B4%9E%E6%89%AB%E6%8F%8F/" style="color:rgb(7, 93, 179);text-decoration:underline;">漏洞扫描</a>, <a href="http://www.cnblogs.com/alisecurity/tag/%E7%97%85%E6%AF%92%E9%98%B2%E6%8A%A4/" style="color:rgb(7, 93, 179);text-decoration:underline;">病毒防护</a>, <a href="http://www.cnblogs.com/alisecurity/tag/%E5%86%85%E5%AE%B9%E5%AE%89%E5%85%A8/" style="color:rgb(7, 93, 179);text-decoration:underline;">内容安全</a>, <a href="http://www.cnblogs.com/alisecurity/tag/%E5%AE%9E%E4%BA%BA%E8%AE%A4%E8%AF%81/" style="color:rgb(7, 93, 179);text-decoration:underline;">实人认证</a>, <a href="http://www.cnblogs.com/alisecurity/tag/%E5%AE%89%E5%85%A8%E9%98%B2%E6%8A%A4/" style="color:rgb(7, 93, 179);text-decoration:underline;">安全防护</a>, <a href="http://www.cnblogs.com/alisecurity/tag/%E7%A7%BB%E5%8A%A8%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8/" style="color:rgb(7, 93, 179);text-decoration:underline;">移动应用安全</a>, <a href="http://www.cnblogs.com/alisecurity/tag/APK%E5%8E%8B%E7%BC%A9/" style="color:rgb(7, 93, 179);text-decoration:underline;">APK压缩</a>, <a href="http://www.cnblogs.com/alisecurity/tag/Android%E5%BC%80%E5%8F%91/" style="color:rgb(7, 93, 179);text-decoration:underline;">Android开发</a></div>
+<div><div style="padding:10px 0px;margin-bottom:10px;margin-top:10px;border:1px dashed silver;font-size:12px;width:320px;text-align:center;">
+        <a href="#" style="margin-right:10px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAYAAABIdFAMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHhJREFUeNo8zjsOxCAMBFB/KEAUFFR0Cbng3nQPw68ArZdAlOZppPFIBhH5EAB8b+Tlt9MYQ6i1BuqFaq1CKSVcxZ2Acs6406KUgpt5/LCKuVgz5BDCSb13ZO99ZOdcZGvt4mJjzMVKqcha68iIePB86GAiOv8CDADlIUQBs7MD3wAAAABJRU5ErkJggg%3D%3D&quot;) repeat-x;padding:3px 8px;vertical-align:middle;text-decoration:none;font-weight:bold;cursor:pointer;display:inline-block;border-radius:10px;box-shadow:rgba(0, 0, 0, 0.5) 0px 1px 3px;text-shadow:rgba(0, 0, 0, 0.25) 0px -1px 1px;background-color:rgb(45, 174, 191);color:rgb(255, 255, 255);border:none;">好文要顶</a>
+            <a href="#" style="margin-right:10px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAYAAABIdFAMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHhJREFUeNo8zjsOxCAMBFB/KEAUFFR0Cbng3nQPw68ArZdAlOZppPFIBhH5EAB8b+Tlt9MYQ6i1BuqFaq1CKSVcxZ2Acs6406KUgpt5/LCKuVgz5BDCSb13ZO99ZOdcZGvt4mJjzMVKqcha68iIePB86GAiOv8CDADlIUQBs7MD3wAAAABJRU5ErkJggg%3D%3D&quot;) repeat-x;padding:3px 8px;vertical-align:middle;text-decoration:none;font-weight:bold;cursor:pointer;display:inline-block;border-radius:10px;box-shadow:rgba(0, 0, 0, 0.5) 0px 1px 3px;text-shadow:rgba(0, 0, 0, 0.25) 0px -1px 1px;background-color:rgb(227, 49, 0);color:rgb(255, 255, 255);border:none;">关注我</a>
+    <a href="#" style="margin-right:10px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAYAAABIdFAMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHhJREFUeNo8zjsOxCAMBFB/KEAUFFR0Cbng3nQPw68ArZdAlOZppPFIBhH5EAB8b+Tlt9MYQ6i1BuqFaq1CKSVcxZ2Acs6406KUgpt5/LCKuVgz5BDCSb13ZO99ZOdcZGvt4mJjzMVKqcha68iIePB86GAiOv8CDADlIUQBs7MD3wAAAABJRU5ErkJggg%3D%3D&quot;) repeat-x;padding:3px 8px;vertical-align:middle;text-decoration:none;font-weight:bold;cursor:pointer;display:inline-block;border-radius:10px;box-shadow:rgba(0, 0, 0, 0.5) 0px 1px 3px;text-shadow:rgba(0, 0, 0, 0.25) 0px -1px 1px;background-color:rgb(255, 181, 21);color:rgb(255, 255, 255);border:none;">收藏该文</a>
+    <a href="#" style="cursor:pointer;background:none;padding:3px 2px;vertical-align:middle;text-decoration:none;font-weight:bold;display:inline-block;margin-right:10px;border-radius:10px;box-shadow:none;text-shadow:none;color:rgb(255, 255, 255);border:none;" title="分享至新浪微博"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/icon_weibo_24.png" type="image/png" data-filename="icon_weibo_24.png" alt="" height="24" style="height:auto;border:none;vertical-align:middle;margin-left:5px;box-shadow:none;max-width:300px;" width="24"/></a>
+    <a href="#" style="cursor:pointer;background:none;padding:3px 2px;vertical-align:middle;text-decoration:none;font-weight:bold;display:inline-block;margin-right:10px;border-radius:10px;box-shadow:none;text-shadow:none;color:rgb(255, 255, 255);border:none;" title="分享至微信"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/wechat.png" type="image/png" data-filename="wechat.png" alt="" height="24" style="border:medium none;width:24px;height:24px;box-shadow:none;margin-left:5px;vertical-align:middle;max-width:300px;" width="24"/></a>
+</div>
+<div style="float:left;width:280px;margin-top:0px;margin-bottom:10px;color:rgb(0, 0, 0);margin-left:0px;font-size:12px;">
+    <div style="float:left;line-height:18px;">
+            <a href="http://home.cnblogs.com/u/alisecurity/" style="color:rgb(7, 93, 179);text-decoration:underline;" target="_blank"><img src="APK瘦身记，如何实现高达53%的压缩效果 - 阿里聚安全 - 博客园_files/20160504180620.png.jpg" type="image/jpeg" data-filename="20160504180620.png.jpg" alt="" height="48" style="height:auto;border:0px;vertical-align:top;float:left;margin-right:5px;padding-top:5px;padding-left:2px;max-width:300px;" width="48"/></a>
+        <div style="float:left;line-height:18px;">
+            <a href="http://home.cnblogs.com/u/alisecurity/" style="color:rgb(7, 93, 179);text-decoration:underline;">阿里聚安全</a><br/>
+            <a href="http://home.cnblogs.com/u/alisecurity/followees" style="color:rgb(7, 93, 179);text-decoration:underline;">关注 - 0</a><br/>
+            <a href="http://home.cnblogs.com/u/alisecurity/followers" style="color:rgb(7, 93, 179);text-decoration:underline;">粉丝 - 321</a>
+        </div>
+    </div>
+    <div style="clear:both;"></div>
+    <div></div>
+    <div>
+                <a href="#" style="color:rgb(7, 93, 179);text-decoration:underline;">+加关注</a>
+    </div>
+</div>
+<div style="float:right;margin-bottom:10px;margin-right:30px;font-size:12px;width:125px;text-align:center;margin-top:10px;">
+    <div style="float:left;width:46px;height:52px;background:url(&quot;//static.cnblogs.com/images/upup.gif&quot;) no-repeat;text-align:center;cursor:pointer;margin-top:2px;padding-top:5px;">
+        <span style="font-size:14px;color:rgb(7, 93, 179);font-family:Verdana;line-height:1.5em;">6</span>
+    </div>
+    <div style="float:right;margin-left:20px;width:46px;height:52px;background:url(&quot;//static.cnblogs.com/images/downdown.gif&quot;) no-repeat;text-align:center;cursor:pointer;margin-top:2px;padding-top:5px;">
+        <span style="font-size:14px;color:rgb(7, 93, 179);font-family:Verdana;line-height:1.5em;">0</span>
+    </div>
+    <div style="clear:both;"></div>
+    <div style="margin-top:5px;margin-left:0px;font-size:12px;color:gray;">
+    </div>
+</div>
+</div>
+<div style="clear:both;"></div>
+<div style="line-height:1.8;font-size:12px;"><a href="http://www.cnblogs.com/alisecurity/p/5312083.html" style="color:rgb(7, 93, 179);text-decoration:none;">« </a> 上一篇：<a href="http://www.cnblogs.com/alisecurity/p/5312083.html" style="color:rgb(7, 93, 179);text-decoration:underline;" title="发布于2016-03-23 17:38">Android应用安全开发之浅谈加密算法的坑</a><br/><a href="http://www.cnblogs.com/alisecurity/p/5358105.html" style="color:rgb(7, 93, 179);text-decoration:none;">» </a> 下一篇：<a href="http://www.cnblogs.com/alisecurity/p/5358105.html" style="color:rgb(7, 93, 179);text-decoration:underline;" title="发布于2016-04-06 10:10">Android提权漏洞CVE-2014-7920&amp;CVE-2014-7921分析</a><br/></div>
+</div>
+
+</div>
+    <p style="font-size:12px;">posted on <span style="line-height:150%;">2016-03-31 14:58</span> <a href="http://www.cnblogs.com/alisecurity/" style="color:rgb(7, 93, 179);text-decoration:underline;">阿里聚安全</a> 阅读(<span style="line-height:150%;">2405</span>) 评论(<span style="line-height:150%;">3</span>)  <a href="https://i.cnblogs.com/EditPosts.aspx?postid=5341218" rel="nofollow" style="color:rgb(7, 93, 179);text-decoration:underline;">编辑</a> <a href="https://www.cnblogs.com/alisecurity/p/5341218.html#" style="color:rgb(7, 93, 179);text-decoration:underline;">收藏</a></p>
+</div></div></div></div></div></div><br/></div></span>
+</div></body></html> 
