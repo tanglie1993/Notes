@@ -1,0 +1,251 @@
+<html>
+<head>
+  <title>模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - eclipse_xu - 博客频道 - CSDN.NET</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2405"/>
+<h1>模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - eclipse_xu - 博客频道 - CSDN.NET</h1>
+
+<div>
+<span><div style="position:relative;"><div>
+<div>
+  <div>
+    <div>
+      <div>
+        <div>
+          <div><div><div><div><h1>模拟自然动画的精髓——TimeInterpolator与TypeEvaluator</h1><div></div></div>
+
+<p>在今天的文章开始之前，有个忙想请大家帮一下，希望在京东、淘宝、当当、亚马逊购买了我的书《<a href="http://lib.csdn.net/base/android" target="_blank" title="Android知识库">Android</a>群英传:神兵利器》的朋友们，帮忙去网店上给个简短的评价，举手之劳，还是多谢大家啦~~</p>
+
+<div>
+  <p>本文绘图软件 <a href="https://www.desmos.com/calculator" target="_blank">https://www.desmos.com/calculator</a></p>
+</div>
+
+<p>通过属性动画，我们可以模拟各种属性的动画效果，但对于这些属性来说，动画变化的速率和范围，是实现一个更加『真实、自然』的动画的基础，这两件事情，就是通过TimeInterpolator与TypeEvaluator来实现的。</p>
+
+<p>TimeInterpolator与TypeEvaluator共同作用在ValueAnimator上，通过复合的方式产生最后的数据，这也就是数学上的『复合函数』，TimeInterpolator控制在何时取值，而TypeEvaluator控制在当前时间点需要取多少值。</p>
+
+<p>由于这里涉及到两个变量，所以，这里我们通常使用『控制变量法』来进行这两个属性的研究，因为通常情况下，这两个属性的作用效果是殊途同归的。</p>
+
+
+
+<h2>TimeInterpolator</h2>
+
+<div>
+  <p>首先，我们研究TimeInterpolator，所以，将TypeEvaluator设置为默认，不产生任何修改。</p>
+</div>
+
+<p>TimeInterpolator，中文常常翻译成插值器。一个最简单的属性动画，示例如下：</p>
+
+
+
+<pre><code>ObjectAnimator animator = ObjectAnimator.ofFloat(mTextView, &quot;translationX&quot;, , mDistance)
+animator.setDuration(mDuration)
+animator.setInterpolator(new BounceInterpolator())
+animator.start()</code></pre>
+
+<p>通过setInterpolator方法，可以给Animator设置插值器，默认的插值器是AccelerateDecelerateInterpolator，即加速减速插值器。</p>
+
+
+
+<h3>理解TimeInterpolator的作用原理</h3>
+
+<p>TimeInterpolator是作用在时间参数上，例如我们有一个动画，时间从0到1，取值也从0到1，我们通过下面三条曲线来看同一时间点，取到的数值的不同。</p>
+
+<p></p><div><img src="模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - e_files/Image.png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p>
+
+<p>当时间取0.5时，我们对应的y=x这条曲线，取出的是0.5，y=sqrt(x)这条曲线，取出的是0.25，y=x^2 这条曲线，取出的是0.7。也就是说，同一个真实的时间节点0.5，我们通过设置不同的函数曲线，取出了不同的数值，那么TimeInterpolator正是通过这种方式，来对时间参数进行修改，即，真实的时间0.5，对于其它两个函数，分别取出了模拟时间0.25和0.7所对应的值，从而达到了『篡改』时间的目的。</p>
+
+
+
+<h3>Android中的TimeInterpolator</h3>
+
+<p>Android中已经给我们实现了很多TimeInterpolator，例如前面我们举的例子——AccelerateDecelerateInterpolator。我们打开AccelerateDecelerateInterpolator的源码。</p>
+
+<p></p><div><img src="模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - e_files/Image [1].png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p>
+
+<p>其中关键的就是那行数学公式——(Math.cos((input + 1) * Math.PI) / 2.0f) + 0.5f。我们来绘制下这个公式对应的曲线图（这里input的取值范围是0到1）。</p>
+
+<p></p><div><img src="模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - e_files/Image [2].png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p>
+
+<p>在[0,1]区间内，就是我们的加速减速插值器了，结合字面意义很好理解。</p>
+
+<p>那么在Android中，系统还给我们提供了非常多的TimeInterpolator，例如：AccelerateDecelerateInterpolator, AccelerateInterpolator, AnticipateInterpolator, AnticipateOvershootInterpolator, BounceInterpolator, CycleInterpolator, DecelerateInterpolator, LinearInterpolator, OvershootInterpolator, PathInterpolator。 <div></div>
+大家可以通过API文档来找到这些插值器的定义，同时，通过源码来查看他们使用的数学公式。</p>
+
+
+
+<h3>自定义TimeInterpolator</h3>
+
+<p>自定义TimeInterpolator非常简单，我们参考系统自带的TimeInterpolator就可以实现了，即实现Interpolator接口和getInterpolation方法即可，例如：</p>
+
+
+
+<pre><code>package com.xys.naturalanim.views.interpolator;
+
+import android.view.animation.Interpolator;
+
+public class CustomInterpolator implements Interpolator {
+
+    @Override
+    public float getInterpolation(float input) {
+        return (float) Math.sin((input) * Math.PI * F);
+    }
+}</code></pre>
+
+<p>其重点就是实现getInterpolation方法中的数学公式。</p>
+
+
+
+<h2>TypeEvaluator</h2>
+
+<p>TypeEvaluator通常被翻译成估值器，在理解了TimeInterpolator之后，再理解TypeEvaluator就很简单了，一个系统自带的简单TypeEvaluator如下：</p>
+
+<p></p><div><img src="模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - e_files/Image [3].png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p>
+
+<p>可见，它和TimeInterpolator基本一样，只不过实现的公式的参数不一样，但简单的换算一下，就通用了，例如：</p>
+
+
+
+<pre><code> (mInterpolator != null) {
+     ( i = ; i &lt; mViewWidth; i++) {
+        mPath.lineTo(i, mViewHeight - mInterpolator.getInterpolation(i *  / mViewHeight) * mViewHeight);
+    }
+}  {
+     ( i = ; i &lt; mViewWidth; i++) {
+        mPath.lineTo(i, mViewHeight - (Integer) mTypeEvaluator.evaluate(i *  / mViewHeight, , mViewHeight));
+    }
+}</code></pre>
+
+<p>但是它们还是有一些细小的区别的，后面再细说，简单的概括，就是： <div></div>
+TimeInterpolator控制动画的速度，而TypeEvaluator控制动画的值，他们可以共同作用，也可以单独作用（让另一个使用默认值）。</p>
+
+<div>
+  <p>实际上，TypeEvaluator中的一个参数fraction，就是『复合函数』中TimeInterpolator计算的结果。即fraction=getInterpolation()。</p>
+</div>
+
+
+
+<h3>自定义TypeEvaluator</h3>
+
+<p>这里首先讲一下TypeEvaluator的自定义，那么为什么要加呢，这是因为，这种方式限定了TypeEvaluator的类型是Number，那么这种就和TimeInterpolator几乎可以完全转化了，他们的目的都是通过提供的参数来完成曲线的绘制，从而实现对动画运动的控制。而TimeInterpolator只有一个参数，实现起来更加的简单，所以，大部分时候，我们都通过TimeInterpolator来实现这种运动曲线的模拟，所以，TypeEvaluator就这样没落了。</p>
+
+<p>但是，不要以为TypeEvaluator就这样没用了，我们在小标题中也写了，是类型的TypeEvaluator可以进行转换，而TypeEvaluator实际上还有很多其它类型，在动画的坐标控制上，有奇效。</p>
+
+
+
+<h3>TypeEvaluator控制点的坐标</h3>
+
+<p>前面我们说了，Float类型的TypeEvaluator和TimeInterpolator基本是一样的，但TypeEvaluator并不只有Float这样一种，它有一种用的比较多的特性，就是通过TypeEvaluator来对运动坐标进行修改，将原本的直线坐标修改成曲线坐标，它通常会与ValueAnimator进行配合使用，例如下面的这个例子：</p>
+
+<p></p><div><img src="模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - e_files/Image [4].png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p>
+
+<p>这种实现曲线运动的方式，就是通过TypeEvaluator来进行实现的，其中核心原理，就是通过Bezier曲线的De Casteljau<a href="http://lib.csdn.net/base/datastructure" target="_blank" title="算法与数据结构知识库">算法</a>计算出具体的点坐标，并设置给TypeEvaluator，代码如下所示。</p>
+
+
+
+<pre><code>public class BezierEvaluator implements TypeEvaluator&lt;PointF&gt; {
+
+    private PointF mControlPoint;
+
+    public BezierEvaluator(PointF controlPoint) {
+        .mControlPoint = controlPoint;
+    }
+
+    @Override
+    public PointF evaluate(float t, PointF startValue, PointF endValue) {
+        return BezierUtil.CalculateBezierPointForQuadratic(t, startValue, mControlPoint, endValue);
+    }
+}</code></pre>
+
+<p>Bezier的计算公式如下所示。</p>
+
+
+
+<pre><code>/**
+ * B(t) = (1 - t)^2 * P0 + 2t * (1 - t) * P1 + t^2 * P2, t ∈ [0,1]
+ *
+ * @param t  曲线长度比例
+ * @param p0 起始点
+ * @param p1 控制点
+ * @param p2 终止点
+ * @return t对应的点
+ */
+public static PointF CalculateBezierPointForQuadratic(float t, PointF p0, PointF p1, PointF p2) {
+    PointF point =  PointF();
+    float temp =  - t;
+    point.x = temp * temp * p0.x +  * t * temp * p1.x + t * t * p2.x;
+    point.y = temp * temp * p0.y +  * t * temp * p1.y + t * t * p2.y;
+    return point;
+}</code></pre>
+
+<p>所以，综上所述，在作动画速率曲线控制的时候，使用TimeInterpolator即可，如果要改变点的坐标，就可以使用TypeEvaluator。</p>
+
+
+
+
+
+<p>在了解了TimeInterpolator和TypeEvaluator之后，我们就可以来了解下动画展现的优化方式了，普通的动画默认以线性的方式展现，但带来的后果就是动画效果的『僵硬』，动画本来是模拟两个状态的过渡过程的，这个在自然界中是『自然、流畅』的，所以，我们不能通过线性的数据变化来模拟自然动画，这就需要使用TimeInterpolator和TypeEvaluator来设计动画曲线了，通过它们来控制动画的实现过程，从而实现动画的展示，这就是我们来实现自然动画的的基本方式。</p>
+
+
+
+
+
+<p>既然线性的动画曲线无法满足我们的动画模拟需求，那么就需要通过一定的数学公式来改变这些动画曲线，值得庆幸的是，这些事情有人帮我们做过了，有人专门设计了这样一些动画的曲线库。</p>
+
+<p><a href="http://easings.net/zh-cn" target="_blank">http://easings.net/zh-cn</a></p>
+
+<p></p><div><img src="模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - e_files/Image [5].png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p>
+
+<p>就是这样一些缓动函数库，让我们在设计动画的时候，可以作更加真实的模拟。同时，你也可以设计自己的曲线函数，下面这个网站，就可以实现这样的模拟。</p>
+
+<p><a href="http://inloop.github.io/interpolator/" target="_blank">http://inloop.github.io/interpolator/</a></p>
+
+
+
+<h3>自然动画的模拟演示</h3>
+
+<p>在各位前辈的肩膀上，我这里撸了一个演示的Demo库，界面如图。</p>
+
+<p></p><div><img src="模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - e_files/Image [6].png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p>
+
+<p>这里主要有几个功能：</p>
+
+<ul>
+<li>可以选择不同的TimeInterpolator</li>
+<li>可以选择要演示的动画效果，包括位移、缩放、旋转、透明度</li>
+<li>演示包含两个View，上面的是设置对应动画模拟效果的View，下面的是对照的线性效果的View</li>
+</ul>
+
+<p>一个动态图简单的了解下：</p>
+
+<p></p><div><img src="模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - e_files/Image [7].png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p>
+
+<p>代码已经开源到Github：</p>
+
+<p><a href="https://github.com/xuyisheng/NaturalAnim" target="_blank">https://github.com/xuyisheng/NaturalAnim</a></p>
+
+<p>欢迎大家提交自己的函数曲线-插值器。</p>
+
+<p>欢迎大家关注我的<a href="http://lib.csdn.net/base/wechat" target="_blank" title="微信开发知识库">微信</a>公众号：</p>
+
+<p></p><div><img src="模拟自然动画的精髓——TimeInterpolator与TypeEvaluator - e_files/Image [8].png" type="image/png" data-filename="" alt="这里写图片描述"/></div><p></p></div></div></div>
+          <ol></ol>
+        </div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+
+
+</div></div></div></span>
+</div></body></html> 

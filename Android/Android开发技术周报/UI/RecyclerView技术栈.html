@@ -1,0 +1,257 @@
+<html>
+<head>
+  <title>RecyclerView技术栈</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3722"/>
+<h1>RecyclerView技术栈</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:10px;-webkit-tap-highlight-color:transparent;"><div style="box-sizing:border-box;font-size:17px;line-height:1.42857;color:rgb(51, 51, 51);background-color:rgb(255, 255, 255);min-width:768px;font-family:-apple-system, &quot;SF UI Text&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;">
+        <h1 style="box-sizing:border-box;color:inherit;margin-top:20px;margin-bottom:10px;font-size:34px;margin:20px 0px 0px;font-family:-apple-system, &quot;SF UI Display&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;font-weight:700;line-height:1.3;word-break:break-word;">RecyclerView技术栈</h1>
+
+        
+        <div style="box-sizing:border-box;margin:30px 0px 40px;">
+          <a href="https://www.jianshu.com/u/df40282480b4" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 51, 51);text-decoration:none;cursor:pointer;width:48px;height:48px;display:inline-block;vertical-align:middle;">
+            <img src="RecyclerView技术栈_files/96.jpg" type="image/jpeg" data-filename="96.jpg" alt="96" height="46" style="box-sizing:border-box;vertical-align:middle;border:1px solid rgb(221, 221, 221);width:100%;height:100%;border-radius:50%;" width="46"/>
+</a>          <div style="box-sizing:border-box;vertical-align:middle;display:inline-block;margin-left:8px;">
+            <span style="box-sizing:border-box;margin-right:3px;font-size:16px;vertical-align:middle;"><a href="https://www.jianshu.com/u/df40282480b4" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 51, 51);text-decoration:none;cursor:pointer;">小鄧子</a></span>
+            
+            <a style="cursor:pointer;background-color:rgb(66, 192, 46);color:rgb(255, 255, 255);text-decoration:none;display:inline-block;margin-bottom:0px;font-weight:400;text-align:center;vertical-align:middle;touch-action:manipulation;box-sizing:border-box;background-image:none;border:1px solid transparent;white-space:nowrap;user-select:none;border-radius:40px;line-height:normal;border-color:rgb(66, 192, 46);font-size:12px;padding:0px 7px 0px 5px;"><i style="box-sizing:border-box;font-size:inherit;font-style:normal;-webkit-font-smoothing:antialiased;font-family:iconfont;font-weight:400;"><span style="font-size:inherit;font-style:normal;font-family:iconfont;font-weight:400;"></span></i><span style="box-sizing:border-box;margin-left:2px;display:inline;">关注</span></a>
+            
+            <div style="box-sizing:border-box;margin-top:5px;font-size:12px;color:rgb(150, 150, 150);">
+              
+                <span style="box-sizing:border-box;padding-right:5px;" title="">2016.02.01 14:24*</span>
+              <span style="box-sizing:border-box;padding-right:5px;">字数 2522</span>
+            <span style="box-sizing:border-box;padding-right:5px;">阅读 23839</span><span style="box-sizing:border-box;padding-right:5px;">评论 32</span><span style="box-sizing:border-box;padding-right:5px;">喜欢 189</span><span style="box-sizing:border-box;padding-right:5px;">赞赏 2</span></div>
+          </div>
+          
+        </div>
+        
+
+        
+        <div style="box-sizing:border-box;color:rgb(47, 47, 47);font-size:16px;font-weight:400;line-height:1.7;word-break:break-word;">
+          <h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">概述</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">随着2014年Google IO的召开，<a href="https://link.jianshu.com/?t=http://developer.android.com/preview/index.html" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Android L Preview</a>版随之发布，对于开发着来说，带来了性能上的改善，而对于消费者来说，得到了体验上的提升。我想，无论是开发者还是使用者，一定都非常喜欢这次的版本跟新。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">同时，这次也带来了两个全新的View控件：<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>和<strong style="box-sizing:border-box;font-weight:700;">CardView</strong>。这篇文章将重点介绍<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>，它有许多内部类和接口。接下来，我将介绍它们的功能，已经如何使用。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">当然，在这之前，我要声明的是：<strong style="box-sizing:border-box;font-weight:700;">RecyclerView 是Support Library的一部分</strong>。所以只需要在<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">app/build.gradle</code>中添加以下依赖，便能立即使用：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">dependencies {
+    compile 'com.android.support:recyclerview-v7:23.2.0'
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">然后点击“Sync Project with Gradle files”，让IDE去下载适当的资源文件。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">为什么命名为RecyclerView？</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">先让我们来看看Google在<strong style="box-sizing:border-box;font-weight:700;">L Preview</strong>中是如何定义<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>的：</p>
+<blockquote style="box-sizing:border-box;margin:0px 0px 20px;padding:20px;font-size:16px;border-left:6px solid rgb(180, 180, 180);margin-bottom:25px;background-color:rgb(247, 247, 247);font-weight:400;line-height:30px;word-break:break-word;">
+<p style="box-sizing:border-box;margin:0px 0px 25px;font-size:16px;font-weight:400;line-height:1.7;margin-bottom:0px;word-break:break-word;">A flexible view for providing a limited window into a large data set.<br style="box-sizing:border-box;"/>
+(能够在有限的窗口中展示大数据集合的灵活视图。)</p>
+</blockquote>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">所以我们能够理解为，RecyclerView一个恰当的使用场景是：由于尺寸限制，用户的设备不能一次性展现所有条目，用户需要上下滚动以查看更多条目。滚出可见区域的条目将被回收，并在下一个条目可见的时候被复用。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以从下图中得到更直观的解释：</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:531px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:75.96000000000001%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="RecyclerView技术栈_files/700.png" type="image/png" data-filename="700.png" height="532" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+
+</div>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">左边的图是数据初始化后的示例，当向上滚动视图的时候，当条目不可见之后将被回收。右图中红色区域内的两条不可见条目，将被放到缓存队列中以便新的条目可见时进行复用。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">对于减少内存开销和CPU的计算，缓存条目是一个非常有用的方法，因为这意味着我们不必每次都创建新的条目，从而减小内存开销和CPU的计算，而且还能够有效降低屏幕的卡顿，保证滑动的顺滑和16ms准则。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">看到这里，你可能不禁会问：并没有什么新东西啊，这和<strong style="box-sizing:border-box;font-weight:700;">ListView</strong>有什么区别呀？我们已经使用<strong style="box-sizing:border-box;font-weight:700;">ListView</strong>很长一段时间了呀，它一样可以做到呀。不过，视图回收本身并不是什么新鲜事。但是回想之前我们写的<strong style="box-sizing:border-box;font-weight:700;">ListView</strong>，无论从它的的性能表现着手，还是语法的书写，甚至数据的绑定都未免略显臃肿。那么现在，我们将再也不会出现上述症状，因为Google提供了一个更好，更灵活的控件——<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">OK，从现在开始，让我们一步一步，开始了解它。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">结构</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">如果你想使用<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>，需要做以下操作：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">RecyclerView.Adapter</code> - 处理数据集合并负责绑定视图</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">ViewHolder</code> - 持有所有的用于绑定数据或者需要操作的View</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">LayoutManager</code> - 负责摆放视图等相关操作</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">ItemDecoration</code> - 负责绘制Item附近的分割线</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">ItemAnimator</code> - 为Item的一般操作添加动画效果，如，增删条目等</p></li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以从下图更直观的了解到<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>的基本结构：</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:269px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:19.34%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="RecyclerView技术栈_files/700 [1].png" type="image/png" data-filename="700.png" height="135" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+
+</div>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">由此可见，想要在<strong style="box-sizing:border-box;font-weight:700;">ListView</strong>中实现条目的增删动画是一件非常困难的事情，但是<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>为我们提供了很好的便利。而且<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>增强了<a href="https://link.jianshu.com/?t=https://guides.codepath.com/android/Using-an-ArrayAdapter-with-ListView#improving-performance-with-the-viewholder-pattern" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">ViewHolder设计模式</a>，这在当前所使用的ListView中是不曾有的。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">与传统ListView比较</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>与老前辈<strong style="box-sizing:border-box;font-weight:700;">ListView</strong>的不同点，主要在于以下几个特性：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">Adapter中的ViewHolder模式</strong> - 对于ListView来说，通过创建<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">ViewHolder</code>来提升性能并不是必须的。因为ListView并没有严格的<strong style="box-sizing:border-box;font-weight:700;">ViewHolder</strong>设计模式。但是在使用<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>的时候，<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">Adapter</code>必须实现至少一个<strong style="box-sizing:border-box;font-weight:700;">ViewHolder</strong>，必须遵循<strong style="box-sizing:border-box;font-weight:700;">ViewHolder</strong>设计模式。</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">定制Item条目</strong> -  <strong style="box-sizing:border-box;font-weight:700;">ListView</strong>只能实现垂直线性排列的列表视图，与之不同的是，<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>可以通过设置<em style="box-sizing:border-box;">RecyclerView.LayoutManager</em>来定制不同风格的视图，比如水平滚动列表或者不规则的瀑布流列表。</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">Item动画</strong> - 在<strong style="box-sizing:border-box;font-weight:700;">ListView</strong>中没有提供任何方法或者接口，方便开发者实现Item的增删动画。相反地，可以通过设置<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>的<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">RecyclerView.ItemAnimator</code>来为条目增加动画效果。</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">设置数据源</strong> - 在<strong style="box-sizing:border-box;font-weight:700;">LisView</strong>中针对不同数据封装了各种类型的<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">Adapter</code>，比如用来处理数组的<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">ArrayAdapter</code>和用来展示Database结果的<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">CursorAdapter</code>。相反地，在<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>中必须自定义实现<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">RecyclerView.Adapter</code>并为其提供数据集合。</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">设置条目分割线</strong> - 在<strong style="box-sizing:border-box;font-weight:700;">ListView</strong>中可以通过设置<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">android:divider</code>属性来为两个Item间设置分割线。如果想为<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>添加此效果，则必须使用<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">RecyclerView.ItemDecoration</code>，这种实现方式不仅更灵活，而且样式也更加丰富。</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">设置点击事件</strong> - 在<strong style="box-sizing:border-box;font-weight:700;">ListView</strong>中存在<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">AdapterView.OnItemClickListener</code>接口，用来绑定条目的点击事件。但是，很遗憾的是在<strong style="box-sizing:border-box;font-weight:700;">RecyclerView</strong>中，并没有提供这样的接口，不过，提供了另外一个接口<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">RcyclerView.OnItemTouchListener</code>，用来响应条目的触摸事件。</p></li>
+</ul>
+<h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">RecyclerView组件</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">RecyclerView.Adapter</strong></p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">确切的说，Adapter扮演着两个角色。一是，根据不同ViewType创建与之相应的的Item-Layout，二是，访问数据集合并将数据绑定到正确的View上。这就需要我们重写以下两个函数：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public VH onCreateViewHolder(ViewGroup parent, int viewType)</code> 创建Item视图，并返回相应的ViewHolder</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public void onBindViewHolder(VH holder, int position)</code> 绑定数据到正确的Item视图上。</p></li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">另外我们还需要重写另一个方法，像ListView-Adapter那样，同样地告诉RecyclerView-Adapter列表Items的总数：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">
+<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public int getItemCount()</code> 返回该Adapter所持有的Itme数量</li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">RecyclerView.ViewHolder</strong></p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">ViewHolder的基本用法是用来存放View对象。Android团队很早之前就推荐使用“ViewHolder设计模式”，但实际上他们并没有把这种概念强加给开发者，而且也没有要求开发者在Adapter中必须使用<strong style="box-sizing:border-box;font-weight:700;">ViewHolder pattern</strong>。那么现在对于这种新型的<strong style="box-sizing:border-box;font-weight:700;">RecyclerView.Adapter</strong>，我们必须实现并使用它。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">另外值得一提的是，可以通过打印<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">ViewHolder.toString</code>来获取更多有效信息：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder(&quot;ViewHolder{&quot; +
+                Integer.toHexString(hashCode()) + &quot; position=&quot; + mPosition + &quot; id=&quot; + mItemId +
+                &quot;, oldPos=&quot; + mOldPosition + &quot;, pLpos:&quot; + mPreLayoutPosition);
+        if (isScrap()) sb.append(&quot; scrap&quot;);
+        if (isInvalid()) sb.append(&quot; invalid&quot;);
+        if (!isBound()) sb.append(&quot; unbound&quot;);
+        if (needsUpdate()) sb.append(&quot; update&quot;);
+        if (isRemoved()) sb.append(&quot; removed&quot;);
+        if (shouldIgnore()) sb.append(&quot; ignored&quot;);
+        if (isChanged()) sb.append(&quot; changed&quot;);
+        if (isTmpDetached()) sb.append(&quot; tmpDetached&quot;);
+        if (!isRecyclable()) sb.append(&quot; not recyclable(&quot; + mIsRecyclableCount + &quot;)&quot;);
+        if (isAdapterPositionUnknown()) sb.append(&quot;undefined adapter position&quot;);
+        if (itemView.getParent() == null) sb.append(&quot; no parent&quot;);
+        sb.append(&quot;}&quot;);
+        return sb.toString();
+    }
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">因此，一个基本的<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">RecyclerView.Adapter</code>如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">public class SimplerItemAdapter extends RecyclerView.Adapter&lt;SimplerItemAdapter.SimpleItemViewHolder&gt; {
+
+  private List&lt;String&gt; items;
+
+  public SimplerItemAdapter(@NonNull List&lt;String&gt; dateItems) {
+    this.items = (dateItems != null ? dateItems : new ArrayList&lt;String&gt;());
+  }
+
+  @Override public SimpleItemViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+    View itemView = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item, viewGroup, false);
+    return new SimpleItemViewHolder(itemView);
+  }
+
+  @Override public void onBindViewHolder(SimpleItemViewHolder viewHolder, int position) {
+    viewHolder.textView.setText(items.get(position));
+  }
+
+  @Override public int getItemCount() {
+    return (this.items != null) ? this.items.size() : 0;
+  }
+
+  protected final static class SimpleItemViewHolder extends RecyclerView.ViewHolder {
+    protected TextView textView;
+
+    public SimpleItemViewHolder(View itemView) {
+      super(itemView);
+      this.textView = (TextView) itemView.findViewById(R.id.text);
+    }
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">RecyclerView.LayoutManager</strong></p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">LayoutManager的职责是摆放Item的位置，并且负责决定何时回收和重用Item。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">必须为RecyclerView指定LayoutManager，否则会出现以下异常：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"> AndroidRuntime java.lang.NullPointerException: Attempt to invoke virtual method ‘void android.support.v7.widget.RecyclerView$LayoutManager.onMeasure(android.support.v7.widget.RecyclerView$Recycler, android.support.v7.widget.RecyclerView$State, int, int)’ on a null object reference
+</code></pre>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">LinearLayoutManager</code> 水平或者垂直的Item视图。</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">GridLayoutManager</code> 网格Item视图。</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">StaggeredGridLayoutManager</code> 交错的网格Item视图。</p></li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">当然还有一些很实用的API：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">
+<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">findFirstVisibleItemPosition()</code> 返回当前第一个可见Item的position</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">
+<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">findFirstCompletelyVisibleItemPosition()</code> 返回当前第一个完全可见Item的position</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">
+<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">findLastVisibleItemPosition()</code> 返回当前最后一个可见Item的position</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">
+<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">findLastCompletelyVisibleItemPosition()</code> 返回当前最后一个完全可见Item的position</li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">LayoutManager当前有且仅有一个抽象函数：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">public LayoutParams generateDefaultLayoutParams()
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">另外值得注意的是，自定义LayoutManager还应该实现以下方法：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">   /**
+     * Scroll to the specified adapter position.
+     *
+     * Actual position of the item on the screen depends on the LayoutManager implementation.
+     * @param position Scroll to this adapter position.
+     */
+    public void scrollToPosition(int position) {
+        if (DEBUG) {
+            Log.e(TAG, &quot;You MUST implement scrollToPosition. It will soon become abstract&quot;);
+        }
+    }
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">RecyclerView.ItemDecoration</strong></p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">通过设置<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">recyclerView.addItemDecoration(new DividerDecoration(this));</code>来改变Item之间的偏移量或者对Item进行装饰。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">当然，你也可以对RecyclerView设置多个<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">ItemDecoration</code>，列表展示的时候会遍历所有的<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">ItemDecoration</code>并调用里面的绘制方法，对Item进行装饰。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">RecyclerView.ItemDecoration</code>是一个抽象类，可以通过重写以下三个方法，来实现Item之间的偏移量或者装饰效果：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public void onDraw(Canvas c, RecyclerView parent)</code> 装饰的绘制在Item条目绘制之前调用，所以这有可能被Item的内容所遮挡</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public void onDrawOver(Canvas c, RecyclerView parent)</code> 装饰的绘制在Item条目绘制之后调用，因此装饰将浮于Item之上</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public void getItemOffsets(Rect outRect, int itemPosition, RecyclerView parent)</code> 与padding或margin类似，LayoutManager在测量阶段会调用该方法，计算出每一个Item的正确尺寸并设置偏移量。</p></li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">RecyclerView.ItemAnimator</strong></p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">ItemAnimator能够帮助Item实现独立的动画。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">ItemAnimator作触发于以下三种事件：</p>
+<ol style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">某条数据被插入到数据集合中</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">从数据集合中移除某条数据</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">更改数据集合中的某条数据</li>
+</ol>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">幸运的是，在Android中默认实现了一个<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">DefaultItemAnimator</code>，我们可以通过以下代码为Item增加动画效果：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">recyclerView.setItemAnimator(new DefaultItemAnimator());
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">在之前的版本中，当时据集合发生改变时，我们通过调用<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">.notifyDataSetChanged()</code>，来刷新列表，因为这样做会触发列表的重绘，所以并不会出现任何动画效果，因此需要调用一些以<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">notifyItem*()</code>作为前缀的特殊方法，比如：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public final void notifyItemInserted(int position)</code> 向指定位置插入Item</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public final void notifyItemRemoved(int position)</code> 移除指定位置Item</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public final void notifyItemChanged(int position)</code> 更新指定位置Item</p></li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><strong style="box-sizing:border-box;font-weight:700;">Listeners</strong></p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">很遗憾，<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">RecyclerView</code>并没有像<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">ListView</code>那样提供以下两个Item的点击监听事件</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public void setOnItemClickListener(@Nullable OnItemClickListener listener)</code> Item点击事件监听</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">public void setOnItemLongClickListener(OnItemLongClickListener listener)</code> Item长按事件监听</p></li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">但是存在这样一个触摸事件的监听<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">RecyclerView.OnItemTouchListener</code>虽然变得更灵活，但是对应的代码量和书写难度却有了一定的增长，至少对我是这样的。</p>
+<blockquote style="box-sizing:border-box;margin:0px 0px 20px;padding:20px;font-size:16px;border-left:6px solid rgb(180, 180, 180);margin-bottom:25px;background-color:rgb(247, 247, 247);font-weight:400;line-height:30px;word-break:break-word;">
+<p style="box-sizing:border-box;margin:0px 0px 25px;font-size:16px;font-weight:400;line-height:1.7;margin-bottom:0px;word-break:break-word;">至此，所有与本文章相关的代码都可以从<a href="https://link.jianshu.com/?t=https://github.com/SmartDengg/RecyclerViewingg" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Github</a>上获取到，另外这个仓库中还有一份本人精心制作的PPT，可供参考。</p>
+</blockquote>
+<h1 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-size:26px;margin:0px 0px 15px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);text-rendering:optimizeLegibility;">参考资料：</h1>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><a href="https://link.jianshu.com/?t=https://guides.codepath.com/android" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Codepath</a> - Codepath Website</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><a href="https://link.jianshu.com/?t=http://www.grokkingandroid.com/first-glance-androids-recyclerview/" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">A First Glance at Android’s RecyclerView</a> - WolframRittmeyer</p>
+
+        </div>
+        
+
+        <div style="box-sizing:border-box;margin:40px 0px 30px;">
+          <a href="https://www.jianshu.com/nb/575116" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(155, 155, 155);font-size:12px;">
+            <i style="box-sizing:border-box;font-style:normal;-webkit-font-smoothing:antialiased;font-size:15px;margin-right:2px;font-family:iconfont;font-weight:400;"><span style="font-size:15px;font-style:normal;font-family:iconfont;font-weight:400;"></span></i>
+            <span style="box-sizing:border-box;">Android原创集</span>
+</a>          <div style="box-sizing:border-box;float:right;margin-top:5px;font-size:12px;line-height:1.7;color:rgb(155, 155, 155);">
+            © 著作权归作者所有
+          </div>
+          <div style="box-sizing:border-box;float:right;margin-top:5px;margin-right:20px;font-size:12px;line-height:1.7;">
+            <a style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(155, 155, 155);">举报文章</a>
+          </div>
+        </div>
+    </div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

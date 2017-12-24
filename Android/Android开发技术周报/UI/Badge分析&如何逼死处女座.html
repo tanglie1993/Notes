@@ -1,0 +1,192 @@
+<html>
+<head>
+  <title>Badge分析&amp;如何逼死处女座</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="820"/>
+<h1>Badge分析&amp;如何逼死处女座</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>Badge分析&amp;如何逼死处女座</h1><div><div></div></div></div>
+          <div>
+            字数1791
+            阅读4653
+            
+            
+          </div>
+
+          
+          
+          
+
+          <div><h1>Badge分析</h1>
+<p>所谓Badge，原本是iOS上的一个效果，但是被Android抄的多了，也就成了Android的标配。图就不上了，大家都懂的。</p>
+<p>应用icon显示角标实际上是在Launcher中实现的，其实不管是角标还是其他对快捷方式的增删改查，都是需要Launcher支持的，应用在增删改查快捷方式和安装、卸载时，都会发出相应的广播，通过这个广播，Launcher会对快捷方式进行修改。</p>
+<p>很庆幸，Android原生ROM的Launcher并不具有给icon添加角标的功能，因为Android的设计思想是把所有消息中心都放置在Notification通知栏中，只有iOS这种通知栏半残废的，才会使用角标。这玩意儿，让强迫症患者，完全不能自理，每日陷落在清除小红点的生活中。</p>
+<p>很悲剧，Android的AOSP代码被国内各大ROM厂商改的不能自理。很多被修改的ROM都可以支持这种角标的功能，甚至是很多第三方Launcher，也提供了这种功能。其基本原理也是天下一大抄，都是监听发出的广播来进行快捷方式的修改，但是，关键是没有Google亲爹的支持，所有的实现都不统一，大家自己做自己的，没有统一的接口，导致各种碎片化非常严重。</p>
+<p><strong>现在原理很清晰了，关键就是要尽可能多的找到这些ROM、Launcher的修改icon的广播。</strong></p>
+<blockquote><p>在调查该问题时，我找到了<a href="https://github.com/leolin310148/ShortcutBadger" target="_blank">https://github.com/leolin310148/ShortcutBadger</a> 这个库，很多地方参考了这个库，但是该库由于很久没有维护了，所以我提取了里面收集的一些Badge的方法，并做了完善，这里对作者表示感谢。</p></blockquote>
+<h1>各种ROM角标分析</h1>
+<h2>MIUI6&amp;7 Badge</h2>
+<p>以下内容来自MUI开发者平台：</p>
+<blockquote>
+<p>一、基本介绍</p>
+<p>1、默认的情况</p>
+<p>当app 向通知栏发送了一条通知 （通知不带进度条并且用户可以删除的），那么桌面app icon角标就会显示1.此时app显示的角标数是和通知栏里app发送的通知数对应的，即向通知栏发送了多少通知就会显示多少角标。</p>
+<p>2、通知可以定义角标数</p>
+<p>例如 有5封未读邮件，通知栏里只会显示一条通知，但是想让角标显示5. 可以在发通知时加个标示。</p>
+<p>修改MIUI的原理是通过反射拿到<em>Notification</em>的私有属性extraNotification，但是这个extraNotification在MIUI系统中重定义了，这个类就是MIUI系统中的android.app.MiuiNotification这个类，这个类里面有个私有属性messageCount，我们只要改变这个<em>messageCount</em>值就能显示的改变app icon的角标数了。</p>
+<p>二、实现代码</p>
+<p>第三方app需要用反射来调用，参考代码：</p>
+</blockquote>
+<pre><code>/**
+ * 设置MIUI的Badge
+ *
+ * @param context context
+ * @param count   count
+ */
+private static  setBadgeOfMIUI(Context context,  count) {
+    Log.d(&quot;xys&quot;, &quot;Launcher : MIUI&quot;);
+    NotificationManager mNotificationManager = (NotificationManager) context
+            .getSystemService(Context.NOTIFICATION_SERVICE);
+    Notification.Builder builder =  Notification.Builder(context)
+            .setContentTitle(&quot;title&quot;).setContentText(&quot;text&quot;).setSmallIcon(R.mipmap.ic_launcher);
+    Notification notification = builder.build();
+     {
+        Field field = notification.getClass().getDeclaredField(&quot;extraNotification&quot;);
+        Object extraNotification = field.get(notification);
+        Method method = extraNotification.getClass().getDeclaredMethod(&quot;setMessageCount&quot;, .class);
+        method.invoke(extraNotification, count);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    mNotificationManager.notify(, notification);
+}</code></pre>
+<h2>Sony Badge</h2>
+<p><a href="https://forsberg.ax/en/blog/android-notification-badge-app-icon-sony/" target="_blank">https://forsberg.ax/en/blog/android-notification-badge-app-icon-sony/</a></p>
+<h2>Samsung Badge</h2>
+
+<p>通过三星Launcher自己的广播，来给应用添加角标：</p>
+<pre><code>/**
+ * 设置三星的Badge
+ *
+ * @param context context
+ * @param count   count
+ */
+private static  setBadgeOfSumsung(Context context,  count) {
+    // 获取你当前的应用
+    String launcherClassName = getLauncherClassName(context);
+     (launcherClassName == ) {
+        return;
+    }
+    Intent intent =  Intent(&quot;android.intent.action.BADGE_COUNT_UPDATE&quot;);
+    intent.putExtra(&quot;badge_count&quot;, count);
+    intent.putExtra(&quot;badge_count_package_name&quot;, context.getPackageName());
+    intent.putExtra(&quot;badge_count_class_name&quot;, launcherClassName);
+    context.sendBroadcast(intent);
+}</code></pre>
+<p>此方法不需要任何权限，只需要知道App的包名和类名。<strong>因此，你当然可以在程序里面给其它任意一个App设置任意数量的角标，而且没有任何提示，是的，很流氓，谁说不是呢，当然别说是我告诉你的，你就所你是百度的。</strong>例如：</p>
+<pre><code>intent.putExtra(&quot;badge_count_package_name&quot;, &quot;com.tencent.mobileqq&quot;);
+    intent.putExtra(&quot;badge_count_class_name&quot;, &quot;com.tencent.mobileqq.activity.SplashActivity&quot;);</code></pre>
+<p>将包名和类名用QQ的替换下，然后你就可以随心所欲、为所欲为了。</p>
+
+<p><a href="https://github.com/shafty023/SamsungBadger" target="_blank">https://github.com/shafty023/SamsungBadger</a></p>
+<h2>LG Badge</h2>
+<p>Samsung好基友，三星能用的，LG几乎都可以用，连Bug都一样。</p>
+<h2>华为EMUI Badge</h2>
+<p>目前华为的ROM只支持给内置的App添加角标，华为本身没有给出相应的接口。</p>
+<h2>酷派 Badge</h2>
+<p>简单粗暴，不支持。我喜欢，类原生。</p>
+<h2>ZUK ZUI Badge</h2>
+<p>ZUK作为一个非常小众的手机厂商，居然在网上官方给出了详细的开发者文档，就这一点，很多大厂都该好好打打自己的耳光。</p>
+<p>由于实在找不到ZUK的测试机，所以这里给出ZUK的开发者文档，有需要的自己看看吧：</p>
+<p><a href="http://developer.zuk.com/detail/12" target="_blank">http://developer.zuk.com/detail/12</a></p>
+<h2>HTC Badge</h2>
+<p>HTC虽然没落了，但好歹是第一只Android的寄生兽，好歹也支持下。</p>
+<pre><code>Intent intentNotification =  Intent(&quot;com.htc.launcher.action.SET_NOTIFICATION&quot;);
+ComponentName localComponentName =  ComponentName(context.getPackageName(),
+        AppInfoUtil.getLauncherClassName(context));
+intentNotification.putExtra(&quot;com.htc.launcher.extra.COMPONENT&quot;, localComponentName.flattenToShortString());
+intentNotification.putExtra(&quot;com.htc.launcher.extra.COUNT&quot;, count);
+context.sendBroadcast(intentNotification);
+
+Intent intentShortcut =  Intent(&quot;com.htc.launcher.action.UPDATE_SHORTCUT&quot;);
+intentShortcut.putExtra(&quot;packagename&quot;, context.getPackageName());
+intentShortcut.putExtra(&quot;count&quot;, count);
+context.sendBroadcast(intentShortcut);</code></pre>
+<p>其原理同样是使用广播，不解释了。</p>
+
+<p>锤子很遗憾，使用的是原生Launcher进行的修改，只有System App具有获得角标的权限。</p>
+<h2>Nova Badge</h2>
+<p>Nova是一款非常赞的Launcher，作为第三方Launcher，它的使用率非常高（当然是在国外）。该Launcher作为业界良心，提供了content provider供外界调用。与ZUK手机一样，良心大大的好，代码如下：</p>
+<pre><code>ContentValues contentValues =  ContentValues();
+contentValues.put(&quot;tag&quot;, context.getPackageName() +  +
+        AppInfoUtil.getLauncherClassName(context));
+contentValues.put(&quot;count&quot;, count);
+context.getContentResolver().insert(Uri.parse(&quot;content://com.teslacoilsw.notifier/unread_count&quot;),
+        contentValues);</code></pre>
+<h1>一些好玩的</h1>
+<p>在知道了一些ROM的生成角标的原理，我们可以做一些好玩的东西。前面在说LG三星Sony的ROM的时候，已经提到了，广播只需要传人包名和启动Activity名就可以给任意一个icon添加角标，因此。。。直接看代码吧：</p>
+<pre><code>/**
+ * Bug利用测试,请勿滥用
+ *
+ * @param view view
+ */
+public  madMode(View view) {
+    madMode();
+}
+
+/**
+ * 清除Bug角标
+ *
+ * @param view view
+ */
+public  cleanMadMode(View view) {
+    madMode();
+}
+
+/**
+ * 获取所有App的包名和启动类名
+ *
+ * @param count count
+ */
+private  madMode( count) {
+    Intent intent =  Intent(Intent.ACTION_MAIN, );
+    intent.addCategory(Intent.CATEGORY_LAUNCHER);
+    List&lt;ResolveInfo&gt; list = getPackageManager().queryIntentActivities(
+            intent, PackageManager.GET_ACTIVITIES);
+     ( i = ; i &lt; list.size(); i++) {
+        ActivityInfo activityInfo = list.get(i).activityInfo;
+        String activityName = activityInfo.name;
+        String packageName = activityInfo.applicationInfo.packageName;
+        BadgeUtil.setBadgeOfMadMode(getApplicationContext(), count, packageName, activityName);
+    }
+}</code></pre>
+<p>非常简单的代码，就是通过PM找出具有启动Intent的Activity，再取出其包名，通过设置来添加角标。效果如图：</p>
+<div>
+<div><img src="Badge分析&如何逼死处女座_files/1240.png" type="image/png" data-filename="1240.png" height="1024" width="576"/></div><div>device-2015-12-07-141255.png</div>
+</div>
+<div>
+<div><img src="Badge分析&如何逼死处女座_files/1240 [1].png" type="image/png" data-filename="1240.png" height="1024" width="576"/></div><div>device-2015-12-07-141314.png</div>
+</div>
+<div>
+<div><img src="Badge分析&如何逼死处女座_files/1240 [2].png" type="image/png" data-filename="1240.png" height="1024" width="576"/></div><div>device-2015-12-07-141337.png</div>
+</div>
+<p>OK，丧心病狂，逼死强迫症处女座。</p>
+<blockquote>
+<p>请勿滥用，由此引起的一切问题，不要找我</p>
+<p>请不要提桌面背景！！！</p>
+</blockquote>
+<h2>Github</h2>
+<p>忘记发地址了<br/><a href="https://github.com/xuyisheng/ShortcutHelper" target="_blank">https://github.com/xuyisheng/ShortcutHelper</a></p>
+</div>
+        </div></div></div><br/></div></span>
+</div></body></html> 

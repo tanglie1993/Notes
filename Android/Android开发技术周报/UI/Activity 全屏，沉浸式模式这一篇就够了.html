@@ -1,0 +1,95 @@
+<html>
+<head>
+  <title>Activity 全屏，沉浸式模式这一篇就够了</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2433"/>
+<h1>Activity 全屏，沉浸式模式这一篇就够了</h1>
+
+<div>
+<span><div style="position:relative;"><div>
+<div>
+  <div>
+    <div>
+      <div>
+        <div>
+          <div><div><div><div><h1> Activity 全屏，沉浸式模式这一篇就够了 </h1><div></div></div>
+                    <div>
+                        						                        <em>2016-11-02</em>
+
+                                                <em>小钙</em>
+                                                <a href="#" target="_blank">鸿洋</a>
+                        
+
+                        
+                    </div>
+                    
+                    
+                    
+                    
+                                                            
+                                                            
+                    
+                    
+                        
+
+                        
+                        
+                        <p>本文由投稿。</p><p>的博客地址：</p><p>http://blog.csdn.net/zhangqinghuazhangzhe</p><div></div><p>第一次在项目中要用到全屏功能的时候无从下手，然后就是去百度了。百度到的结果都是差不多的。不过直接把代码贴过来的确是可以用的。但是除了知道怎么做之外还想去理解它，因为只有理解了才能举一反三嘛。好在在后来的时候看到了官方的文档，写的非常详细。</p><ul><li><p> <a href="#" target="_blank">我是官方文档</a></p></li></ul><p>（https://developer.android.com/training/system-ui/index.html）</p><p>接下来开始正题</p><p>先给出一些名词方便下面的讲解</p><p>StatusBar:</p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image.png" type="image/png" data-filename=""/></div> <p></p><p>NavigationBar:</p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [1].png" type="image/png" data-filename=""/></div> <p></p><p>SystemBar 为：StatusBar 跟 NavigationBar 的统称</p><p>设置全屏主要分为两种方式：</p><ul><li><p>4.0 之前采用的方式</p></li><li><p>4.0 之后新增的方式</p></li></ul><div>
+			<div><div>4.0 以及之前设置全屏</div></div>   </div><p>因为 4.0 之前的系统已经很少了，所以这里就简单的说一下。 </p><p>有两种方式可以实现全屏：</p><ul><li><p>使用全屏的主题</p></li><li><p>getWindow().addFlag(WindowManager.LayoutParams.FLAG_FULLSCREEN)</p></li></ul><p>这种全屏方式是无法隐藏 NavigationBar 的（如果有 NavigationBar 的话），因为 NavigationBar 是在 4.0 以后才引入的。使用这种方式设置全屏的特点是，离开了 App 后再进入 App 时，依然处于全屏模式，只能清除掉全屏标志位才能退出全屏。</p><div>
+			<div><div>4.1 以及之后设置全屏</div></div>   </div><p>4.1 以及之后使用 View 的 setSystemUiVisibility() 来对 SystemBar 进行控制。 </p><p>任何 View 都可以用来调用这个方法，只要它是可见状态的。</p><p>下面先把要涉及到的 flag 分组列举出来（所有的 flag 都是以 SYSTEM_UI_FLAG 作为前缀，所以下面将其省略）。</p><p><strong>控制 SystemBar 相关：</strong></p><ul><li><p>FULLSCREEN</p></li><li><p>HIDE_NAVIGATION</p></li><li><p>LOW_PROFILE</p></li></ul><p><strong>布局相关：</strong></p><ul><li><p>LAYOUT_SCREEN</p></li><li><p>LAYOUT_HIDE_NAVIGATION</p></li><li><p>LAYOUT_STABLE</p></li></ul><p><strong>沉浸式相关 (4.4 引入)：</strong></p><ul><li><p>IMMERSIVE</p></li><li><p>IMMERSIVE_STICKY</p></li></ul><p>超前提示：</p><div><p>在离开 App 时，比如按了 home / 多任务键 会导致设置的控制 SystemBar 相关的 flag 被清除，而其他设置的 flag 不会受到影响。</p></div><div>
+			<div><div><div><strong>3.1 FULLSCREEN</strong></div></div></div></div><p>虽然写的是 Fullscreen ，但其实只是隐藏 StatusBar。</p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [2].png" type="image/png" data-filename=""/></div><p></p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [3].png" type="image/png" data-filename=""/></div><p></p><p>看图可以得出以下几点：</p><ol><li><p>点击屏幕 StatusBar 不会显示出来</p></li><li><p>从屏幕上边缘往下滑可以让 StatusBar 重新显示</p></li><li><p>点击 home / 多任务键再返回 App 时 StatusBar 重新显示了出来，印证了超前提示里所说的。而且 StatusBar 在显示出来以后不会自动隐藏，这一点跟在 4.1 之前设置的全屏方式不一样，因为设置的 FULLSCREEN flag 已经被清除了，如果想重新隐藏，需要重新设置该 flag。</p></li><li><p>StatusBar 的显示 / 隐藏会使 ImageView 大小发生了变化</p></li></ol><p>为了防止布局大小不会因为 StatusBar 的显示 / 隐藏发生变化，有两种 flag 可供选择：</p><p>1. LAYOUT_STABLE</p><pre><code>mDecorView.setSystemUiVisibility(
+        View.SYSTEM_UI_FLAG_FULLSCREEN 
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);</code></pre><p>这里有一点需要注意：设置多个标志位时要用 | 连接起来，不能多次调用 setSystemUiVisibility。如：</p><pre><code>mDecorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+mDecorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);</code></pre><p>这样的结果就是只有最后一次设置的 flag 生效，而之前设置的标志位会被清除。也就是说上面的代码中只设置了 LAYOUT_STABLE 而 FULLSCREEN 被清除了。所以如果想清除之前设置的所有 flag ，mDecorView.setSystemUiVisibility(0) 就可以了</p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [4].png" type="image/png" data-filename=""/></div><p></p><p>这次布局并没有延伸到 StatusBar 底下，所以大小也就不会受到它的影响</p><p>2.LAYOUT_FULLSCREEN</p><pre><code>mDecorView.setSystemUiVisibility(
+        View.SYSTEM_UI_FLAG_FULLSCREEN 
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);</code></pre><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [5].png" type="image/png" data-filename=""/></div><p></p><div>
+			<div><div><div><strong>3.2 HIDE_NAVIGATION</strong></div></div></div></div><pre><code>protected void onCreate(Bundle savedInstanceState) {
+    mDecorView.setSystemUiVisibility(
+        View.SYSTEM_UI_FLAG_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+}</code></pre><p>Google 建议隐藏 NavigationBar 的同时将 StatusBar 一起隐藏。</p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [6].png" type="image/png" data-filename=""/></div><p></p><p>与隐藏 StatusBar 时不同的是，隐藏了 NavigationBar 以后，点击屏幕的任何位置都会导致设置的所有控制 SystemBar 相关的 flag 被清除，所以 SystemBar 重新显示了出来。</p><p>这里还需要注意的在这种模式下点击屏幕点击事件会被屏蔽，要等到 SystemBar 显示出来以后再次点击，事件才会传递到我们的布局中。</p><p>与 LAYOUT_FULLSCREEN 类似的是， LAYOUT_HIDE_NAVIGATION 可以让布局内容延伸到 NavigationBar 的底部。</p><div><p>因为离开 App 后控制 SystemBar 相关的 flag 会被清除，所以可以按需在 onResume() 或者 <div></div>onWindowFocusChanged() 中重新设置它们。</p></div><div>
+			<div><div><div><strong>3.3 LOW_PROFILE</strong></div></div></div></div><pre><code>protected void onCreate(Bundle savedInstance) {
+    mDecorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LOW_PROFILE);
+}</code></pre><p>这种模式好像用的不多，作用是减少 StatusBar 中的图标并使其变暗，将 NavigationBar 中的按钮减弱成 3 个点。 <div></div>直接上图来说明该 flag 的效果吧：</p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [7].png" type="image/png" data-filename=""/></div><p></p><div>
+			<div><div><div><strong>3.4 IMMERSIVE </strong></div></div></div></div><p>需要配合 View.SYSTEM_UI_FLAG_FULLSCREEN 和 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION 一起设置</p><pre><code>mDecorView.setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION 
+            | View.SYSTEM_UI_FLAG_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_IMMERSIVE);</code></pre><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [8].png" type="image/png" data-filename=""/></div><p></p><p>可以看到设置了该 flag 以后，点击屏幕不会让 SystemBar 显示出来。而在呼出 SystemBar 后，控制 SystemBar 相关的 flag 依然会被清除。</p><div>
+			<div><div><div><strong>3.5 IMMERSIVE_STICY</strong></div></div></div></div><p>跟 IMMERSIVE 不同的是，在该模式下呼出的 SystemBar 会在短暂的显示后自动重新隐藏。在 SystemBar 显示出来的时候点击屏幕中心会立刻让 SystemBar 重新隐藏。所以在模式下不会清除控制 SystemBar 相关的 flag。但是离开 App 时还是会被清除。</p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [9].png" type="image/png" data-filename=""/></div><p></p><p>所以在回到 App 的时候要重新激活它：</p><pre><code>@Override
+public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+    if (hasFocus) {
+        decorView.setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);}
+}</code></pre><div>
+			<div><div>监听 SystemBar 的变化</div></div>   </div><p>通常情况下我们需要能够控制 SystemBar 的显示与隐藏，所以就需要监听 SystemBar 的状态。</p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [10].png" type="image/png" data-filename=""/></div><p></p><ul><li><p>FULLSCREEN（4）</p></li><li><p>HIDE_NAVIGATION（2）</p></li><li><p>LOW_PROFILE（1）</p></li></ul><p>括号中的数字是它们的值，现在让我们回到代码中。</p><p>onSystemUiVisibilityChange(int visibility) 中的 visibility 表示的是 LOW_PROFILE、FULLSCREEN 跟 HIDE_NAVIGATION 这三个值的和。</p><p>因为只有这 3 个值是跟控制 SystemBar 相关的。</p><p>也就是说从 visibility 的值就可以只知道我们设置了哪些 flag。</p><p>比如如果 visibility 为 4，说明设置了 FULLSCREEN；</p><p>如果 visibility 为 7 则说明 3 种 flag 都设置了。</p><p>所以当 visibility 为 0 时表示没有设置任何控制 SystemBar 的 flag，也就说明了 SystemBar 处于显示状态。</p><p>为什么 visibility 的值会是它们三个的和呢？因为我们在设置 flag 的时候是用 | 将多个 flag 连接在一起的， | 就相当于把它们的值加起来。</p><p>当 SystemBar 显示或者隐藏的时候，该监听器就会被触发。但是如果使用的是 IMMERSIVE_STICKY ，在 SystemBar 被呼出的时候不会触发该监听器。</p><p>下面给出一个 Demo ，功能是点击图片时进入/退出全屏</p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [11].png" type="image/png" data-filename=""/></div><p></p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [12].png" type="image/png" data-filename=""/></div><p></p><p>这里有一个问题，如果点击稍微快一点的话就会出现只隐藏 StatusBar 而没有隐藏 NavigationBar 的情况。如果有哪个小伙伴知道的话请告知一下。</p><p>希望这篇文章能给大家带来一点点帮助。</p><div></div><p>如果你有好的文章想和大家分享，欢迎投稿，直接向我投递<strong>文章链接</strong>即可。</p><p>欢迎<strong>长按下图</strong>-&gt;<strong>识别图中二维码</strong>或者<strong>扫一扫</strong>关注我的公众号：</p><p></p><div><img src="Activity 全屏，沉浸式模式这一篇就够了_files/Image [13].png" type="image/png" data-filename=""/></div><p></p>
+                    </div></div></div>
+          <ol></ol>
+        </div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+
+
+</div></div></div></span>
+</div></body></html> 

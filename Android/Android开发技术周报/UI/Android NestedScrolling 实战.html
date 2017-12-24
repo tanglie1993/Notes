@@ -1,0 +1,284 @@
+<html>
+<head>
+  <title>Android NestedScrolling 实战</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3890"/>
+<h1>Android NestedScrolling 实战</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="font-family:sans-serif;text-size-adjust:100%;font-size:62.5%;-webkit-tap-highlight-color:rgba(0, 0, 0, 0);"><div style="font-family:Merriweather, serif;letter-spacing:0.01rem;font-size:1.8rem;line-height:1.75em;color:rgb(58, 65, 69);font-feature-settings:'kern' 1;text-rendering:geometricPrecision;"><div style="background:rgb(255, 255, 255);transition:transform 0.5s ease;"><span style="overflow:hidden;"><div style="word-wrap:break-word;">
+
+        <div style="display:block;margin-bottom:3.4rem;">
+            <h1 style="font-size:5rem;margin:0px 0px 0.4em;font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;letter-spacing:-2px;text-indent:-3px;margin-bottom:0px;">Android NestedScrolling 实战</h1>
+            <div style="display:block;font-family:&quot;Open Sans&quot;, sans-serif;font-size:1.5rem;line-height:2.2rem;color:rgb(158, 171, 179);margin:0px;">
+                <span style="display:inline-block;border-left:1px solid rgb(213, 219, 222);text-transform:uppercase;font-size:1.3rem;white-space:nowrap;padding:0px;margin:0px;border:none;">21 August 2015</span>  on <a href="https://www.race604.com/tag/android/" style="background:transparent;transition:color 0.3s ease;color:rgb(158, 171, 179);text-decoration:none;">Android</a>
+            </div>
+        </div>
+
+        <div style="display:block;">
+            <p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">从 Android 5.0 Lollipop 开始提供一套 API 来支持嵌入的滑动效果。同样在最新的 Support V4 包中也提供了前向的兼容。有了嵌入滑动机制，就能实现很多很复杂的滑动效果。在 <strong style="font-weight:700;">Android Design Support</strong> 库中非常重要的 <a href="https://developer.android.com/reference/android/support/design/widget/CoordinatorLayout.html" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;"><code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">CoordinatorLayout</code></a> 组件就是使用了这套机制，实现了 Toolbar 的收起和展开功能，如下图所示：
+<img src="Android NestedScrolling 实战_files/collapsing-toolbar.gif" type="image/gif" data-filename="collapsing-toolbar.gif" alt="Collapsing toolbar" height="360" style="border:0px;display:block;max-width:126%;height:auto;padding:0.6em 0px;position:relative;left:50%;transform:translateX(-50%);" width="206"/></p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;"><strong style="font-weight:700;">NestedScrolling</strong> 提供了一套父 View 和子 View 滑动交互机制。要完成这样的交互，父 View 需要实现 <a href="https://developer.android.com/reference/android/support/v4/view/NestedScrollingParent.html" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;"><code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingParent</code></a> 接口，而子 View 需要实现 <a href="https://developer.android.com/reference/android/support/v4/view/NestedScrollingChild.html" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;"><code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingChild</code></a> 接口。</p>
+
+<h2 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;margin:0px 0px 0.4em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;font-size:3.6rem;letter-spacing:-1px;">实现 NestedScrollingChild</h2>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">首先来说 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingChild</code>。如果你有一个可以滑动的 View，需要被用来作为嵌入滑动的子 View，就必须实现本接口。在此 View 中，包含一个 <a href="https://developer.android.com/reference/android/support/v4/view/NestedScrollingChildHelper.html" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;"><code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingChildHelper</code></a> 辅助类。<code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingChild</code> 接口的实现，基本上就是调用本 Helper 类的对应的函数即可，因为 Helper 类中已经实现好了 Child 和 Parent 交互的逻辑。原来的 View 的处理 Touch 事件，并实现滑动的逻辑大体上不需要改变。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">需要做的就是，如果要准备开始滑动了，需要告诉 Parent，你要准备进入滑动状态了，调用 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">startNestedScroll()</code>。你在滑动之前，先问一下你的 Parent 是否需要滑动，也就是调用 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">dispatchNestedPreScroll()</code>。如果父类滑动了一定距离，你需要重新计算一下父类滑动后剩下给你的滑动距离余量。然后，你自己进行余下的滑动。最后，如果滑动距离还有剩余，你就再问一下，Parent 是否需要在继续滑动你剩下的距离，也就是调用 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">dispatchNestedScroll()</code>。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">以上是一些基本原理，有了上面的基本思路，可以参考这篇<a href="http://segmentfault.com/a/1190000002873657" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">文章</a>，这里面有原理的详细解析。如果还是不清楚，<a href="https://gist.github.com/geminiwen/9fda4ff6b84ffd3691e7#" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">这里</a>有对应的代码可以参考。</p>
+
+<h2 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;margin:0px 0px 0.4em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;font-size:3.6rem;letter-spacing:-1px;">实现 NestedScrollingParent</h2>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">作为一个可以嵌入 NestedScrollingChild 的父 View，需要实现 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingParent</code>，这个接口方法和 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingChild</code> 大致有一一对应的关系。同样，也有一个 <a href="https://developer.android.com/reference/android/support/v4/view/NestedScrollingParentHelper.html" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;"><code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingParentHelper</code></a> 辅助类来默默的帮助你实现和 Child 交互的逻辑。滑动动作是 Child 主动发起，Parent 就收滑动回调并作出响应。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">从上面的 Child 分析可知，滑动开始的调用 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">startNestedScroll()</code>，Parent 收到 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">onStartNestedScroll()</code> 回调，决定是否需要配合 Child 一起进行处理滑动，如果需要配合，还会回调 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">onNestedScrollAccepted()</code>。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">每次滑动前，Child 先询问 Parent 是否需要滑动，即 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">dispatchNestedPreScroll()</code>，这就回调到 Parent 的 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">onNestedPreScroll()</code>，Parent 可以在这个回调中“劫持”掉 Child 的滑动，也就是先于 Child 滑动。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">Child 滑动以后，会调用 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">onNestedScroll()</code>，回调到 Parent 的 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">onNestedScroll()</code>，这里就是 Child 滑动后，剩下的给 Parent 处理，也就是 后于 Child 滑动。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">最后，滑动结束，调用 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">onStopNestedScroll()</code> 表示本次处理结束。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">其实，除了上面的 Scroll 相关的调用和回调，还有 Fling 相关的调用和回调，处理逻辑基本一致。</p>
+
+<h2 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;margin:0px 0px 0.4em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;font-size:3.6rem;letter-spacing:-1px;">实战</h2>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">有了这一套官方的嵌套滑动的解决方案，打算把我的 <a href="https://github.com/race604/FlyRefresh" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">FlyRefresh</a> 的滑动和下来部分用 NestedScrolling 来实现。我在<a href="http://www.race604.com/flyrefresh/" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">这篇</a>博客中讲了，之前是通过在 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">PullHeaderLayout</code> 的 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">dispatchTouchEvent()</code> 中小心处理 Touch 事件来实现的。现在回想起来，这种方法相对复杂，需要清楚知道 Parent 和 Child 的滑动状态，这就导致了，只能支持有限的 Child 类型，例如当时只支持 ListView 和 RecyclerView，为了支持更多的类型，还定义了一个 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">IScrollHandler</code> 接口来支持。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">让 FlyRefresh 实现 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingParent</code>，就可以支持所有的 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingChild</code> 作为 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">FlyRefreshLayout</code> 的子 View。另外，因为 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">CoordinatorLayout</code> 是如此的重要，大部分的 App 都需要使用它作为顶层的 Layout，为了让 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">FlyRefreshLayout</code> 能够在 CoordinatorLayout 也能使用，所以我还打算同时实现 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">NestedScrollingChild</code> 接口。关键实现代码如下：</p>
+
+<pre style="width:100%;font-family:Inconsolata, monospace, sans-serif;white-space:pre;box-sizing:border-box;margin:0px 0px 1.75em;border:1px solid rgb(227, 237, 243);font-size:0.9em;padding:10px;overflow:auto;background:rgb(247, 250, 251);border-radius:3px;word-wrap:normal;hyphens:none;"><code style="font-family:Inconsolata, monospace, sans-serif;border-radius:2px;font-size:inherit;padding:0px;white-space:pre;border:none;background:transparent;">public class PullHeaderLayout extends ViewGroup implements NestedScrollingParent, NestedScrollingChild {
+
+    private final int[] mScrollOffset = new int[2];
+    private final int[] mScrollConsumed = new int[2];
+    private final NestedScrollingParentHelper mParentHelper;
+    private final NestedScrollingChildHelper mChildHelper;
+    ...
+
+    // NestedScrollingChild
+
+    @Override
+    public void setNestedScrollingEnabled(boolean enabled) {
+        mChildHelper.setNestedScrollingEnabled(enabled);
+    }
+
+    @Override
+    public boolean isNestedScrollingEnabled() {
+        return mChildHelper.isNestedScrollingEnabled();
+    }
+
+    @Override
+    public boolean startNestedScroll(int axes) {
+        return mChildHelper.startNestedScroll(axes);
+    }
+
+    @Override
+    public void stopNestedScroll() {
+        mChildHelper.stopNestedScroll();
+    }
+
+    @Override
+    public boolean hasNestedScrollingParent() {
+        return mChildHelper.hasNestedScrollingParent();
+    }
+
+    @Override
+    public boolean dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
+                                        int dyUnconsumed, int[] offsetInWindow) {
+        return mChildHelper.dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
+                offsetInWindow);
+    }
+
+    @Override
+    public boolean dispatchNestedPreScroll(int dx, int dy, int[] consumed, int[] offsetInWindow) {
+        return mChildHelper.dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow);
+    }
+
+    @Override
+    public boolean dispatchNestedFling(float velocityX, float velocityY, boolean consumed) {
+        return mChildHelper.dispatchNestedFling(velocityX, velocityY, consumed);
+    }
+
+    @Override
+    public boolean dispatchNestedPreFling(float velocityX, float velocityY) {
+        return mChildHelper.dispatchNestedPreFling(velocityX, velocityY);
+    }
+
+    // NestedScrollingParent
+    @Override
+    public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
+        return (nestedScrollAxes &amp; ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
+    }
+
+    @Override
+    public void onNestedScrollAccepted(View child, View target, int nestedScrollAxes) {
+        mParentHelper.onNestedScrollAccepted(child, target, nestedScrollAxes);
+        startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL);
+    }
+
+    @Override
+    public void onStopNestedScroll(View target) {
+        stopNestedScroll();
+    }
+
+    @Override
+    public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed,
+                               int dyUnconsumed) {
+        final int myConsumed = moveBy(dyUnconsumed);
+        final int myUnconsumed = dyUnconsumed - myConsumed;
+        dispatchNestedScroll(0, myConsumed, 0, myUnconsumed, null);
+    }
+
+    @Override
+    public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
+        if (dy &gt; 0 &amp;&amp; mHeaderController.canScrollUp()) {
+            final int delta = moveBy(dy);
+            consumed[0] = 0;
+            consumed[1] = delta;
+            //dispatchNestedScroll(0, myConsumed, 0, consumed[1], null);
+        }
+    }
+
+    @Override
+    public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
+        if (!consumed) {
+            flingWithNestedDispatch((int) velocityY);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean flingWithNestedDispatch(int velocityY) {
+        final boolean canFling = (mHeaderController.canScrollUp() &amp;&amp; velocityY &gt; 0) ||
+                (mHeaderController.canScrollDown() &amp;&amp; velocityY &lt; 0);
+        if (!dispatchNestedPreFling(0, velocityY)) {
+            dispatchNestedFling(0, velocityY, canFling);
+            if (canFling) {
+                fling(velocityY);
+            }
+        }
+        return canFling;
+    }
+
+    @Override
+    public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
+        return flingWithNestedDispatch((int) velocityY);
+    }
+
+    @Override
+    public int getNestedScrollAxes() {
+        return mParentHelper.getNestedScrollAxes();
+    }
+
+    // Touch event hanlder
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        MotionEvent vtev = MotionEvent.obtain(ev);
+        final int actionMasked = MotionEventCompat.getActionMasked(ev);
+        if (actionMasked == MotionEvent.ACTION_DOWN) {
+            mNestedYOffset = 0;
+        }
+        vtev.offsetLocation(0, mNestedYOffset);
+
+        switch (actionMasked) {
+            ...
+            case MotionEvent.ACTION_MOVE:
+                ...
+                final int y = (int) MotionEventCompat.getY(ev, activePointerIndex);
+                int deltaY = mLastMotionY - y;
+                if (dispatchNestedPreScroll(0, deltaY, mScrollConsumed, mScrollOffset)) {
+                    deltaY -= mScrollConsumed[1];
+                    vtev.offsetLocation(0, mScrollOffset[1]);
+                    mNestedYOffset += mScrollOffset[1];
+                }
+                if (!mIsBeingDragged &amp;&amp; Math.abs(deltaY) &gt; mTouchSlop) {
+                    final ViewParent parent = getParent();
+                    if (parent != null) {
+                        parent.requestDisallowInterceptTouchEvent(true);
+                    }
+                    mIsBeingDragged = true;
+                    if (deltaY &gt; 0) {
+                        deltaY -= mTouchSlop;
+                    } else {
+                        deltaY += mTouchSlop;
+                    }
+                }
+                if (mIsBeingDragged) {
+                    // Scroll to follow the motion event
+                    mLastMotionY = y - mScrollOffset[1];
+
+                    final int scrolledDeltaY = moveBy(deltaY);
+                    final int unconsumedY = deltaY - scrolledDeltaY;
+                    if (dispatchNestedScroll(0, scrolledDeltaY, 0, unconsumedY, mScrollOffset)) {
+                        mLastMotionY -= mScrollOffset[1];
+                        vtev.offsetLocation(0, mScrollOffset[1]);
+                        mNestedYOffset += mScrollOffset[1];
+                    }
+                }
+                break;
+            ...
+        }
+        ...
+        return true;
+    }
+
+    ...
+}
+</code></pre>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">完整的修改，可以看这个 <a href="https://github.com/race604/FlyRefresh/commit/4efa6a0f6cdd563fe36092218a9db7037f3dacee" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">commit</a>。整个修改下来，代码减少了不少，而且更加整洁了。</p>
+
+<h2 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;margin:0px 0px 0.4em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;font-size:3.6rem;letter-spacing:-1px;">总结</h2>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">总体来说，<strong style="font-weight:700;">NestedScroll</strong> 初看起来有些让人费解，但是真的理解以后，就发现这种设计的优秀之处。把滑动整体封装起来，通过 Helper 来实现 Child 和 Parent 之间的连接和交互。通过接口来回调，实现了 Child 和 Parent 的逻辑独立。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">Android 5.0的大部分可以滑动的控件都支持了 NestScrolling 接口，最新的 Support V4 中也一样，相信以后越来越多的第三方库都会支持，到时候各种控件的嵌套滑动就能无缝集成了。</p>
+<div></div>
+
+
+        </div>
+
+        <div style="display:block;position:relative;margin:6rem 0px 0px;padding:6rem 0px 0px;border-top:1px solid rgb(235, 242, 246);">
+
+
+
+            <div style="display:block;margin-right:180px;">
+                <h4 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;margin:0px;font-size:1.8rem;"><a href="https://www.race604.com/author/race604/" style="background:transparent;transition:color 0.3s ease;color:rgb(46, 46, 46);text-decoration:none;">Race604</a></h4>
+
+                    <p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;text-rendering:geometricPrecision;margin:1rem 0px;font-size:1.4rem;line-height:1.75em;">Android developer, Blogger. @Android笔记</p>
+                <div style="padding:0px;margin:1.6rem 0px;list-style:none;font-size:1.4rem;line-height:1;font-style:italic;color:rgb(158, 171, 179);">
+                    
+                    <span style="display:inline-block;margin:0px 2rem 1rem 0px;word-wrap:break-word;"><span style="font-family:casper-icons, &quot;Open Sans&quot;, sans-serif;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none !important;"></span><a href="http://www.weibo.com/devandroid" style="background:transparent;transition:color 0.3s ease;color:rgb(158, 171, 179);text-decoration:none;">http://www.weibo.com/devandroid</a></span>
+                </div>
+            </div>
+
+
+            <div style="display:block;position:absolute;top:6rem;right:0px;width:140px;">
+                <h4 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;margin:0px;font-size:1.8rem;">Share this post</h4>
+		<a href="https://twitter.com/intent/tweet?text=Android%20NestedScrolling%20%E5%AE%9E%E6%88%98&amp;url=http://www.race604.com/android-nested-scrolling/" style="background:transparent;transition:color 0.3s ease;color:rgb(187, 199, 204);font-size:1.8rem;display:inline-block;margin:1rem 1.6rem 1.6rem 0px;text-decoration:none;"><span style="color:rgb(187, 199, 204);font-size:1.1em;font-family:casper-icons, &quot;Open Sans&quot;, sans-serif;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none !important;"></span>
+                    
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=http://www.race604.com/android-nested-scrolling/" style="background:transparent;transition:color 0.3s ease;color:rgb(187, 199, 204);font-size:1.8rem;display:inline-block;margin:1rem 1.6rem 1.6rem 0px;text-decoration:none;"><span style="color:rgb(187, 199, 204);font-size:1.8rem;font-family:casper-icons, &quot;Open Sans&quot;, sans-serif;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none !important;"></span>
+                    
+                </a>
+                <a href="https://plus.google.com/share?url=http://www.race604.com/android-nested-scrolling/" style="background:transparent;transition:color 0.3s ease;color:rgb(187, 199, 204);font-size:1.8rem;display:inline-block;margin:1rem 1.6rem 1.6rem 0px;text-decoration:none;"><span style="color:rgb(187, 199, 204);font-size:1.8rem;font-family:casper-icons, &quot;Open Sans&quot;, sans-serif;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none !important;"></span>
+                    
+                </a>
+            </div>
+
+        </div>
+
+    <span style="display:none;width:7px;height:7px;border:1px solid rgb(231, 238, 242);position:absolute;bottom:-5px;left:50%;margin-left:-5px;background:rgb(255, 255, 255);border-radius:100%;box-shadow:rgb(255, 255, 255) 0px 0px 0px 5px;"></span></div></span></div></div></div></div><br/></div></span>
+</div></body></html> 

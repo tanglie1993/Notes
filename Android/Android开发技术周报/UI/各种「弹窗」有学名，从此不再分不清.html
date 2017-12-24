@@ -1,0 +1,98 @@
+<html>
+<head>
+  <title>各种「弹窗」有学名，从此不再分不清</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="795"/>
+<h1>各种「弹窗」有学名，从此不再分不清</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>各种「弹窗」有学名，从此不再分不清</h1><div><div></div></div></div>
+
+
+      
+
+
+
+  <p>自己一直没分清 popup 和 popover 的区别，老混着用，今天上网一搜发现刚好 Quora 上有人问<a href="https://www.quora.com/Whats-the-difference-between-a-modal-a-popover-and-a-popup" target="_blank">What's the difference between a modal, a popover and a popup?</a>, 然后下面 Airbnb 的设计工程师<a href="https://twitter.com/hshoff" target="_blank">Harrison Shoff</a>给出了<a href="https://www.quora.com/Whats-the-difference-between-a-modal-a-popover-and-a-popup/answer/Harrison-Shoff" target="_blank">一个萌萌的回答</a>，不只区分了 popup 和 popover，而是对几乎所有不同类型的弹窗进行了对比。很赞，关键竟然没用截图就能把事说清楚，忍不住连夜翻译下分享给大家：</p>
+
+<p>以下为原回答和我的烂翻译-----------------------------</p>
+
+<blockquote>
+<p>All of these UI components are containers/windows that show on top of the content you are currently viewing/interacting with. (same with an alert, dialog, flash notice, notification, lightbox, theatre view, etc.)</p>
+</blockquote>
+
+<p>下面所有这些 UI 组件都是会显示在你正在看或交互的内容上方的那一类。</p>
+
+<blockquote>
+<p>They get different names based on the attention they deserve, the context you're in, and how you can interact with it.</p>
+</blockquote>
+
+<p>它们以获取注意力的不同程度，场景，和交互方式来区分，有了不同的称谓。</p>
+
+<blockquote>
+<p>Some rough definitions/opinions:</p>
+</blockquote>
+
+<p>一些简单粗暴的区分方法：</p>
+
+<blockquote>
+<p>Alert - &quot;Hey that thing you're trying to do, you can't do that until you do this.&quot; It's the &quot;woah easier there tiger, let's pump the brakes&quot; of UI design. If you're showing a lot of these it's usually a failure of design because your user's expectations don't match the UI expectations. The buttons on this window are usually &quot;Ok&quot; or &quot;Cancel&quot;. The container/window is usually locked. Locked means you can't dismiss the container/window by clicking anywhere outside of it. You need to explicitly acknowledge what's inside of the container and to do this you have click the button inside of the container before you can continue on your way.</p>
+</blockquote>
+
+<p>Alert - &quot;Hey, 你必须把这件事先做了才能干你要干的那个事。&quot;这是 UI 设计中的「前方有虎，请踩刹车」。如果设计里有很多 Alert，说明是个失败的设计，因为用户的预期和 UI 流程的引导不符。Alert 窗口里的按钮一般是「OK」或「取消」。Alert 弹窗一般是锁住的，意味着你不能通过在这个弹窗之外的任何操作来关掉它。你需要准确理解 Alert 弹窗里的内容并按它提示的操作，才能继续往下。</p>
+
+<blockquote>
+<p>Modal/Dialog - These guys are for getting work done. Let's say you have a button with a call to action that says &quot;Invite Friends&quot; and when you click it, a container/window shows up with a list of all of your friends that you can then debate how much you really like them and select those deserving your attention. It lets you do more work without have show all the work upfront. This kind of thing isn't locked. You can click anywhere to dismiss the container/window and go about your merry way.</p>
+</blockquote>
+
+<p>Modal/Dialog - 这些家伙是用来搞定任务的。比如说你当你点击一个「邀请好友」的按钮，就有一个弹窗出现列出你所有的好友，然后你可以考虑你更喜欢谁、谁更值得你的注意。这样的弹窗帮你搞定更多事情，而无需占满整个空间。并且它不是「锁住的」，你可以点击弹窗外的任一区域将它关闭然后继续你之前在做的事。</p>
+
+<blockquote>
+<p>Popup - These are the assholes of UI Design in this category. They say &quot;Hey, I'm here now. You don't have to deal with me right now, keep doing what you're doing, but I'm not going away until you say you don't want me around anymore.&quot; Basically an action you take as a user means something new is shown and you've got to deal with it at some point. They are especially painful if they play noise.</p>
+</blockquote>
+
+<p>Popup - 这类别里有一些 UI 设计中的「混蛋」。他们说 &quot;我在这了哦，不过你现在不用管我，你可以继续做你的事情，但除非你说不想再看到我，我绝不消失。&quot; 基本上是用来提醒有新的事情发生，你需要去处理一下的。当他们频繁出现、干扰的时候会比较烦人。</p>
+
+<blockquote>
+<p>Flash Notice/Growl Notification - These things have time associated with them. They say &quot;Heads up this thing just happened, do you want to deal with it right now?&quot; and then you if don't do anything with them after a certain time they dismiss themselves.</p>
+</blockquote>
+
+<p>Flash Notice/Growl Notification - 这类元素有时间限制。他们会说 &quot;这事刚刚发生，你要去看看处理下么？&quot; 如果你在一定时间内什么都不做，他们会自己消失。</p>
+
+<blockquote>
+<p>Lightbox/Theatres - These guys want your attention. You click on a thumbnail and one of these guys shows up, fades out or puts some kind of overlay on the background and shows the big photo. Usually they let you navigate through similar content (the next photo in the gallery) without dismissing and clicking on another thumbnail. They kind of say &quot;Here's that thing you wanted to know more about...but now that you're here. Let's check this stuff out for a while&quot;. These can be locked or not. Depends on if you want people to return the context they were in or to continue on a new context thread.</p>
+</blockquote>
+
+<p>Lightbox/Theatres - 这些家伙想尽可能地吸引你的注意力。你点击一个缩略图，它们就会出现，让背景内容都半透明或者给它们盖上一层半透明的颜色遮盖，然后将大图显示在前。往往它们会允许你在同类内容间切换（比如相册里的下一张照片）而无需退出并点击另一个缩略图。他们大概是在说 &quot;这里是你想进一步了解的东西……但是既然你已经在这了，就让我们花心思仔细瞧一瞧吧。&quot; Lightbox/Theatres 是否会被「锁住」，取决于你是希望用户回到他之前所在的场景还是开始进入一个新的场景。</p>
+
+<blockquote>
+<p>Popover/Tooltip/Hovercard - These are passive approaches to showing more information. Maybe you're not super sure what the intention of the user is when they hover over the blue link of new subject like &quot;Waffle Cones&quot;. You could show a little tooltip saying &quot;these are hand made, click here for more info&quot;. Basically the toolip container/window foreshadows what happens if you do click the link &quot;Hey we're gonna go down the magically path of waffle cones. If that's what you're into, click the link and buckle up.&quot;</p>
+</blockquote>
+
+<p>Popover/Tooltip/Hovercard - 通过较被动的处理来展示更多信息。也许你不是很确定当用户把鼠标移到 &quot;蛋卷&quot; 的蓝色链接上时，他心理的意图到底是啥，你可以显示显示一个小的 tooltip 告诉他 &quot;全部纯手工制作哦，点击查看更多信息吧&quot;。基本上 tooltip 一般用于提前告诉你如果你点了以后会发生什么：&quot;Hey 我们将要穿过魔幻的蛋卷通道，如果你想试试，点击链接、系好安全带吧！&quot;</p>
+
+<blockquote>
+<p>Figure out what a user's expectations/intentions are and try to help them out.</p>
+</blockquote>
+
+<p>明确用户的目的和计划，然后帮他们实现。</p>
+
+<blockquote>
+<p>And don't be annoying.</p>
+</blockquote>
+
+<p>尽量不要干扰。</p>
+
+<p>完，原文链接在此: https://www.quora.com/Whats-the-difference-between-a-modal-a-popover-and-a-popup/answer/Harrison-Shoff</p>
+
+<p>不过总的来说，有个解释固然好，但也不必教条，主要还是要确定在讨论时大家说的是同一个东西。因为实际上据我进一步调查，即便在英文世界也有各种混用、借用这些单词，例如 Bootstrap 里的所谓 Alert 和前文中讲的那种就根本不是一回事。总之，如同<a href="https://twitter.com/hshoff" target="_blank">Harrison Shoff</a>最后强调的，关键还是做好设计。</p></div></div></div><br/></div></span>
+</div></body></html> 

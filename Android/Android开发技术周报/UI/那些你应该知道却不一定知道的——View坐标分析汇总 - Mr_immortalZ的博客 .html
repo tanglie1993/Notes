@@ -1,0 +1,480 @@
+<html>
+<head>
+  <title>那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 - 博客频道 - CSDN.NET</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1786"/>
+<h1>那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 - 博客频道 - CSDN.NET</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1> 那些你应该知道却不一定知道的——View坐标分析汇总 </h1><div><div></div></div></div>
+
+   
+
+        
+    
+    
+    
+      <div>
+        
+        <div>
+                    <span>
+                        
+                      
+                      
+                        
+                    </span>                    
+        </div>
+    </div>
+      
+        <div>         
+            <p>版权声明：本文为博主原创文章，未经博主允许不得转载。http://blog.csdn.net/mr_immortalZ</p>
+        </div>
+
+  
+
+  
+  
+     
+
+
+        <p>前方高能~ <br/>
+本文版权所有，转载请注明：<a href="http://blog.csdn.net/mr_immortalz/article/details/51168278" target="_blank">http://blog.csdn.net/mr_immortalz/article/details/51168278</a></p>
+
+
+
+
+
+<blockquote>
+  <p>网上关于<a href="http://lib.csdn.net/base/15" target="_blank" title="Android知识库">Android</a> 的view坐标挺多的，写这篇的目的是因为网上搜到的文章大多较简单，几乎都是简单的介绍下获取的几个方法坐标的几个方法罢了，但在实战中，你会发现可能你学会的那几个获取坐标的方法并没有正确的使用，导致当你要计算坐标的时候可能会试过几遍才找到正确的办法（其实这也正是我容易混淆的地方，所以特地写篇博客记录下）</p>
+</blockquote>
+
+<p>关于那几个获取坐标的方法我就懒得说了 <br/>
+（这篇博客有记载，大家可以去看看<a href="http://blog.csdn.net/jason0539/article/details/42743531" target="_blank">http://blog.csdn.net/jason0539/article/details/42743531</a>）</p>
+
+<p>大体的方法就是这些了</p>
+
+<p></p><div><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160416151944699.png" type="image/png" data-filename="20160416151944699.png" alt="这里写图片描述" height="234" width="576"/></div><p></p>
+
+<p>下面借用那篇博客的一张图：</p>
+
+<p></p><div><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160416152117873.png" type="image/png" data-filename="20160416152117873.png" alt="这里写图片描述" height="732" width="576"/></div><p></p>
+
+<p><strong>view提供的方法</strong></p>
+
+<blockquote>
+  <p>getTop：获取到的，是view自身的顶边到其父布局顶边的距离 <br/>
+  getLeft：获取到的，是view自身的左边到其父布局左边的距离 <br/>
+  getRight：获取到的，是view自身的右边到其父布局左边的距离 <br/>
+  getBottom：获取到的，是view自身的底边到其父布局顶边的距离</p>
+</blockquote>
+
+<p><strong>MotionEvent提供的方法</strong></p>
+
+<blockquote>
+  <p>getX()：获取点击事件相对控件左边的x轴坐标，即点击事件距离控件左边的距离 <br/>
+  getY()：获取点击事件相对控件顶边的y轴坐标，即点击事件距离控件顶边的距离 <br/>
+  getRawX()：获取点击事件相对整个屏幕左边的x轴坐标，即点击事件距离整个屏幕左边的距离 <br/>
+  getRawY()：获取点击事件相对整个屏幕顶边的y轴坐标，即点击事件距离整个屏幕顶边的距离</p>
+</blockquote>
+
+<p><strong>下面做个测试</strong></p>
+
+<p></p><div><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160416152715709.png" type="image/png" data-filename="20160416152715709.png" alt="这里写图片描述" height="377" width="358"/></div><p></p>
+
+<p>分别点击A点，B点后效果</p>
+
+<p></p><div><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160416152631572.png" type="image/png" data-filename="20160416152631572.png" alt="这里写图片描述" height="137" width="576"/></div><p></p>
+
+<p>这里需要注意的是：</p>
+
+<blockquote>
+  <p>点击B点后（可以看到先是回调TestTextView中的onTouchEvent方法，然后才是MainActivity中的onTouchEvent，因为我在二者的onTouchEvent方法中都没有进行点击事件的消费处理，所以会往上传递，突然扯到了事件分发机制，2333~这里就是突然想补充一点，还是扯回坐标吧）</p>
+  
+  <p>1.TestTextView中getY和getRawY取得的值不一样，这点我们可以理解</p>
+  
+  <p>2.MainActivity中getY和getRawY取得的值一样！（我们注意到点击A,B点都是如此）</p>
+</blockquote>
+
+
+
+<h2>这里我们得到一条规律：</h2>
+
+<blockquote>
+  <p><strong>getY和getRawY在View,ViewGroup中值不一致，在Activity中是一致的</strong></p>
+</blockquote>
+
+<p>没有从源码角度去分析，就是简单的打印来判断，可能不太具有说服力，大家见谅下       O(∩_∩)O</p>
+
+<p><strong>测试2：类似在ListView这种有滚动轴的控件中会是什么样的呢？</strong></p>
+
+<p></p><div><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160416170334643.png" type="image/png" data-filename="20160416170334643.png" alt="这里写图片描述" height="463" width="458"/></div><p></p>
+
+<p>这个打印我忘记截图完整了，这里我说明下打印的log我是在ListView所在的activity中的dispatchTouchEvent，之所以不在activity的onTouchEvent中打印是因为ListView中的item消费了事件，那么这个activity的onTouchEvent就不会打印出Log了。 <br/>
+贴上代码</p>
+
+
+
+<pre><code>@Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+         (event.getAction() == MotionEvent.ACTION_DOWN) {
+            LogUtil.m(&quot;SecondActivity  getX &quot; + event.getX() + &quot; getY &quot; + event.getY());
+            LogUtil.m(&quot;SecondActivity  getrawx &quot; + event.getRawX() + &quot; getrawy &quot; + event.getRawY());
+        }
+        return super.dispatchTouchEvent(event);
+    }</code></pre>
+
+<p><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160416170406321.png" type="image/png" data-filename="20160416170406321.png" alt="这里写图片描述" height="47" width="491"/></p>
+
+<p>这次我们点击的是item7的顶部，发现一致，按照刚才我们得到的规律应该很好理解，ListView是ViewGroup，所以getY和getRawY取得的值是一样的。 <br/>
+（PS：这时可能会有点好奇，我们明明点击的接近是item7的顶部，为啥得到的Y指却不是接近0呢，原因后面讲）</p>
+
+
+
+<h2>这里我们得到一条启示：</h2>
+
+<blockquote>
+  <p><strong>对于这种滑动的ViewGroup，我们在获取ViewGroup的坐标值时并不需要考虑它到底滑动了多少</strong>（实际滑动的我们应该看作是ViewGroup中的View在滑动）</p>
+</blockquote>
+
+
+
+<p><strong>在上面我们留下了一个疑问</strong>：我们明明点击的接近是item7的顶部，得到的Y指却不是接近0。 <br/>
+原因在于getRawY返回的是点击事件距离整个屏幕顶边的距离，所以点击item7的顶部，得到的Y值其实就是状态栏的值。</p>
+
+<blockquote>
+  <p>当然我们有时候碰到的不仅就只有状态栏，有时候是状态栏与标题栏并存的。所以我们在获取ViewGroup的Y值是一定要注意是否需要减去状态栏，标题栏（如果有）的高度，否则计算得到的Y值并不是正确的。</p>
+</blockquote>
+
+<p>这里为了让大家更清晰的了解，大家可以看看这篇文章<a href="http://bbs.51cto.com/thread-1072344-1.html" target="_blank">http://bbs.51cto.com/thread-1072344-1.html</a>（Android4.0窗口机制和创建过程分析 ）</p>
+
+<p>下面我们用图来初略说明（这是我的理解，有误欢迎指正）</p>
+
+<p></p><div><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160416174510452.png" type="image/png" data-filename="20160416174510452.png" alt="这里写图片描述" height="603" width="408"/></div><p></p>
+
+<p><strong>现在我们再来说说怎么取得坐标值的时机</strong></p>
+
+<blockquote>
+  <p>因为MotionEvent提供的获取坐标的方法是在页面完完全全显示在用户眼前且用户点击后才会使用到的方法，所以并不存在获取不到的问题，下面就论述下 <br/>
+  <strong>view提供的获取坐标方法</strong></p>
+</blockquote>
+
+<p>看到这，你可能会说，那还不简单当布局被加载出来的时候，我们去获取不就OK了吗？ <br/>
+于是我们就会看到这样的错误：在一个Activity的onCreate方法中，设置完setContentView后，就开始View的getLeft，getTop等方法，结果发现为0，为啥？</p>
+
+<p>原因就是：</p>
+
+<blockquote>
+  <p><strong>对于View，ViewGroup来说，width、height、top、left等属性值是在Measure与Layout过程完成之后才开始正确赋值的，而Measure与Layout却都晚于onCreate方法执行，所以onCreate中getLeft根本就取不到值！</strong></p>
+</blockquote>
+
+<p>那要是我们想要在onCreate中取到我们想要的值，我们应该怎么做呢？ <br/>
+大家可以参考这两篇博文 <br/>
+（<a href="http://www.cnblogs.com/kissazi2/p/4133927.html" target="_blank">http://www.cnblogs.com/kissazi2/p/4133927.html</a>） <br/>
+（<a href="http://blog.csdn.net/codezjx/article/details/45341309" target="_blank">http://blog.csdn.net/codezjx/article/details/45341309</a>）</p>
+
+<p>我觉得写得很好了</p>
+
+<p>归纳如下：</p>
+
+<ol>
+<li>监听Draw/Layout事件：ViewTreeObserver</li>
+<li>将一个runnable添加到Layout队列中：View.post()</li>
+<li>重写View的onLayout方法</li>
+<li>重写Activity的onWindowFocusChanged方法,在该方法中获取</li>
+</ol>
+
+<p>这里我推荐2,4这两种，即</p>
+
+
+
+<pre><code>view.post( Runnable() {  
+    @Override  
+    public  () {  
+        view.getHeight();  
+    }  
+});</code></pre>
+
+
+
+
+
+<pre><code>@Override  
+public  onWindowFocusChanged(boolean hasFocus) {  
+    super.onWindowFocusChanged(hasFocus);  
+    //此处可以正常获取width、height等  
+} </code></pre>
+
+
+
+
+
+<blockquote>
+  <p>现在对坐标系是咋样的，我们已经了解了。</p>
+  
+  <p>对啥时候获取，以及获取后是否需要纠正得到正确的Y，我们也已经分析了。</p>
+  
+  <p><strong>下面就来说说本文的重头戏 ——— 坐标的计算。</strong></p>
+  
+  <p>（之所以说是重头戏，是因为我们之前得到的都是一个点的正确坐标，现在我们需要做的是在得到多个正确坐标后，进行正确的计算，这样我们才能实现滑动这样炫酷的效果`(<em>∩_∩</em>)′）</p>
+</blockquote>
+
+
+
+<h2>首先我们需要建立一个概念</h2>
+
+<blockquote>
+  <p><strong>在Android的坐标系中，原点在屏幕左上角，向右x为正，向下y为正。</strong></p>
+</blockquote>
+
+<p></p><div><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160418223513513.png" type="image/png" data-filename="20160418223513513.png" alt="这里写图片描述" height="598" width="545"/></div>
+（为了好计算，图片中的坐标单位是px）<p></p>
+
+<p>（下面就以这个为例，我们要将View从原点移动到（200,400）的位置，即B点与C点重合）</p>
+
+<p><strong>想实现View移动大致有这几种方式（代码见下面）</strong></p>
+
+<p></p><div><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160419001204719.png" type="image/png" data-filename="20160419001204719.png" alt="这里写图片描述" height="310" width="576"/></div><p></p>
+
+<p>XML文件</p>
+
+
+
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+    xmlns:tools=&quot;http://schemas.android.com/tools&quot;
+    android:layout_width=&quot;match_parent&quot;
+    android:layout_height=&quot;match_parent&quot;
+    tools:context=&quot;.MainActivity&quot;&gt;
+    &lt;LinearLayout
+        android:id=&quot;@+id/ly&quot;
+        android:background=&quot;#EFAA88&quot;
+        android:layout_centerInParent=&quot;true&quot;
+        android:layout_width=&quot;300px&quot;
+        android:layout_height=&quot;500px&quot;&gt;
+        &lt;mr_immortalz.com.testlocation.TestTextView
+            android:background=&quot;#aabbcc&quot;
+            android:id=&quot;@+id/tv&quot;
+            android:text=
+            android:layout_width=&quot;100px&quot;
+            android:layout_height=&quot;100px&quot; /&gt;
+    &lt;/LinearLayout&gt;
+
+&lt;/LinearLayout&gt;</code></pre>
+
+<p>TestTextView也很简单，就是</p>
+
+
+
+<pre><code>/**
+ * Created by Mr_immortalZ on 2016/4/16.
+ * email : mr_immortalz@qq.com
+ */
+public class TestTextView extends TextView {
+    public TestTextView(Context context) {
+        super(context);
+    }
+
+    public TestTextView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public TestTextView(Context context, AttributeSet attrs,  defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+             MotionEvent.ACTION_DOWN:
+                /*LogUtil.m(&quot;TestTextView  getX &quot;+event.getX()+&quot; getY &quot;+event.getY());
+                LogUtil.m(&quot;TestTextView  getrawx &quot;+event.getRawX()+&quot; getrawy &quot;+event.getRawY());*/
+                //layout(getLeft() + 200, getTop() + 400, getRight() + 200, getBottom() + 400);
+
+                /*offsetLeftAndRight(200);
+                offsetTopAndBottom(400);*/
+               /* ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) getLayoutParams();
+                lp.leftMargin = getLeft() + 200;
+                lp.topMargin = getTop() + 400;
+                setLayoutParams(lp);*/
+
+                //((View)getParent()).scrollTo(-200,-400);
+
+                //scrollTo(-50,-10);
+
+                //scrollTo(300, 500);
+
+                //((View)getParent()).scrollBy(-200,-400);
+                /*AnimatorSet set = new AnimatorSet();
+                set.playTogether(
+                        ObjectAnimator.ofFloat(this, &quot;translationX&quot;, 200),
+                        ObjectAnimator.ofFloat(this,&quot;translationY&quot;, 400)
+
+                );
+                set.start();*/
+                TranslateAnimation anim =  TranslateAnimation(, , , );
+                anim.setFillAfter();
+                startAnimation(anim);
+
+                LogUtil.m(&quot;移动后 getX &quot; + getX() + &quot;  getY &quot; + getY());
+                LogUtil.m(&quot;移动后 getLeft &quot; + getLeft() + &quot;tv getTop &quot; + getTop()
+                        + &quot; tv getRight &quot; + getRight() + &quot; tv getBottom &quot; + getBottom());
+                break;
+        }
+        return ;
+    }
+}</code></pre>
+
+
+
+<h2>我们移动到指定位置的有7种方式</h2>
+
+<hr/>
+
+<p><strong>1.layout</strong></p>
+
+
+
+<pre><code>layout(getLeft() + , getTop() + , getRight() + , getBottom() + );</code></pre>
+
+<p>移动后getLeft等值改变</p>
+
+<p><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160418230526658.png" type="image/png" data-filename="20160418230526658.png" alt="这里写图片描述" height="58" width="793"/></p>
+
+<p><strong>2.offsetLeftAndRight、offsetTopAndBottom</strong></p>
+
+
+
+<pre><code>offsetLeftAndRight();
+offsetTopAndBottom();</code></pre>
+
+<p>移动后getLeft等值改变</p>
+
+<p><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160418230526658 [1].png" type="image/png" data-filename="20160418230526658.png" alt="这里写图片描述" height="58" width="793"/></p>
+
+<p><strong>3.修改LayoutParams</strong></p>
+
+
+
+<pre><code> ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) getLayoutParams()
+                lp.leftMargin = getLeft() + 
+                lp.topMargin = getTop() + 
+                setLayoutParams(lp)</code></pre>
+
+<p>移动后getLeft等值不改变</p>
+
+<p><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160418230605195.png" type="image/png" data-filename="20160418230605195.png" alt="这里写图片描述" height="60" width="809"/></p>
+
+<hr/>
+
+<p><strong>4.scrollTo</strong></p>
+
+
+
+<pre><code>((View)getParent()).scrollTo(-,-)</code></pre>
+
+<p>移动后getLeft等值不改变</p>
+
+<p><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160418230605195 [1].png" type="image/png" data-filename="20160418230605195.png" alt="这里写图片描述" height="60" width="809"/></p>
+
+<p><strong>5.scrollBy</strong></p>
+
+
+
+<pre><code>((View)getParent()).scrollBy(-,-)</code></pre>
+
+<p>移动后getLeft等值不改变</p>
+
+<p><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160418230605195 [2].png" type="image/png" data-filename="20160418230605195.png" alt="这里写图片描述" height="60" width="809"/></p>
+
+<p><strong>对于scrollTo、scrollBy需要注意的有两个问题</strong> <br/>
+问题1：</p>
+
+<blockquote>
+  <p>移动计算值 =  <strong>最开始点坐标 - 最后移动到的坐标</strong> <br/>
+  原因是因为最终会调用这个方法 <br/>
+  —— invalidateInternal(l - scrollX, t - scrollY, r - scrollX, b - scrollY, true, false); <br/>
+  <strong>其中l,t,r,b为原来坐标点，scrollX,scrollY为目标坐标点，只有当目标坐标点值是负数时，移动到的位置才为正数！</strong> <br/>
+       例如scrollTo ，我们要从（0,0）移动到（200,400）这个点，根据上面的公式可知为负值</p>
+</blockquote>
+
+
+
+<p>为什么需要加上 ((View)getParent())</p>
+
+<blockquote>
+  <p>TestTextView本身是View，scrollTo、scrollBy移动的都是View的Content，如果不加的话，使用的效果则是TestTextView的文字位置变化，而TestTextView本身不会变化。 <br/>
+  如果在ViewGroup中使用scrollTo、scrollBy，则移动的是ViewGroup中的View.我们这里需要让TestTextView移动，则需要先 ((View)getParent())，然后再((View)getParent()).scrollTo…</p>
+</blockquote>
+
+<hr/>
+
+<p><strong>6.属性动画</strong></p>
+
+<p>我就以ObjectAnimator为例子</p>
+
+
+
+<pre><code>AnimatorSet  = new AnimatorSet();
+                .playTogether(
+                        ObjectAnimator.ofFloat(this, &quot;translationX&quot;, ),
+                        ObjectAnimator.ofFloat(this,&quot;translationY&quot;, )
+
+                );
+                .start();</code></pre>
+
+<p>移动后getLeft等值不改变</p>
+
+<p><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160418230605195 [3].png" type="image/png" data-filename="20160418230605195.png" alt="这里写图片描述" height="60" width="809"/></p>
+
+<p>7.位移动画</p>
+
+
+
+<pre><code>TranslateAnimation anim =  TranslateAnimation(,,,);
+                anim.setFillAfter();
+                startAnimation(anim);</code></pre>
+
+<p>移动后getLeft等值不改变</p>
+
+<p><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160418230605195 [4].png" type="image/png" data-filename="20160418230605195.png" alt="这里写图片描述" height="60" width="809"/></p>
+
+<p><strong>关于位移动画的补充点：</strong></p>
+
+<p>我们经常用这样的需求，要求一个popupwindow从屏幕底部弹出或者从屏幕顶部弹出。 <br/>
+这里的位移设置同样还是如此（原点在屏幕左上角，向右x为正，向下y为正）</p>
+
+<p>这篇博文可以参考学习下，下面这张神图也是来自这篇博文（Android动画之translate(位移动画)） <br/>
+<a href="http://www.cnblogs.com/bavariama/archive/2013/01/29/2881225.html" target="_blank">http://www.cnblogs.com/bavariama/archive/2013/01/29/2881225.html</a> </p><div><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160419000646681.png" type="image/png" data-filename="20160419000646681.png" alt="这里写图片描述" height="411" width="576"/></div><p></p>
+
+<p><strong>注意点</strong></p>
+
+<blockquote>
+  <p>属性动画是真实改变View的位置的，虽然属性动画、位移动画的getLeft等没有改变，但是属性动画的getX、getY是改变了的，位移动画的getX、getY仍未改变！</p>
+</blockquote>
+
+<hr/>
+
+<p><strong>最后再来回顾下这张图</strong></p>
+
+<p></p><div><img src="那些你应该知道却不一定知道的——View坐标分析汇总 - Mr_immortalZ的博客 _files/20160419001204719 [1].png" type="image/png" data-filename="20160419001204719.png" alt="这里写图片描述" height="310" width="576"/></div><p></p>
+
+
+
+
+
+<blockquote>
+  <p>坐标分析上面都分析完了，基本上涵盖了自定义View坐标计算、滑动、事件分发等常见场景的坐标问题，希望大家能从中得到收获。 <br/>
+  水平很菜，有错误的地方欢迎指正，大家一起学习进步！</p>
+  
+  <p>☻ 反正撸完这篇，我算是对于坐标系有了更深刻的认识，给自己点个赞~❤</p>
+</blockquote></div></div></div><br/></div></span>
+</div></body></html> 

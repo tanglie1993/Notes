@@ -1,0 +1,55 @@
+<html>
+<head>
+  <title>彻底搞懂CoordinatorLayout</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2623"/>
+<h1>彻底搞懂CoordinatorLayout</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>从是什么开始</h1><div><div></div></div></div><p>首先我们先来看看CoordinatorLayout究竟是个什么东东，它究竟是用来做什么的。官方文档对CoordinatorLayout是这样描述的：</p><blockquote><p>CoordinatorLayout是一个“加强版”FrameLayout，它主要有两个用途：</p><ol><li><p>用作应用的顶层布局管理器，也就是作为用户界面中所有UI控件的容器</p></li><li><p>用作相互之间具有特定交互行为的UI控件的容器</p></li></ol><p>通过为CoordinatorLayout的子View指定Behavior，就可以实现它们之间的交互行为。 Behavior可以用来实现一系列的交互行为和布局变化，比如说侧滑菜单、可滑动删除的UI元素，以及跟随着其他UI控件移动的按钮等。</p></blockquote><p>上面的描述可能有些抽象，现在我们只需要知道CoordinatorLayout是一个布局管理器，主要用来实现它的子View间的交互行为。那么什么是交互行为呢？我们来看一个简单的例子：</p><p></p><div><img src="彻底搞懂CoordinatorLayout_files/Image.png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>在上图中，我们拖动按钮，可以看到，一个TextView会跟着按钮一起移动。这就是交互行为的一个简单地例子。也就是说首先需要Button的位置发生变化，然后TextView对Button的位置变化做出响应，这个例子中，TextView做出响应的方式就是跟随着Button一起移动。那么这个交互行为时如何实现的呢？我们接着往下看。</p><h1>如何实现交互行为</h1><p>上面我们看到了一个简单的交互行为的例子，下面我们通过分析这个例子来介绍一下实现交互行为的一般性步骤。</p><p>上面的例子实现的是Button和TextView的交互行为：Button发生变化时，TextView要对这个变化做出响应。那么首先我们要让TextView知道Button产生了变化，还要指明TextView对Button的变化做出什么反应。</p><p>这里实际上是一个观察者模式的运用：TextView是观察者，Button是被观察者。TextView需要向系统注册一个回调，告知系统在Button发生变化时通知它，这样当Button发生变化时，TextView会得到关于这个变化的通知，而后就可以对这个变化做出响应。如此一来我们便实现了TextView和Button的交互行为。下面我们来介绍如何通过给TextView设置一个Behavior来实现上面的交互行为。</p><h3>XML布局文件</h3><p>首先我们先来看一下用户界面的布局文件：</p><pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;<br/>&lt;android.support.design.widget.CoordinatorLayout
+  android:layout_width=&quot;match_parent&quot;
+  android:layout_height=&quot;match_parent&quot;
+  xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+  xmlns:app=&quot;http://schemas.android.com/apk/res-auto&quot;&gt;
+  &lt;TextView
+    app:layout_behavior=&quot;.FollowBehavior&quot;
+    android:layout_width=&quot;wrap_content&quot;
+    android:layout_height=&quot;wrap_content&quot;
+    android:text=&quot;观察者&quot; /&gt;
+  &lt;Button
+    android:id=&quot;@+id/btn&quot;
+    android:layout_width=&quot;wrap_content&quot;
+    android:layout_height=&quot;wrap_content&quot;<br/>    android:layout_gravity=&quot;center&quot;
+    android:text=&quot;被观察者&quot; /&gt;<br/>&lt;/android.support.design.widget.CoordinatorLayout&gt;</code></pre><p>我们为TextView指定了一个layout_behavior属性，这样就给它设置了一个Behavior。我们可以看到layout_behavior属性的值为&quot;.FollowBehavior&quot;，指的是当前Module中一个名为FollowBehavior的类，它实际上是CoordinatorLayout.Behavior类的子类，我们来看一下FollowBehavior类的实现。</p><h3>自定义交互行为类</h3><p>FollowBehavior类的代码如下：</p><pre><code>public class FollowBehavior extends CoordinatorLayout.Behavior&lt;TextView&gt; {<br/>  public FollowBehavior(Context context, AttributeSet attrs) {<br/>    super(context, attrs);
+  }<br/>  @Override
+  public boolean layoutDependsOn(CoordinatorLayout parent, TextView child, View dependency) { <br/>    return dependency instanceof  Button;
+  }<br/>  @Override
+  public boolean onDependentViewChanged(CoordinatorLayout parent, TextView child,<br/>        View dependency) {
+    child.setX(dependency.getX() + 150);
+    child.setY(dependency.getY() + 150);<br/>    return true;
+  }
+}</code></pre><p>在上面的代码中我们重写了父类的两个方法：layoutDependsOn()方法和onDependentViewChanged()方法。在介绍这两个方法的作用前，我们先来介绍一下dependent view。在一个交互行为中，dependent view的变化决定了另一个相关View的行为。在这个例子中，Button就是dependent view，因为TextView跟随着它。实际上dependent view就相当于我们前面介绍的被观察者。知道了这个概念，让我们看看重写的两个方法的作用：</p><ul><li><p>layoutDependsOn()：这个方法在对界面进行布局时至少会调用一次，用来确定本次交互行为中的dependent view，在上面的代码中，当dependency是Button类的实例时返回true，就可以让系统知道布局文件中的Button就是本次交互行为中的dependent view。</p></li><li><p>onDependentViewChanged()：当dependent view发生变化时，这个方法会被调用，参数中的child相当于本次交互行为中的观察者，观察者可以在这个方法中对被观察者的变化做出响应，从而完成一次交互行为。</p></li></ul><p>现在我们已经定义好了一个交互行为，但是Button还不会跟着我们的手指移动，接下来我们让它动起来。</p><h3>让Button动起来</h3><p>我们只需让Button在屏幕上的位置随我们手指移动，从而让TextView跟着它移动，相关代码如下：</p><pre><code>public class CoorDemoActivity extends Activity {
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {<br/>    super.onCreate(savedInstanceState);
+    setContentView(R.layout.follow);
+    findViewById(R.id.btn).setOnTouchListener(new View.OnTouchListener() {        <br/>      @Override
+      public boolean onTouch(View v, MotionEvent event) {<br/>        if (event.getAction() == MotionEvent.ACTION_MOVE) {
+          v.setX(event.getRawX()-v.getWidth()/2);
+          v.setY(event.getRawY()-v.getHeight()/2);
+        }<br/>        return true;
+      }
+    });
+  }
+}</code></pre><p>这样一来，我们就完成了为TextView和Button设置跟随移动这个交互行为。很简单有木有，其实为CoordinatorLayout的子View设置交互行为只需三步：</p><ul><li><p>自定义一个继承自Behavior类的交互行为类；</p></li><li><p>把观察者的layout_behavior属性设置为自定义行为类的类名；</p></li><li><p>重写Behavior类的相关方法来实现我们想要的交互行为。</p></li></ul><p>值得注意的是，有些时候，并不需要我们自己来定义一个Behavior类，因为系统为我们预定义了不少Behavior类。在接下来的篇章中，我们会做出进一步的介绍。</p><h1>更进一步</h1><p>现在我们已经知道了怎么通过给CoordinatorLayout的子View设置Behavior来实现交互行为。现在，让我们更进一步地挖掘下CoordinatorLayout，深入了解一下隐藏在表象背后的神秘细节。</p><p>实际上，CoordinatorLayout本身并没有做过多工作，实现交互行为的主要幕后推手是CoordinatorLayout的内部类——Behavior。通过为CoordinatorLayout的<strong>直接子View</strong>绑定一个Behavior，这个Behavior就会拦截发生在这个View上的Touch事件、嵌套滚动等。不仅如此，Behavior还能拦截对与它绑定的View的测量及布局。关于嵌套滚动，我们会在后续文章中进行详细介绍。下面我们来深入了解一下Behavior是如何做到这一切的。</p><h3>深入理解Behavior</h3><h6>拦截Touch事件</h6><p>当我们为一个CoordinatorLayout的直接子View设置了Behavior时，这个Behavior就能拦截发生在这个View上的Touch事件，那么它是如何做到的呢？实际上，CoordinatorLayout重写了onInterceptTouchEvent()方法，并在其中给Behavior开了个后门，让它能够先于View本身处理Touch事件。具体来说，CoordinatorLayout的onInterceptTouchEvent()方法中会遍历所有直接子View，对于绑定了Behavior的直接子View调用Behavior的onInterceptTouchEvent()方法，若这个方法返回true，那么后续本该由相应子View处理的Touch事件都会交由Behavior处理，而View本身表示懵逼，完全不知道发生了什么。</p><h5>拦截测量及布局</h5><p>了解了Behavior是怎养拦截Touch事件的，想必大家已经猜出来了它拦截测量及布局事件的方式——CoordinatorLayout重写了测量及布局相关的方法并为Behavior开了个后门。没错，真相就是如此。</p><p>CoordinatorLayout在onMeasure()方法中，会遍历所有直接子View，若该子View绑定了一个Behavior，就会调用相应Behavior的onMeasureChild()方法，若此方法返回true，那么CoordinatorLayout对该子View的测量就不会进行。这样一来，Behavior就成功接管了对View的测量。</p><p>同样，CoordinatorLayout在onLayout()方法中也做了与onMeasure()方法中相似的事，让Behavior能够接管对相关子View的布局。</p><h5>View的依赖关系的确定</h5><p>现在，我们在探究一下交互行为中的两个View之间的依赖关系是怎么确定的。我们称child为交互行为中根据另一个View的变化做出响应的那个个体，而dependent view为child所依赖的View。实际上，确立child和dependent view的依赖关系有两种方式：</p><ul><li><p>显式依赖：为child绑定一个Behavior，并在Behavior类的layoutDependsOn()方法中做手脚。即当传入的dependency为dependent view时返回true，这样就建立了child和dependent view之间的依赖关系。</p></li><li><p>隐式依赖：通过我们最开始提到的锚（anchor）来确立。具体做法可以这样：在XML布局文件中，把child的layout_anchor属性设为dependent view的id，然后child的layout_anchorGravity属性用来描述为它想对dependent view的变化做出什么样的响应。关于这个我们会在后续篇章给出具体示例。</p></li></ul><p>无论是隐式依赖还是显式依赖，在dependent view发生变化时，相应Behavior类的onDependentViewChanged()方法都会被调用，在这个方法中，我们可以让child做出改变以响应dependent view的变化。</p><hr/><p><strong>长按或扫描二维码关注我们，让您利用每天等地铁的时间就能学会怎样写出优质app。</strong></p><p></p><div><img src="彻底搞懂CoordinatorLayout_files/Image [1].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p>
+                    </div></div></div><br/></div></span>
+</div></body></html> 

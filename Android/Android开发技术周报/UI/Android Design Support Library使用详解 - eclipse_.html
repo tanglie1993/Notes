@@ -1,0 +1,562 @@
+<html>
+<head>
+  <title>Android Design Support Library使用详解 - eclipse_xu - 博客频道 - CSDN.NET</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1444"/>
+<h1>Android Design Support Library使用详解 - eclipse_xu - 博客频道 - CSDN.NET</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>Android Design Support Library使用详解</h1><div><div></div></div></div>
+
+<hr/>
+
+<p>Google在2015的IO大会上，给我们带来了更加详细的Material Design设计规范，同时，也给我们带来了全新的<a href="http://lib.csdn.net/base/15" target="_blank" title="Android知识库">Android</a> Design Support Library，在这个support库里面，Google给我们提供了更加规范的MD设计风格的控件。最重要的是，Android Design Support Library的兼容性更广，直接可以向下兼容到Android 2.2。这不得不说是一个良心之作。</p>
+
+<p>使用Support Library非常简单： <br/>
+添加引用即可：</p>
+
+
+
+<pre><code>compile 'com.android.support:design:22.2.0'</code></pre>
+
+<p>下面我们来看看这些新控件的基本使用方法，我们从最简单的控件开始说起。</p>
+
+<p>部分内容直接来自Android Developer Blog中的内容： <br/>
+英文原文： <br/>
+<a href="http://android-developers.blogspot.jp/2015/05/android-design-support-library.html" target="_blank">http://android-developers.blogspot.jp/2015/05/android-design-support-library.html</a></p>
+
+<p>菠萝的翻译： <br/>
+<a href="http://www.jcodecraeer.com/a/anzhuokaifa/developer/2015/0531/2958.html" target="_blank">http://www.jcodecraeer.com/a/anzhuokaifa/developer/2015/0531/2958.html</a></p>
+
+<h2>Snackbar</h2>
+
+<p>Snackbar提供了一个介于Toast和AlertDialog之间轻量级控件，它可以很方便的提供消息的提示和动作反馈。 <br/>
+Snackbar的使用与Toast的使用基本相同：</p>
+
+
+
+<pre><code>Snackbar.make(view, &quot;Snackbar comes out&quot;, Snackbar.LENGTH_LONG)
+                        .setAction(&quot;Action&quot;, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(
+                                        MainActivity.this,
+                                        &quot;Toast comes out&quot;,
+                                        Toast.LENGTH_SHORT).show()
+                            }
+                        }).show()</code></pre>
+
+<p>需要注意的是，这里我们把第一个参数作为Snackbar显示的基准元素，而设置的Action也可以设置多个。</p>
+
+<p>显示的效果就类似如下：</p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150603220816306.jpg" type="image/jpeg" data-filename="20150603220816306.jpg" alt="这里写图片描述" height="132" width="576"/></div><p></p>
+
+<p>Snackbar在出现一定时间后，就会消失，这与Toast一模一样。</p>
+
+<p>Google API Doc 官方说明：</p>
+
+<p><a href="http://developer.android.com/reference/android/support/design/widget/Snackbar.html" target="_blank">http://developer.android.com/reference/android/support/design/widget/Snackbar.html</a></p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150604094738617.jpg" type="image/jpeg" data-filename="20150604094738617.jpg" alt="这里写图片描述" height="383" width="576"/></div><p></p>
+
+
+
+<h2>TextInputLayout</h2>
+
+<p>TextInputLayout作为一个父容器控件，包装了新的EditText。通常，单独的EditText会在用户输入第一个字母之后隐藏hint提示信息，但是现在你可以使用TextInputLayout 来将EditText封装起来，提示信息会变成一个显示在EditText之上的floating label，这样用户就始终知道他们现在输入的是什么。同时，如果给EditText增加监听，还可以给它增加更多的floating label。</p>
+
+<p>下面我们来看这与一个TextInputLayout：</p>
+
+
+
+<pre><code>&lt;android.support.design.widget.TextInputLayout
+        android:id=&quot;@+id/til_pwd&quot;
+        android:layout_width=&quot;match_parent&quot;
+        android:layout_height=&quot;wrap_content&quot;&gt;
+
+        &lt;EditText
+            android:layout_width=&quot;match_parent&quot;
+            android:layout_height=&quot;wrap_content&quot;/&gt;
+
+&lt;/android.support.design.widget.TextInputLayout&gt;</code></pre>
+
+<blockquote>
+  <p>一定要注意，他是把EditText包含起来的，不能单独使用。</p>
+</blockquote>
+
+<p>在代码中，我们给它设置监听：</p>
+
+
+
+<pre><code>        final TextInputLayout textInputLayout = (TextInputLayout) findViewById(R.id.til_pwd);
+
+        EditText editText = textInputLayout.getEditText();
+        textInputLayout.setHint(&quot;Password&quot;);
+
+        editText.addTextChangedListener( TextWatcher() {
+            @Override
+            public  beforeTextChanged(CharSequence s,  start,  count,  after) {
+                 (s.length() &gt; ) {
+                    textInputLayout.setError(&quot;Password error&quot;);
+                    textInputLayout.setErrorEnabled();
+                }  {
+                    textInputLayout.setErrorEnabled(false);
+                }
+            }
+
+            @Override
+            public  onTextChanged(CharSequence s,  start,  before,  count) {
+            }
+
+            @Override
+            public  afterTextChanged(Editable s) {
+            }
+        });
+    }</code></pre>
+
+<p>这样：显示效果如下：</p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150603224122229.jpg" type="image/jpeg" data-filename="20150603224122229.jpg" alt="这里写图片描述" height="83" width="576"/></div><p></p>
+
+<p>当输入时：</p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150603224141620.jpg" type="image/jpeg" data-filename="20150603224141620.jpg" alt="这里写图片描述" height="113" width="576"/></div><p></p>
+
+<p>这里需要注意的是，TextInputLayout的颜色来自style中的colorAccent的颜色：</p>
+
+
+
+<pre><code>&lt; =&quot;colorAccent&quot;&gt;#1743b7&lt;/item&gt;
+</code></pre>
+
+<p>下面我们给出Google API Doc上的说明，了解TextInputLayout的详细使用方法：</p>
+
+<p><a href="http://developer.android.com/reference/android/support/design/widget/TextInputLayout.html" target="_blank">http://developer.android.com/reference/android/support/design/widget/TextInputLayout.html</a></p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150604094256724.jpg" type="image/jpeg" data-filename="20150604094256724.jpg" alt="这里写图片描述" height="227" width="576"/></div><p></p>
+
+
+
+<h2>Floating Action Button</h2>
+
+<p>floating action button 是一个负责显示界面基本操作的圆形按钮。Design library中的FloatingActionButton 实现了一个默认颜色为主题中colorAccent的悬浮操作按钮，like this：</p>
+
+<p><img src="Android Design Support Library使用详解 - eclipse__files/20150604094913153.png" type="image/png" data-filename="20150604094913153.png" alt="这里写图片描述" height="84" width="200"/></p>
+
+<p>FloatingActionButton——FAB使用非常简单，你可以指定在加强型FrameLayout里面——CoordinatorLayout，这个我们后面再将。 <br/>
+关于FAB的使用，你可以把它当做一个button即可。</p>
+
+
+
+<pre><code>&lt;android.support.design.widget.FloatingActionButton
+        android:id=&quot;@+id/fab&quot;
+        android:layout_width=&quot;wrap_content&quot;
+        android:layout_height=&quot;wrap_content&quot;
+        android:layout_gravity=&quot;end|bottom&quot;
+        android:layout_margin=&quot;@dimen/fab_margin&quot;
+        android:src=&quot;@drawable/ic_done&quot;/&gt;</code></pre>
+
+<p>通过指定layout_gravity就可以指定它的位置。 <br/>
+同样，你可以通过指定anchor，即显示位置的锚点：</p>
+
+
+
+<pre><code>&lt;android.support.design.widget.FloatingActionButton
+        android:layout_height=&quot;wrap_content&quot;
+        android:layout_width=&quot;wrap_content&quot;
+        app:layout_anchor=&quot;@id/app_bar&quot;
+        app:layout_anchorGravity=&quot;bottom|right|end&quot;
+        android:src=&quot;@android:drawable/ic_done&quot;
+        android:layout_margin=&quot;15dp&quot;
+        android:clickable=&quot;true&quot;/&gt;</code></pre>
+
+<p>除了一般大小的悬浮操作按钮，它还支持mini size（fabSize=”mini”）。FloatingActionButton继承自ImageView，你可以使用android:src或者ImageView的任意方法，比如setImageDrawable()来设置FloatingActionButton里面的图标。</p>
+
+<p><a href="http://developer.android.com/reference/android/support/design/widget/FloatingActionButton.html" target="_blank">http://developer.android.com/reference/android/support/design/widget/FloatingActionButton.html</a></p>
+
+
+
+<h2>TabLayout</h2>
+
+<p>Tab滑动切换View并不是一个新的概念，但是Google却是第一次在support库中提供了完整的支持，而且，Design library的TabLayout 既实现了固定的选项卡 - view的宽度平均分配，也实现了可滚动的选项卡 - view宽度不固定同时可以横向滚动。选项卡可以在程序中动态添加：</p>
+
+
+
+<pre><code>        TabLayout tabLayout = (TabLayout) findViewById(R.tabs)
+        tabLayout.addTab(tabLayout.newTab().setText(&quot;tab1&quot;))
+        tabLayout.addTab(tabLayout.newTab().setText(&quot;tab2&quot;))
+        tabLayout.addTab(tabLayout.newTab().setText(&quot;tab3&quot;))</code></pre>
+
+<p>但大部分时间我们都不会这样用，通常滑动布局都会和ViewPager配合起来使用，所以，我们需要ViewPager来帮忙：</p>
+
+
+
+<pre><code>        mViewPager = (ViewPager) findViewById(R.viewpager)
+        // 设置ViewPager的数据等
+        setupViewPager()
+        TabLayout tabLayout = (TabLayout) findViewById(R.tabs)
+        tabLayout.setupWithViewPager(mViewPager)</code></pre>
+
+<p>通过一句话setupWithViewPager，我们就把ViewPager和TabLayout结合了起来。</p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150604144633150.jpg" type="image/jpeg" data-filename="20150604144633150.jpg" alt="这里写图片描述" height="139" width="576"/></div><p></p>
+
+<p><a href="http://developer.android.com/reference/android/support/design/widget/TabLayout.html" target="_blank">http://developer.android.com/reference/android/support/design/widget/TabLayout.html</a></p>
+
+
+
+<h2>NavigationView</h2>
+
+<p>NavigationView在MD设计中非常重要，之前Google也提出了使用DrawerLayout来实现导航抽屉。这次，在support library中，Google提供了NavigationView来实现导航菜单界面，所以，新的导航界面可以这样写了：</p>
+
+
+
+<pre><code>&lt;android.support.v4.widget.DrawerLayout
+    android:id=&quot;@+id/dl_main_drawer&quot;
+    xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+    xmlns:app=&quot;http://schemas.android.com/apk/res-auto&quot;
+    android:layout_width=&quot;match_parent&quot;
+    android:layout_height=&quot;match_parent&quot;
+    android:fitsSystemWindows=&quot;true&quot;&gt;
+
+    &lt;!-- 你的内容布局--&gt;
+    &lt;include layout=&quot;@layout/navigation_content&quot;/&gt;
+
+    &lt;android.support.design.widget.NavigationView
+        android:id=&quot;@+id/nv_main_navigation&quot;
+        android:layout_width=&quot;wrap_content&quot;
+        android:layout_height=&quot;match_parent&quot;
+        android:layout_gravity=&quot;start&quot;
+        app:headerLayout=&quot;@layout/navigation_header&quot;
+        app:menu=&quot;@menu/drawer_view&quot;/&gt;
+
+&lt;/android.support.v4.widget.DrawerLayout&gt;</code></pre>
+
+<p>其中最重要的就是这两个属性：</p>
+
+<p>app:headerLayout <br/>
+app:menu</p>
+
+<p>通过这两个属性，我们可以非常方便的指定导航界面的头布局和菜单布局：</p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150604151120067.png" type="image/png" data-filename="20150604151120067.png" alt="这里写图片描述" height="960" width="576"/></div><p></p>
+
+<p>其中最上面的布局就是app:headerLayout所指定的头布局：</p>
+
+
+
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+              android:layout_width=&quot;match_parent&quot;
+              android:layout_height=&quot;200dp&quot;
+              android:background=&quot;?attr/colorPrimaryDark&quot;
+              android:gravity=&quot;center&quot;
+              android:orientation=&quot;vertical&quot;
+              android:padding=&quot;16dp&quot;
+              android:theme=&quot;@style/ThemeOverlay.AppCompat.Dark&quot;&gt;
+
+    &lt;ImageView
+        android:layout_width=&quot;100dp&quot;
+        android:layout_height=&quot;100dp&quot;
+        android:layout_marginTop=&quot;16dp&quot;
+        android:background=&quot;@drawable/ic_user&quot;/&gt;
+
+    &lt;TextView
+        android:layout_width=&quot;match_parent&quot;
+        android:layout_height=&quot;wrap_content&quot;
+        android:layout_marginTop=&quot;16dp&quot;
+        android:gravity=&quot;center&quot;
+        android:text=&quot;XuYisheng&quot;
+        android:textAppearance=&quot;@style/TextAppearance.AppCompat.Body1&quot;
+        android:textSize=&quot;20sp&quot;/&gt;
+
+&lt;/LinearLayout&gt;</code></pre>
+
+<p>而下面的菜单布局，我们可以直接通过menu内容自动生成，而不需要我们来指定布局：</p>
+
+
+
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+
+&lt; xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;&gt;
+
+    &lt;group android:checkableBehavior=&quot;single&quot;&gt;
+        &lt;            android:id=&quot;@+id/nav_home&quot;
+            android:icon=&quot;@drawable/ic_dashboard&quot;
+            android:title=&quot;CC Talk&quot;/&gt;
+        &lt;            android:id=&quot;@+id/nav_messages&quot;
+            android:icon=&quot;@drawable/ic_event&quot;
+            android:title=&quot;HJ Class&quot;/&gt;
+        &lt;            android:id=&quot;@+id/nav_friends&quot;
+            android:icon=&quot;@drawable/ic_headset&quot;
+            android:title=&quot;Words&quot;/&gt;
+        &lt;            android:id=&quot;@+id/nav_discussion&quot;
+            android:icon=&quot;@drawable/ic_forum&quot;
+            android:title=&quot;Big HJ&quot;/&gt;
+    &lt;/group&gt;
+
+    &lt; android:title=&quot;Version&quot;&gt;
+        &lt;&gt;
+            &lt;                android:icon=&quot;@drawable/ic_dashboard&quot;
+                android:title=&quot;Android&quot;/&gt;
+            &lt;                android:icon=&quot;@drawable/ic_dashboard&quot;
+                android:title=&quot;iOS&quot;/&gt;
+        &lt;/&gt;
+    &lt;/&gt;
+
+&lt;/&gt;
+</code></pre>
+
+<p>你可以通过设置一个OnNavigationItemSelectedListener，使用其setNavigationItemSelectedListener()来获得元素被选中的回调事件。它为你提供被点击的 菜单元素 ，让你可以处理选择事件，改变复选框状态，加载新内容，关闭导航菜单，以及其他任何你想做的操作。例如这样：</p>
+
+
+
+<pre><code>private  setupDrawerContent(NavigationView navigationView) {
+        navigationView.setNavigationItemSelectedListener(
+                 NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(MenuItem menuItem) {
+                        menuItem.setChecked();
+                        mDrawerLayout.closeDrawers();
+                        return ;
+                    }
+                });
+    }</code></pre>
+
+<p>可见，Google将这些东西封装的非常易于使用了。</p>
+
+
+
+<h2>AppBarLayout</h2>
+
+<p>AppBarLayout跟它的名字一样，把容器类的组件全部作为AppBar。like this：</p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150604173640997.jpg" type="image/jpeg" data-filename="20150604173640997.jpg" alt="这里写图片描述" height="196" width="576"/></div><p></p>
+
+<p>这里就是把Toolbar和TabLayout放到了AppBarLayout中，让他们当做一个整体作为AppBar。</p>
+
+
+
+<pre><code>    &lt;android.support.design.widget.AppBarLayout
+        android:id=&quot;@+id/appbar&quot;
+        android:layout_width=&quot;match_parent&quot;
+        android:layout_height=&quot;wrap_content&quot;
+        android:theme=&quot;@style/ThemeOverlay.AppCompat.Dark.ActionBar&quot;&gt;
+
+        &lt;android.support7.widget.Toolbar
+            android:id=&quot;@+id/toolbar&quot;
+            android:layout_width=&quot;match_parent&quot;
+            android:layout_height=&quot;?attr/actionBarSize&quot;
+            android:background=&quot;?attr/colorPrimary&quot;
+            app:popupTheme=&quot;@style/ThemeOverlay.AppCompat.Light&quot;/&gt;
+
+        &lt;android.support.design.widget.TabLayout
+            android:id=&quot;@+id/tabs&quot;
+            android:layout_width=&quot;match_parent&quot;
+            android:layout_height=&quot;wrap_content&quot;/&gt;
+
+    &lt;/android.support.design.widget.AppBarLayout&gt;</code></pre>
+
+<p><a href="http://developer.android.com/reference/android/support/design/widget/AppBarLayout.html" target="_blank">http://developer.android.com/reference/android/support/design/widget/AppBarLayout.html</a></p>
+
+
+
+<h2>CoordinatorLayout</h2>
+
+<p>CoordinatorLayout是这次新添加的一个增强型的FrameLayout。在CoordinatorLayout中，我们可以在FrameLayout的基础上完成很多新的操作。</p>
+
+
+
+<h3>Floating View</h3>
+
+<p>MD的一个新的特性就是增加了很多可悬浮的View，像我们前面说的Floating Action Button。我们可以把FAB放在任何地方，只需要通过：</p>
+
+
+
+<pre><code>android:layout_gravity=&quot;end|bottom&quot;</code></pre>
+
+<p>来指定显示的位置。同时，它还提供了layout_anchor来供你设置显示坐标的锚点：</p>
+
+
+
+<pre><code>app:layout_anchor=&quot;/appbar&quot;</code></pre>
+
+
+
+
+
+<p>CoordinatorLayout可以说是这次support library更新的重中之重。它从另一层面去控制子view之间触摸事件的布局，Design library中的很多控件都利用了它。</p>
+
+<blockquote>
+  <p>一个很好的例子就是当你将FloatingActionButton作为一个子View添加进CoordinatorLayout并且将CoordinatorLayout传递给 Snackbar.make()，在3.0及其以上的设备上，Snackbar不会显示在悬浮按钮的上面，而是FloatingActionButton利用CoordinatorLayout提供的回调方法，在Snackbar以动画效果进入的时候自动向上移动让出位置，并且在Snackbar动画地消失的时候回到原来的位置，不需要额外的代码。</p>
+</blockquote>
+
+<p>官方的例子很好的说明了这一点：</p>
+
+
+
+<pre><code>&lt;android.support.design.widget.CoordinatorLayout
+        xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+        xmlns:app=&quot;http://schemas.android.com/apk/res-auto&quot;
+        android:layout_width=&quot;match_parent&quot;
+        android:layout_height=&quot;match_parent&quot;&gt;
+
+     &lt;! -- Your Scrollable View --&gt;
+    &lt;android.support7.widget.RecyclerView
+            android:layout_width=&quot;match_parent&quot;
+            android:layout_height=&quot;match_parent&quot;
+            app:layout_behavior=&quot;@string/appbar_scrolling_view_behavior&quot; /&gt;
+
+    &lt;android.support.design.widget.AppBarLayout
+            android:layout_width=&quot;match_parent&quot;
+            android:layout_height=&quot;wrap_content&quot;&gt;
+            &lt;android.support7.widget.Toolbar
+                  ...
+                  app:layout_scrollFlags=&quot;scroll|enterAlways&quot;&gt;
+
+            &lt;android.support.design.widget.TabLayout
+                  ...
+                  app:layout_scrollFlags=&quot;scroll|enterAlways&quot;&gt;
+     &lt;/android.support.design.widget.AppBarLayout&gt;
+&lt;/android.support.design.widget.CoordinatorLayout&gt;</code></pre>
+
+<p>其中，一个可以滚动的组件，例如RecyclerView、ListView（<strong>这里需要注意的是，貌似只支持RecyclerView、ListView，如果你用一个ScrollView，是没有效果的</strong>）。如果： <br/>
+1、给这个可滚动组件设置了layout_behavior <br/>
+2、给另一个控件设置了layout_scrollFlags <br/>
+那么，当设置了layout_behavior的控件滑动时，就会触发设置了layout_scrollFlags的控件发生状态的改变。</p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150604225906021.gif" type="image/gif" data-filename="20150604225906021.gif" alt="这里写图片描述" height="700" width="419"/></div><p></p>
+
+<p>设置的layout_scrollFlags有如下几种选项：</p>
+
+<ul>
+<li>scroll: 所有想滚动出屏幕的view都需要设置这个flag- 没有设置这个flag的view将被固定在屏幕顶部。</li>
+<li>enterAlways: 这个flag让任意向下的滚动都会导致该view变为可见，启用快速“返回模式”。</li>
+<li>enterAlwaysCollapsed: 当你的视图已经设置minHeight属性又使用此标志时，你的视图只能已最小高度进入，只有当滚动视图到达顶部时才扩大到完整高度。 </li>
+<li>exitUntilCollapsed: this flag causes the view to scroll off until it is ‘collapsed’ (its minHeight) before exiting。</li>
+</ul>
+
+<p>需要注意的是，后面两种模式基本只有在CollapsingToolbarLayout才有用，而前面两种模式基本是需要一起使用的，也就是说，这些flag的使用场景，基本已经固定了。 <br/>
+例如我们前面例子中的，也就是这种模式：</p>
+
+
+
+<pre><code>layout_scrollFlags=&quot;scroll|enterAlways&quot;</code></pre>
+
+<blockquote>
+  <p>PS : 所有使用scroll flag的view都必须定义在没有使用scroll flag的view的前面，这样才能确保所有的view从顶部退出，留下固定的元素。</p>
+</blockquote>
+
+<p><a href="http://developer.android.com/reference/android/support/design/widget/CoordinatorLayout.html" target="_blank">http://developer.android.com/reference/android/support/design/widget/CoordinatorLayout.html</a></p>
+
+
+
+<h2>CollapsingToolbarLayout</h2>
+
+<p>CollapsingToolbarLayout提供了一个可以折叠的Toolbar，这也是Google+、photos中的效果。Google把它做成了一个标准控件，更加方便大家使用。</p>
+
+<p>这里先看一个例子：</p>
+
+
+
+<pre><code>    &lt;android.support.design.widget.AppBarLayout
+        android:id=&quot;@+id/appbar&quot;
+        android:layout_width=&quot;match_parent&quot;
+        android:layout_height=&quot;@dimen/detail_backdrop_height&quot;
+        android:fitsSystemWindows=&quot;true&quot;
+        android:theme=&quot;@style/ThemeOverlay.AppCompat.Dark.ActionBar&quot;&gt;
+
+        &lt;android.support.design.widget.CollapsingToolbarLayout
+            android:id=&quot;@+id/collapsing_toolbar&quot;
+            android:layout_width=&quot;match_parent&quot;
+            android:layout_height=&quot;match_parent&quot;
+            android:fitsSystemWindows=&quot;true&quot;
+            app:contentScrim=&quot;?attr/colorPrimary&quot;
+            app:expandedTitleMarginEnd=&quot;64dp&quot;
+            app:expandedTitleMarginStart=&quot;48dp&quot;
+            app:layout_scrollFlags=&quot;scroll|exitUntilCollapsed&quot;&gt;
+
+            &lt;ImageView
+                android:id=&quot;@+id/backdrop&quot;
+                android:layout_width=&quot;match_parent&quot;
+                android:layout_height=&quot;match_parent&quot;
+                android:fitsSystemWindows=&quot;true&quot;
+                android:scaleType=&quot;centerCrop&quot;
+                android:src=&quot;@drawable/ic_banner&quot;
+                app:layout_collapseMode=&quot;parallax&quot;/&gt;
+
+            &lt;android.support7.widget.Toolbar
+                android:id=&quot;@+id/toolbar&quot;
+                android:layout_width=&quot;match_parent&quot;
+                android:layout_height=&quot;?attr/actionBarSize&quot;
+                app:layout_collapseMode=&quot;pin&quot;
+                app:popupTheme=&quot;@style/ThemeOverlay.AppCompat.Light&quot;/&gt;
+
+        &lt;/android.support.design.widget.CollapsingToolbarLayout&gt;
+
+    &lt;/android.support.design.widget.AppBarLayout&gt;</code></pre>
+
+<p>我们在CollapsingToolbarLayout中放置了一个ImageView和一个Toolbar。并把这个CollapsingToolbarLayout放到AppBarLayout中作为一个整体。在CollapsingToolbarLayout中，我们分别设置了ImageView和一个Toolbar的layout_collapseMode。 <br/>
+这里使用了CollapsingToolbarLayout的app:layout_collapseMode=”pin”来确保Toolbar在view折叠的时候仍然被固定在屏幕的顶部。当你让CollapsingToolbarLayout和Toolbar在一起使用的时候，title会在展开的时候自动变得大些，而在折叠的时候让字体过渡到默认值。必须注意，在这种情况下你必须在CollapsingToolbarLayout上调用setTitle()，而不是在Toolbar上。</p>
+
+<p>除了固定住view，你还可以使用app:layout_collapseMode=”parallax”（以及使用app:layout_collapseParallaxMultiplier=”0.7”来设置视差因子）来实现视差滚动效果（比如CollapsingToolbarLayout里面的一个ImageView），这中情况和CollapsingToolbarLayout的app:contentScrim=”?attr/colorPrimary”属性一起配合更完美。</p>
+
+<p>在这个例子中，我们同样设置了：</p>
+
+
+
+<pre><code>layout_scrollFlags=&quot;scroll|exitUntilCollapsed&quot;&gt;
+</code></pre>
+
+<p>来接收一个：</p>
+
+
+
+<pre><code>app:layout_behavior=&quot;@string/appbar_scrolling_view_behavior&quot;&gt;</code></pre>
+
+<p>这样才能产生滚动效果，而通过layout_collapseMode，我们就设置了滚动时内容的变化效果。</p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150604225806250.gif" type="image/gif" data-filename="20150604225806250.gif" alt="这里写图片描述" height="700" width="419"/></div><p></p>
+
+<p>再来看一个官方的实例：</p>
+
+<p></p><div><img src="Android Design Support Library使用详解 - eclipse__files/20150604230018928.gif" type="image/gif" data-filename="20150604230018928.gif" alt="这里写图片描述" height="996" width="560"/></div><p></p>
+
+
+
+<h3>CoordinatorLayout与自定义view</h3>
+
+<p>有一件事情必须注意，那就是CoordinatorLayout并不知道FloatingActionButton或者AppBarLayout的内部工作原理 - 它只是以Coordinator.Behavior的形式提供了额外的API，该API可以使子View更好的控制触摸事件与手势以及声明它们之间的依赖，并通过onDependentViewChanged()接收回调。</p>
+
+<p>可以使用CoordinatorLayout.DefaultBehavior(你的View.Behavior.class)注解或者在布局中使用app:layout_behavior=”com.example.app.你的View$Behavior”属性来定义view的默认行为。framework让任意view和CoordinatorLayout结合在一起成为了可能。</p>
+
+<p><a href="http://developer.android.com/reference/android/support/design/widget/CollapsingToolbarLayout.html" target="_blank">http://developer.android.com/reference/android/support/design/widget/CollapsingToolbarLayout.html</a></p>
+
+
+
+
+
+<p>经过几天的研究，Google这次提出的Android Design Support Library的意义其实并不在于给出了这些非常好的控件，其实这些控件在Github上基本都能找到相应的。它的目的在于Google给出了官方的设计指导，进一步完善了MD设计思想。这才是Android Design Support Library最重要的特性。当然，平心而论，这些控件的使用并不是非常的人性化，过多的封装导致整个效果不是非常的具有可定制性，但是，这毕竟是Google迈出的第一步，后面一定会更加牛逼。</p>
+
+
+
+
+
+<p>最后，给出一个融合MD和Android Design Support Library的Demo供大家研究，相信结合文章和代码，大家一定能很快理解Android Design Support Library的使用方法。</p>
+
+<p><a href="https://github.com/xuyisheng/DesignSupportLibraryDemo" target="_blank">DesignSupportLibraryDemo</a></p>
+
+<p><a href="https://github.com/xuyisheng/DesignSupportLibraryDemo" target="_blank">https://github.com/xuyisheng/DesignSupportLibraryDemo</a>  欢迎大家star、fork。</p>
+
+<p>当前版本还未完善，很多画面还在处理中。后续会进一步丰富、完善，作为一个MD设计的Demo。</p></div></div></div><br/></div></span>
+</div></body></html> 

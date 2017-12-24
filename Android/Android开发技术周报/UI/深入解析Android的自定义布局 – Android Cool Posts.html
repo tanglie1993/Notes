@@ -1,0 +1,81 @@
+<html>
+<head>
+  <title>深入解析Android的自定义布局 – Android Cool Posts</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1355"/>
+<h1>深入解析Android的自定义布局 – Android Cool Posts</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>深入解析Android的自定义布局</h1><div><div></div></div></div>
+
+	
+		<p><a href="http://greenrobot.me/wp-content/uploads/2014/12/layouts-post.png" target="_blank"></a></p><div><a href="http://greenrobot.me/wp-content/uploads/2014/12/layouts-post.png" target="_blank"><img src="深入解析Android的自定义布局 – Android Cool Posts_files/400.png" type="image/png" data-filename="400.png" alt="layouts-post" height="240" width="576"/></a></div><p></p>
+<h2>写在前面的话：</h2>
+<p>这篇文章是前Firefox Android工程师（现在<a href="http://lucasr.org/2014/11/27/joining-facebook/" target="_blank">跳槽</a>去Facebook了）<a href="http://lucasr.org/about" target="_blank">Lucas Rocha</a>所写，文中对Android中常用的四种自定义布局方案进行了很好地分析，并结合这四种Android自定义布局方案所写的示例项目讲解了它们各自的优劣以及四种方案之间的比较。看完这篇文章，也让我对Android 自定义布局有了进一步的了解，于是趁着兴头，我把它翻译成中文，<a href="http://lucasr.org/2014/05/12/custom-layouts-on-android/" target="_blank">原文链接在此</a>。</p>
+<p>只要你写过Android程序，你肯定使用过Android平台内建的几个布局——<i>RelativeLayout</i>, <i>LinearLayout</i>, <i>FrameLayout</i>等等。 它们能帮助我们很好的构建Android UI。</p>
+<p>这些内建的布局已经提供了很多方便的构件，但很多情况下你还是需要来定制自己的布局。</p>
+<p>总结起来，自定义布局有两大优点：</p>
+<ol>
+<li>通过减少view的使用和更快地遍历布局元素让你的UI显示更加有效率；</li>
+<li>可以构建那些无法由已有的view实现的UI。</li>
+</ol>
+<p>在这篇博文中，我将实现四种不同的自定义布局，并对它们的优缺点进行比较。它们分别是： <strong>composite view</strong>, <strong>custom composite view</strong>, <strong>flat custom view</strong>, 和 <strong>async custom views</strong>。</p>
+<p>这些代码实现可以在我的github上的 <a href="https://github.com/lucasr/android-layout-samples" target="_blank">android-layout-samples</a> 项目里找到。这个app使用上面说到的四种自定义布局实现了相同的UI效果。它们使用 <a href="http://square.github.io/picasso/" target="_blank">Picasso</a> 来加载图片。这个app的UI只是twitter timeline的简化版本——没有交互，只有布局。</p>
+<p>好啦，我们先从最常见的自定义布局开始吧： <i>composite view。</i></p>
+<h2>Composite View</h2>
+<p><i>Composite views</i> (也被称为 compound views) 是众多将多个view结合成为一个可重用UI组件的方法中最简单的。这种方法的实现过程是这样的：</p>
+<ol>
+<li>继承相关的内建的布局。</li>
+<li>在构造函数里面填充一个 <i>merge</i> 布局。</li>
+<li>初始化成员变量并通过 <i>findViewById()</i>指向内部view。</li>
+<li>添加自定义的API来查询和更新view的状态。</li>
+</ol>
+<p><i>TweetCompositeView</i><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/widget/TweetCompositeView.java" target="_blank"><sup>code</sup></a> 就是一个 composite view。它继承于 <i>RelativeLayout</i>，并填充了 <i>tweet_composite_layout.xml</i><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/res/layout/tweet_composite_view.xml" target="_blank"><sup>code</sup></a> 布局文件，最后向外界暴露了 <i>update()</i>方法来更新它在adapter<a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/adapter/TweetsAdapter.java#L85" target="_blank"><sup>code</sup></a>里面的状态。</p>
+<h2>Custom Composite View</h2>
+<p>上面提到的<i>TweetCompositeView</i> 这种实现方式能满足大部分的情况。但是碰到某些情况就不灵了。假设你现在想要减少子视图的数量，让布局元素的便利更加有效。</p>
+<p>这个时候我们可以回过头来看看，尽管 composite views 实现起来比较简单，但是使用这些内建的布局还是有不少的开销的——特别是 <i>LinearLayout</i> 和<i>RelativeLayout</i>这种比较复杂的容器。由于Android平台内建布局的实现，在一次布局元素遍历中，系统需要处理许多布局的结合和子视图的多次测量——<i>LinearLayout</i>的 <i>layout_weight</i> 的属性就是常见例子。</p>
+<p>因此你可以为你的app量身定做一套子视图的计算和定位逻辑，这样的话你就可以极大的优化你的UI了。这种做法就是我接下来要介绍的 <i>custom composite view</i>.</p>
+<p>顾名思义，一个 custom composite view 就是一个重写了<i>onMeasure()</i> 和<i>onLayout()</i> 方法的 composite view 。因此相比之前的composite view继承了 <i>RelativeLayout，</i>现在我们需要更进一步——继承更抽象的<i>ViewGroup。</i></p>
+<p><i>TweetLayoutView</i><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/widget/TweetLayoutView.java" target="_blank"><sup>code</sup></a> 就是通过这种技术实现的。注意现在这个实现不像 <i>TweetComposiveView</i> 继承了<i>LinearLayout</i> ，这也就避免了 <i>layout_weight</i><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/res/layout/tweet_layout_view.xml" target="_blank"><sup>code</sup></a>这个属性的使用了。</p>
+<p>这个大费周折的过程通过ViewGroup’s 的<a href="http://developer.android.com/reference/android/view/ViewGroup.html#measureChildWithMargins%28android.view.View,%20int,%20int,%20int,%20int%29" target="_blank"><i>measureChildWithMargins()</i></a> 方法和背后的 <a href="http://developer.android.com/reference/android/view/ViewGroup.html#getChildMeasureSpec%28int,%20int,%20int%29" target="_blank"><i>getChildMeasureSpec()</i></a> 方法计算出了每个子视图的 <a href="http://developer.android.com/reference/android/view/View.MeasureSpec.html" target="_blank"><i>MeasureSpec</i></a> 。</p>
+<p><i>TweetLayoutView</i> 不能正确地处理所有可能的 layout 组合但是它也不必这样。我们肯定需要根据特定需求来优化我们的自定义布局，这种方式可以让我们写出简单高效的布局代码。</p>
+<h2>Flat Custom View</h2>
+<p>如你所见，custom composite views 可以简单地通过使用<i>ViewGroup</i> 的API就可以实现了。大部分时候，这种实现是可以满足我们的需求的。</p>
+<p>然而我们想更进一步的话——优化我们应用中的关键部分UI，比如 <i>ListViews</i> ，<i>ViewPager</i>等等。如果我们把所有的 <i>TweetLayoutView</i> 子视图合并成一个单一的自定义视图然后统一管理会怎么样呢？这就是我们接下来要讨论的 <i>flat custom view</i>——参看下面的图片。</p>
+<div><a href="http://greenrobot.me/wp-content/uploads/2014/12/layouts.png" target="_blank"><div><img src="深入解析Android的自定义布局 – Android Cool Posts_files/205.png" type="image/png" data-filename="205.png" alt="layouts" height="197" width="576"/></div></a><br/>
+<div>左边为CUSTOM COMPOSITE VIEW ，右边是FLAT CUSTOM VIEW</div>
+</div>
+<p>flat custom view 就是一个完全自定义的 view ，它完全负责内部的子视图的计算，位置安排，绘制。所以它就直接继承了<i>View</i> 而不是 <i>ViewGroup</i>。</p>
+<p>如果你想找找现实生活中app是否存在这样的例子，很简单——开启你手机“开发者模式”里面的 “显示布局边界”选项，然后打开 Twitter, Gmail, 或者 Pocket这些app，它们在列表UI里面都采用了 flat custom view。</p>
+<p>使用 flat custom view最主要的好处就是可以极大地压缩app 的视图层级，进而可以进行更快的布局元素遍历，最终可以减少内存占用。</p>
+<p>Flat custom view 可以给你最大的自由，就好像你在一张白纸上面作画。但是这样的自由是有代价的：你不能使用已有的那些视图元素了，比如 <i>TextView</i> 和 <i>ImageView</i>。没错，在 <i>Canvas</i> 上面<a href="http://developer.android.com/reference/android/graphics/Canvas.html#drawText%28java.lang.String,%20float,%20float,%20android.graphics.Paint%29" target="_blank">描绘文本 </a>的确很简单，但要你实现 <a href="http://developer.android.com/reference/android/widget/TextView.html#setEllipsize%28android.text.TextUtils.TruncateAt%29" target="_blank">ellipsizing</a>（就是对过长的文本截断）呢？同样， 在 <i>Canvas</i> 上面 <a href="http://developer.android.com/reference/android/graphics/Canvas.html#drawBitmap%28int[],%20int,%20int,%20float,%20float,%20int,%20int,%20boolean,%20android.graphics.Paint%29" target="_blank">描绘图片</a>确很简单，但是如何<a href="http://developer.android.com/reference/android/widget/ImageView.html#attr_android:scaleType" target="_blank">缩放</a>呢？这些限制同样适用于touch events, accessibility, keyboard navigation等等。</p>
+<p>所以使用flat custom view的底线就是：只将flat custom view应用于你的app的UI核心部分，其他的就直接依赖Android平台提供的view了。</p>
+<p><i>TweetElementView</i><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/widget/TweetElementView.java" target="_blank"><sup>code</sup></a> 就是 flat custom view。为了更容易的实现它，我创建了一个小小的自定义视图框架叫做<i>UIElement</i>。你可以在  <i>canvas</i><a href="https://github.com/lucasr/android-layout-samples/tree/master/src/main/java/org/lucasr/layoutsamples/canvas" target="_blank"><sup>code</sup></a> 这个包里找到它。</p>
+<p><i>UIElement</i> 提供了和Android平台类似的 measure/layout API 。它包含了没有图像界面的 <i>TextView</i> 和 <i>ImageView</i> ，这两个元素包含了几个必需的特性——分别参看 <i>TextElement</i><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/canvas/TextElement.java" target="_blank"><sup>code</sup></a> 和<i>ImageElement</i><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/canvas/ImageElement.java" target="_blank"><sup>code</sup></a> 。它还拥有自己的 inflater<a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/canvas/UIElementInflater.java" target="_blank"><sup>code</sup></a> ，帮助从 布局资源文件<sup><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/res/layout/tweet_element_view.xml" target="_blank">code</a></sup>里面实例化<i>UIElement </i> 。</p>
+<p>注意： <i>UIElement</i> 还处于非常早期的开发阶段，所以还有很多缺陷，不过将来随着不断的改进<i>UIElement</i> 可能会变得非常有用。</p>
+<p>你可能觉得<i>TweetElementView</i> 的代码看起来很简单，这是因为实际代码都在 <i>TweetElement</i><sup><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/widget/TweetElement.java" target="_blank">code</a></sup>里面——实际上<i>TweetElementView</i> 扮演托管的角色<a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/canvas/UIElementHost.java" target="_blank"><sup>code</sup></a>。</p>
+<p><i>TweetElement </i> 里面的布局代码和<i>TweetLayoutView</i>‘非常类似，但是它使用 Picasso 请求图片时却不一样<a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/widget/ImageElementTarget.java" target="_blank"><sup>code</sup></a> ，因为<i>TweetElement </i> 没有使用<i>ImageView</i>。</p>
+<h2>Async Custom View</h2>
+<p>总所周知，Android UI 框架时<a href="http://developer.android.com/guide/components/processes-and-threads.html#Threads" target="_blank">单线程</a>的 。 这样的单线程会带来一些限制。比如，你不能在主线程之外遍历布局元素——然而这对复杂、动态的UI是很有益处的。</p>
+<p>假如你的app 在一个<i>ListView</i> 中很布局比较复杂的条目(就像大多数社交app一样)，那么你在滑动<i>ListView</i> 就很有可能出现跳帧的现象，因为<i>ListView</i> 需要为列表中即将出现的新内容计算它们的视图大小<a href="https://github.com/android/platform_frameworks_base/blob/kitkat-release/core/java/android/widget/ListView.java#L1870" target="_blank"><sup>code</sup></a>和布局<sup><a href="https://github.com/android/platform_frameworks_base/blob/kitkat-release/core/java/android/widget/ListView.java#L1882" target="_blank">code</a>。</sup>同样的问题也会出现在<i>GridViews</i>，<i>ViewPagers</i>等等。</p>
+<p>如果我们可以在主线程之外的线程上面对那些还没有出现的子视图进行布局遍历是不是就可以解决上面的问题了？也就是说，在子视图上面调用 <i>measure()</i> 和<i>layout()</i> 方法都不会占用主线程的时间了。</p>
+<p>所以 <i>async custom view </i>就是一个允许子视图布局遍历过程发生在主线程之外的实验，这个idea是受到Facebook的Paperteam <a href="https://www.youtube.com/watch?v=TCuVxU07NWs&amp;feature=youtu.be&amp;t=33m43s" target="_blank">async node framework</a> 这个视频激发所想到的。</p>
+<p>既然我们在主线程之外永远接触不到Android平台的UI组件，因此我们需要一个API在不能直接接触到这个视图的前提下对这个视图的内容进行测量、布局。这恰恰就是 <i>UIElement</i> 框架提供给我的功能。</p>
+<p><i>AsyncTweetView</i><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/async/AsyncTweetView.java" target="_blank"><sup>code</sup></a> 就是一个 async custom view。它使用了一个线程安全的 <i>AsyncTweetElement</i><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/async/AsyncTweetElement.java" target="_blank"><sup>code</sup></a> 工厂类<a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/async/AsyncTweetElementFactory.java" target="_blank"><sup>code</sup></a> 来定义它的内容。具体过程是一个 <a href="https://github.com/lucasr/smoothie" target="_blank">Smoothie</a> 子项加载器<sup><a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/async/TweetsLayoutLoader.java" target="_blank">code</a> </sup>在一个后台线程上对暂时不可见的<i>AsyncTweetElement</i> 进行创建、预测量和缓存（在内存里面，以便后来直接使用）。</p>
+<p>当然在实现这个异步UI的过程中我还是妥协了一些，因为你不知道如何显示任意高度的布局占位符。比如，当布局异步传递过来的时候你只能在后台线程对它们的大小进行一次更改。因此当一个 <i>AsyncTweetView</i> 就要显示的时候却无法在内存里面找到合适的<i>AsyncTweetElement</i> ，这个时候框架就会强制在主线程上面创建一个<i>AsyncTweetElement</i> <a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/async/AsyncTweetView.java#L46" target="_blank"><sup>code</sup></a>。</p>
+<p>还有，预先加载的逻辑和内存缓存过期时间设置都需要比较好的实现来保证在主线程尽可能多地利用内存里面的缓存布局。比如，这个方案中使用 LRU 缓存<a href="https://github.com/lucasr/android-layout-samples/blob/master/src/main/java/org/lucasr/layoutsamples/async/UIElementCache.java" target="_blank"><sup>code</sup></a> 就不是一个明智的选择。</p>
+<p>尽管还存在这些限制，但是使用 async custom view 的得到的初步结果还是很有前途的。当然我也会通过重构这个<em>UIElement</em>  框架和使用其他类别的UI在这个领域继续探索。让我们静观其变吧。</p>
+<p><b>总结</b></p>
+<p>在我们涉及到布局的时候，我们自定义的越深，我们能从Android平台所能获得的依赖就越少。所以我们也要避免过早优化，只在确实能实实在在改善app质量和性能的区域进行完全的布局自定义。</p>
+<p>这不是一个非黑即白的决定。在使用平台提供的UI元素和完全自定义的两种极端之间还有很多方案——从简单的composite views 到复杂的 async views。实际项目中，你可能会结合文中的几种方案写出优秀的app。</p>
+	</div></div></div><br/></div></span>
+</div></body></html> 

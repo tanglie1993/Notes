@@ -1,0 +1,173 @@
+<html>
+<head>
+  <title>ConstraintLayout入门指南</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2864"/>
+<h1>ConstraintLayout入门指南</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>0. 为什么要引入ConstraintLayout</h1><div><div></div></div></div><p>你可能在之前的UI开发中遇到过以下问题：</p><ul><li><p>RelativeLayout（以下简称RL）的性能开销较大，而你又很难不使用RL；</p></li><li><p>想要按比例布局就要使用layout_weight属性，想要使用layout_weight属性就要使用LinearLayout（以下简称LL）或者TableLayout（以下简称TL），然后你在原先同级的每个布局外再嵌套一层布局以使用layout_weight；</p></li><li><p>按固定宽高比布局等更高阶的布局需求，原先的各类布局方式都不能很好的支持，可能需要通过Java代码，在运行中二次实现；</p></li><li><p>亦或者你只是想尝试下这款Andorid官方力推的新布局，看看它有什么新特性。</p></li></ul><h1>1. 准备工作</h1><p>1.1 确保SDK Tools中已经下载了ConstraintLayout（以下简称CL）的支持库：</p><p></p><div><img src="ConstraintLayout入门指南_files/640.webp" type="image/webp" data-filename="640.webp"/></div><p></p><p>1.2 gradle中增加对ConstraintLayout的依赖：</p><pre><code>compile 'com.android.support.constraint:constraint-layout:1.0.2'</code></pre><p>1.3 在使用到ConstraintLayout的xml文件头部添加标签：</p><pre><code>xmlns:app=&quot;http://schemas.android.com/apk/res-auto&quot;</code></pre><p>1.4 如果xml能正常联想出ConstraintLayout，并且其子View能正常联想出ConstraintLayout的相关属性，说明ConstraintLayout已经成功依赖：</p><p></p><div><img src="ConstraintLayout入门指南_files/Image.png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p></p><div><img src="ConstraintLayout入门指南_files/Image [1].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><h1>2. Step by Step上手</h1><p>先定一个小目标：将RL / LL实现的需求，通过CL来实现一遍。虽然Android Studio 2.3已经支持将其他布局自动转换成CL：</p><p></p><div><img src="ConstraintLayout入门指南_files/Image [2].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>但还是建议先亲自上手码一遍：</p><ul><li><p>理解CL的布局规则；</p></li><li><p>自动转换CL的功能目前还不是很完善，可能所见非所得。自动转换后还是要手动check下效果的。</p></li></ul><h2>2.1 相对布局</h2><p>RL最常见的使用场景：我要控件B在控件A/父布局的上、下、左、右边，我要控件B跟控件A/父布局间距xxx dp。<br/>e.g：控件B位于控件A右侧50dp：</p><ul><li><p>RL实现</p><pre><code>&lt;RelativeLayout
+      android:layout_width=&quot;match_parent&quot;
+      android:layout_height=&quot;wrap_content&quot;&gt;
+
+      &lt;TextView
+          android:id=&quot;@+id/tv_a&quot;
+          android:layout_width=&quot;100dp&quot;
+          android:layout_height=&quot;100dp&quot;
+          android:background=&quot;@color/colorPrimary&quot;/&gt;
+
+      &lt;TextView
+          android:id=&quot;@+id/tv_b&quot;
+          android:layout_width=&quot;100dp&quot;
+          android:layout_height=&quot;100dp&quot;
+          android:layout_toRightOf=&quot;@id/tv_a&quot;
+          android:layout_marginLeft=&quot;50dp&quot;
+          android:background=&quot;@color/colorAccent&quot;/&gt;<br/>&lt;/RelativeLayout&gt;</code></pre></li><li><p>CL实现</p><pre><code>&lt;android.support.constraint.ConstraintLayout
+      android:layout_width=&quot;match_parent&quot;
+      android:layout_height=&quot;wrap_content&quot;&gt;
+
+      &lt;TextView
+          android:id=&quot;@+id/tv_a&quot;
+          android:layout_width=&quot;100dp&quot;
+          android:layout_height=&quot;100dp&quot;
+          android:background=&quot;@color/colorPrimary&quot;/&gt;
+
+      &lt;TextView
+          android:id=&quot;@+id/tv_b&quot;
+          android:layout_width=&quot;100dp&quot;
+          android:layout_height=&quot;100dp&quot;
+          android:layout_marginLeft=&quot;50dp&quot;
+          app:layout_constraintLeft_toRightOf=&quot;@id/tv_a&quot;
+          android:background=&quot;@color/colorAccent&quot;/&gt;<br/>&lt;/android.support.constraint.ConstraintLayout&gt;</code></pre></li></ul><p>看上去几乎没有什么差别。事实上，RL中所有的属性CL中都有与之对应的项目，稍加熟悉即可完成转换：</p><table><thead><tr><th>CL属性</th><th>RL属性</th></tr></thead><tbody><tr><td>layout_constraintLeft_toLeftOf</td><td>layout_alignLeft</td></tr><tr><td>layout_constraintLeft_toRightOf</td><td>layout_toRightOf</td></tr><tr><td>layout_constraintRight_toLeftOf</td><td>layout_toLeftOf</td></tr><tr><td>layout_constraintRight_toRightOf</td><td>layout_alignRight</td></tr><tr><td>layout_constraintTop_toTopOf</td><td>layout_alignTop</td></tr><tr><td>layout_constraintTop_toBottomOf</td><td>layout_below</td></tr><tr><td>layout_constraintBottom_toTopOf</td><td>layout_above</td></tr><tr><td>layout_constraintBottom_toBottomOf</td><td>layout_alignBottom</td></tr><tr><td>layout_constraintBaseline_toBaselineOf</td><td>layout_alignBaseline</td></tr><tr><td>layout_constraintStart_toEndOf</td><td>layout_toEndOf (API 17)</td></tr><tr><td>layout_constraintStart_toStartOf</td><td>layout_alignStart (API 17)</td></tr><tr><td>layout_constraintEnd_toStartOf</td><td>layout_toStartOf (API 17)</td></tr><tr><td>layout_constraintEnd_toEndOf</td><td>layout_alignEnd (API 17)</td></tr></tbody></table><p>而相对于父布局的相对布局属性，CL的规则是：<strong>将父布局当做一个id=”parent”</strong>的对象来对待。也比较好理解：</p><table><thead><tr><th>CL属性</th><th>RL属性</th></tr></thead><tbody><tr><td>layout_constraintTop_toTopOf=”parent”</td><td>layout_alignParentTop=”true”</td></tr><tr><td>layout_constraintBottom_toBottomOf=”parent”</td><td>layout_alignParentBottom=”true”</td></tr><tr><td>layout_constraintLeft_toLeftOf=”parent”</td><td>layout_alignParentLeft=”true”</td></tr><tr><td>layout_constraintRight_toRightOf=”parent”</td><td>layout_alignParentRight=”true”</td></tr><tr><td>layout_constraintStart_toStartOf=”parent”</td><td>layout_alignParentStart=”true”</td></tr><tr><td>layout_constraintEnd_toEndOf=”parent”</td><td>layout_alignParentEnd=”true”</td></tr><tr><td>layout_constraintLeft_toLeftOf=”parent” layout_constraintRight_toRightOf=”parent”</td><td>layout_centerHorizontal=”true”</td></tr><tr><td>layout_constraintTop_toTopOf=”parent” layout_constraintBottom_toBottomOf=”parent”</td><td>layout_centerVertical=”true”</td></tr><tr><td>layout_constraintLeft_toLeftOf=”parent” layout_constraintRight_toRightOf=”parent” layout_constraintTop_toTopOf=”parent” layout_constraintBottom_toBottomOf=”parent”</td><td>layout_centerInParent=”true”</td></tr></tbody></table><h2><br/>2.2 固定比例间距</h2><p>layout_weight属性常见的使用场景：我要控件A的左间距和右间距的比例为x:(1-x)。<br/>e.g：控件A左间距和右间距的比例是3:7：</p><ul><li><p>TL实现（可能并非最优写法）</p><pre><code>&lt;TableLayout
+      android:layout_width=&quot;match_parent&quot;
+      android:layout_height=&quot;wrap_content&quot;
+      android:orientation=&quot;horizontal&quot;
+      android:shrinkColumns=&quot;0,2&quot;&gt;
+
+      &lt;TableRow&gt;
+          &lt;View
+              android:layout_width=&quot;match_parent&quot;
+              android:layout_height=&quot;wrap_content&quot;
+              android:layout_weight=&quot;0.3&quot;/&gt;
+
+          &lt;TextView
+              android:id=&quot;@+id/tv_a&quot;
+              android:layout_width=&quot;100dp&quot;
+              android:layout_height=&quot;100dp&quot;
+              android:background=&quot;@color/colorPrimary&quot;/&gt;
+
+          &lt;View
+              android:layout_width=&quot;match_parent&quot;
+              android:layout_height=&quot;wrap_content&quot;
+              android:layout_weight=&quot;0.7&quot;/&gt;
+      &lt;/TableRow&gt;&lt;/TableLayout&gt;</code></pre></li><li><p>CL实现</p><pre><code>&lt;android.support.constraint.ConstraintLayout
+      android:layout_width=&quot;match_parent&quot;
+      android:layout_height=&quot;wrap_content&quot;&gt;
+
+      &lt;TextView
+          android:id=&quot;@+id/tv_a&quot;
+          android:layout_width=&quot;100dp&quot;
+          android:layout_height=&quot;100dp&quot;
+          android:background=&quot;@color/colorPrimary&quot;
+          app:layout_constraintLeft_toLeftOf=&quot;parent&quot;
+          app:layout_constraintRight_toRightOf=&quot;parent&quot;
+          app:layout_constraintHorizontal_bias=&quot;0.3&quot;/&gt;<br/>&lt;/android.support.constraint.ConstraintLayout&gt;</code></pre></li></ul><p>在设置了各类居中属性的基础上，通过<strong>layout_constraintHorizontal_bias</strong>和<strong>layout_constraintVertical_bias</strong>两个属性，可以简单直观的完成间距比例的设置。</p><h2>2.3 固定比例宽高</h2><p>原先，在未指定宽高具体数值的情况下，让View / ViewGroup按照比例动态调整宽高比，实现起来比较麻烦。你可能需要等到View / ViewGroup绘制出来后，拿到它的LayoutParams，获取固定边的长度，计算出被动边的长度，最后将LayoutParams set回去。而有了CL提供的<strong>layout_constraintDimensionRatio</strong>属性，一行xml即可搞定。<br/> e.g：控件A按照宽高比4:3展示，宽为固定边，高为被动边：</p><pre><code>&lt;android.support.constraint.ConstraintLayout
+        android:layout_width=&quot;match_parent&quot;
+        android:layout_height=&quot;wrap_content&quot;&gt;
+
+    &lt;!--layout_constraintDimensionRatio的H/W表示被动调整的是高(H)或是宽(W)--&gt;
+    &lt;View
+        android:layout_width=&quot;0dp&quot;
+        android:layout_height=&quot;0dp&quot;
+        android:layout_marginLeft=&quot;100dp&quot;
+        android:layout_marginRight=&quot;100dp&quot;
+        app:layout_constraintDimensionRatio=&quot;H,4:3&quot;
+        android:background=&quot;@color/colorPrimary&quot;
+        app:layout_constraintLeft_toLeftOf=&quot;parent&quot;
+        app:layout_constraintRight_toRightOf=&quot;parent&quot;/&gt;<br/>&lt;/android.support.constraint.ConstraintLayout&gt;</code></pre><p>上面的示例中，layout_width和layout_height都设置为了0dp，0dp在CL布局中等同于<strong>MATCH_CONSTRAINT——CL的一个新属性常量</strong>。在CL中，子View / ViewGroup无法使用match_parent属性。<br/>MATCH_CONSTRAINT搭配不同的属性有不同的意义：</p><ul><li><p>设置<strong>layout_constraintDimensionRatio</strong>属性的情况下，代表该边长度由<strong>layout_constraintDimensionRatio</strong>动态调整；</p></li><li><p>weighted chain（后面会提到）中，代表该边长度由<strong>layout_constraintHorizontal_weight</strong>或<strong>layout_constraintVertical_weight</strong>动态调整；</p></li><li><p>其他情况下，等同于match_parent，代表该边长度由各margin动态调整；</p></li></ul><h2>2.4 GoneMargin</h2><blockquote><p>layout_goneMarginStart<br/>layout_goneMarginEnd<br/>layout_goneMarginLeft<br/>layout_goneMarginTop<br/>layout_goneMarginRight<br/>layout_goneMarginBottom</p></blockquote><p>layout_goneMargin系列是CL中新加入的属性。相对布局的两个控件，其中一方Visibility == Gone时，另外一方将会根据layout_goneMargin系列属性的值重新规划自己的间距。比较常用于在相对布局中保持各个控件的位置。<br/>e.g：控件B在控件A设置Visibility == Gone后保持在原来的位置：</p><pre><code>&lt;android.support.constraint.ConstraintLayout
+        android:layout_width=&quot;match_parent&quot;
+        android:layout_height=&quot;wrap_content&quot;
+        android:layout_marginTop=&quot;100dp&quot;&gt;
+
+        &lt;TextView
+            android:id=&quot;@+id/tv_a&quot;
+            android:layout_width=&quot;50dp&quot;
+            android:layout_height=&quot;50dp&quot;
+            android:background=&quot;@color/colorPrimary&quot;
+            android:gravity=&quot;center&quot;
+            android:text=&quot;A&quot;
+            android:textSize=&quot;30sp&quot;/&gt;
+
+        &lt;TextView
+            android:id=&quot;@+id/tv_b&quot;
+            android:layout_width=&quot;50dp&quot;
+            android:layout_height=&quot;50dp&quot;
+            android:layout_marginLeft=&quot;50dp&quot;
+            app:layout_goneMarginLeft=&quot;100dp&quot;
+            app:layout_constraintLeft_toRightOf=&quot;@id/tv_a&quot;
+            android:background=&quot;@color/colorAccent&quot;
+            android:gravity=&quot;center&quot;
+            android:text=&quot;B&quot;
+            android:textSize=&quot;30sp&quot;/&gt;<br/>&lt;/android.support.constraint.ConstraintLayout&gt;</code></pre><p></p><div><img src="ConstraintLayout入门指南_files/Image [3].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><h2>2.5 Chain</h2><p>chain是CL中新加入的控件与控件间的关系。组成chain的多个控件，可以在同一方向上更加方便的完成复杂的布局要求。</p><h3>2.5.1 组成chain</h3><p>多个控件组成chain需要满足以下条件：</p><ol><li><p>控件间的布局存在相互依赖关系（你依赖我布局，我也依赖你布局）；</p></li><li><p>两个以上的控件，相互依赖关系需要保持在同一个方向上（都是水平方向上的依赖：Left_toRightOf / Right_toLeftOf；或者都是垂直方向上的依赖：Top_toBottomOf / Bottom_toTopOf）；</p></li></ol><p>听起来很绕。e.g：控件A、B、C在水平方向上组成chain：</p><ol><li><pre><code>&lt;android.support.constraint.ConstraintLayout
+     android:layout_width=&quot;match_parent&quot;
+     android:layout_height=&quot;wrap_content&quot;&gt;
+
+     &lt;TextView
+         android:id=&quot;@+id/tv_a&quot;
+         android:layout_width=&quot;50dp&quot;
+         android:layout_height=&quot;50dp&quot;
+         android:layout_marginRight=&quot;50dp&quot;
+         app:layout_constraintRight_toLeftOf=&quot;@+id/tv_b&quot;/&gt;
+
+     &lt;TextView
+         android:id=&quot;@+id/tv_b&quot;
+         android:layout_width=&quot;50dp&quot;
+         android:layout_height=&quot;50dp&quot;
+         app:layout_constraintLeft_toRightOf=&quot;@id/tv_a&quot;
+         app:layout_constraintRight_toLeftOf=&quot;@+id/tv_c&quot;/&gt;
+
+     &lt;TextView
+         android:id=&quot;@+id/tv_c&quot;
+         android:layout_width=&quot;50dp&quot;
+         android:layout_height=&quot;50dp&quot;
+         android:layout_marginLeft=&quot;50dp&quot;
+         app:layout_constraintLeft_toRightOf=&quot;@id/tv_b&quot;/&gt;<br/>&lt;/android.support.constraint.ConstraintLayout&gt;</code></pre></li></ol><p>示例中，控件A和控件B通过 <strong>layout_constraintRight_toLeftOf=”@+id/tv_b”</strong>和<strong>layout_constraintLeft_toRightOf=”@id/tv_a”</strong> 达成了水平方向的相互依赖关系。控件B与控件C同理。同时，又由于控件A与B、控件B与C均是水平方向的chain关系，控件A、B、C三者在水平方向组成了一条chain。<br/>在xml的Design窗口下，组成chain的控件间会出现一条链条：</p><p></p><div><img src="ConstraintLayout入门指南_files/Image [4].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><h3>2.5.2 设置chain style</h3><p>水平方向chain最左边的控件和垂直方向chain最顶部的控件被成为<strong>head chain</strong>。通过对head chain添加<strong>chainStyle</strong>属性，可以设置该条chain在水平或垂直方向上的chainStyle：</p><ul><li><p>layout_constraintHorizontal_chainStyle</p></li><li><p>layout_constraintVertical_chainStyle</p></li></ul><p>chainStyle属性一共有三种：spread、spread_inside、packed。再配合其他属性，最终可以组成五种chain style：</p><table><thead><tr><th>chain style</th><th>设置方式</th></tr></thead><tbody><tr><td>Spread Chain</td><td>chainStyle = “spread”</td></tr><tr><td>Spread Inside Chain</td><td>chainStyle = “spread_inside”</td></tr><tr><td>Packed Chain</td><td>chainStyle = “packed”</td></tr><tr><td>Packed Chain with Bias</td><td>chainStyle = “packed” layout_constraintHorizontal_bias layout_constraintVertical_bias</td></tr><tr><td>Weighted Chain</td><td>chainStyle = “spread” layout_constraintHorizontal_weight layout_constraintVertical_weight layout_width = “0dp” layout_height = “0dp”</td></tr></tbody></table><p>官方的这张图已经比较清楚的展示了chain style各自的布局效果：</p><p></p><div><img src="ConstraintLayout入门指南_files/Image [5].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>前四种chain style的设置和效果都比较简单，不再赘述。<br/>重点介绍下Weighted Chain，Weighted Chain的设置方式相对比较复杂，以水平方向的chain为例：</p><pre><code>&lt;android.support.constraint.ConstraintLayout
+        android:layout_width=&quot;match_parent&quot;
+        android:layout_height=&quot;wrap_content&quot;&gt;
+
+        &lt;TextView
+            android:id=&quot;@+id/tv_a&quot;
+            android:layout_width=&quot;0dp&quot;
+            android:layout_height=&quot;50dp&quot;
+            android:background=&quot;@color/colorPrimary&quot;
+            app:layout_constraintHorizontal_chainStyle=&quot;spread&quot;
+            app:layout_constraintHorizontal_weight=&quot;0.33&quot;
+            app:layout_constraintLeft_toLeftOf=&quot;parent&quot;
+            app:layout_constraintRight_toLeftOf=&quot;@+id/tv_b&quot;/&gt;
+
+        &lt;TextView
+            android:id=&quot;@+id/tv_b&quot;
+            android:layout_width=&quot;0dp&quot;
+            android:layout_height=&quot;50dp&quot;
+            app:layout_constraintHorizontal_weight=&quot;0.33&quot;
+            app:layout_constraintLeft_toRightOf=&quot;@id/tv_a&quot;
+            app:layout_constraintRight_toLeftOf=&quot;@+id/tv_c&quot;/&gt;
+
+        &lt;TextView
+            android:id=&quot;@+id/tv_c&quot;
+            android:layout_width=&quot;0dp&quot;
+            android:layout_height=&quot;50dp&quot;
+            app:layout_constraintHorizontal_weight=&quot;0.33&quot;
+            app:layout_constraintLeft_toRightOf=&quot;@id/tv_b&quot;
+            app:layout_constraintRight_toRightOf=&quot;parent&quot;/&gt;<br/>&lt;/android.support.constraint.ConstraintLayout&gt;</code></pre><p></p><div><img src="ConstraintLayout入门指南_files/Image [6].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><ul><li><p>chain head设置chainStyle为spread；</p></li><li><p>chain中控件设置了layout_constraintHorizontal_weight参数；</p></li><li><p>chain中控件都需要将layout_weight设置为0dp（2.3中提到的MATCH_CONSTRAINT）；</p></li></ul><p>除此以外，Weighted Chain还有以下特征：</p><ul><li><p>Weighted Chain中的控件也允许在chain方向上使用wrap_content自适应控件宽 / 高，且布局时优先满足设置为wrap_content的控件；<br/>  e.g：将示例中的控件C layout_width设置为wrap_content：</p><p></p><div><img src="ConstraintLayout入门指南_files/Image [7].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p></li><li><p>Weighted Chain中的控件既不设置constraint_weight，也不在chain方向上将边设置为wrap_content，那么该控件将被隐藏；</p></li><li><p>如果Weighted Chain中的控件在chain方向上设置了margin，margin的距离将计算入该控件实际占有的布局范围；<br/>  e.g：将示例中的控件B左右各添加10dp margin后，控件A和C的实际占有布局并没有被压缩：</p><p></p><div><img src="ConstraintLayout入门指南_files/Image [8].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p></li></ul><h1>3. 简单的性能测试</h1><p>官方称，CL相较于RL，在onMeasure() / onLayout()上的性能开销提升了40%：</p><p></p><div><img src="ConstraintLayout入门指南_files/Image [9].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>为此，笔者也做了一个简单的性能试验来验证：<br/>分别用CL和RL构造了一个3 × 2的相对布局矩阵，布局矩阵中的控件均使用wrap_content自适应大小，并设置有margin，使用ListView不断的绘制：</p><p></p><div><img src="ConstraintLayout入门指南_files/Image [10].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>同时，使用API 24新加入的OnFrameMetricsAvailableListener回调，监听Window在渲染时，在onMeasure() / onLayout()上实际花费的时间。最终数据如下：</p><p><img src="ConstraintLayout入门指南_files/Image [11].png" type="image/png" data-filename="" height="1" width="1"/> <img src="ConstraintLayout入门指南_files/Image [12].png" type="image/png" data-filename="" height="1" width="1"/> </p><p>抛开绝对数值，CL相对RL，在onMeasure() / onLayout()上大致减少了10%的时间，并没有官方宣传的那么明显。可能是测试的布局嵌套并不是很深，亦或者布局中的控件并不是很多。</p><h1>4. 个人开发体验</h1><p>使用CL开发也有一段时间了，个人觉得CL与RL、LL、TL这些老前辈相比，在按比例布局、线性布局上面的支持更加完善，相关开发痛点可以用较少的xml描述完成了。简单的相对布局上，抛开微小的性能优势，CL和RL几乎没有什么差距，两者可以无缝转换。较复杂的相对布局上，CL相较RL代码不够直观，写出来的xml可读性比较差，chain + constraint相对布局属性的组合想要实现与嵌套RL相同的效果，往往需要更多的xml代码。许多人认为CL的出现就是为了替换RL，个人觉得倒是更适合替换TL，替换RL可能需要功能更加强大的chain才能解决。<br/>但不管怎么说，越来越多的使用CL是趋势。</p><p>不足之处，请多指教。</p><h1>参考文献：</h1><p>https://android-developers.googleblog.com/2017/08/understanding-performance-benefits-of.html</p><p>https://developer.android.com/reference/android/support/constraint/ConstraintLayout.html</p><p>http://blog.csdn.net/zxt0601/article/details/72683379</p>
+                </div></div></div><br/></div></span>
+</div></body></html> 

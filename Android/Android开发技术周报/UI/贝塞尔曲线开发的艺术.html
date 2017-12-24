@@ -1,0 +1,912 @@
+<html>
+<head>
+  <title>贝塞尔曲线开发的艺术</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2521"/>
+<h1>贝塞尔曲线开发的艺术</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>贝塞尔曲线开发的艺术</h1><div><div></div></div></div>
+<p><strong>一句话概括贝塞尔曲线：将任意一条曲线转化为精确的数学公式。</strong></p>
+<p>很多绘图工具中的钢笔工具，就是典型的贝塞尔曲线的应用，这里的一个网站可以在线模拟钢笔工具的使用：</p>
+<p><a href="http://bezier.method.ac/" target="_blank">http://bezier.method.ac/</a></p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240.png" type="image/png" data-filename="1240.png" height="304" width="576"/></div><div>2.png</div>
+</div>
+<p>贝塞尔曲线中有一些比较关键的名词，解释如下：</p>
+<ul>
+<li>数据点：通常指一条路径的起始点和终止点</li>
+<li>控制点：控制点决定了一条路径的弯曲轨迹，根据控制点的个数，贝塞尔曲线被分为一阶贝塞尔曲线（0个控制点）、二阶贝塞尔曲线（1个控制点）、三阶贝塞尔曲线（2个控制点）等等。</li>
+</ul>
+<p>要想对贝塞尔曲线有一个比较好的认识，可以参考WIKI上的链接：</p>
+<p><a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve" target="_blank">https://en.wikipedia.org/wiki/B%C3%A9zier_curve</a></p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [1].png" type="image/png" data-filename="1240.png" height="421" width="576"/></div><div>1.png</div>
+</div>
+<h2>贝塞尔曲线模拟</h2>
+<p>在Android中，一般来说，开发者只考虑二阶贝塞尔曲线和三阶贝塞尔曲线，SDK也只提供了二阶和三阶的API调用。对于再高阶的贝塞尔曲线，通常可以将曲线拆分成多个低阶的贝塞尔曲线，也就是所谓的降阶操作。下面将通过代码来模拟二阶和三阶的贝塞尔曲线是如何绘制和控制的。</p>
+<p>贝塞尔曲线的一个比较好的动态演示如下所示：</p>
+<p><a href="http://myst729.github.io/bezier-curve/" target="_blank">http://myst729.github.io/bezier-curve/</a></p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [2].png" type="image/png" data-filename="1240.png" height="445" width="576"/></div><div>20.png</div>
+</div>
+<h3>二阶模拟</h3>
+<p>二阶贝塞尔曲线在Android中的API为：quadTo()和rQuadTo()，这两个API在原理上是可以互相转换的——quadTo是基于绝对坐标，而rQuadTo是基于相对坐标，所以后面我都只以其中一个来进行讲解。</p>
+<p>先来看下最终的效果：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/strip.gif" type="image/gif" data-filename="strip.gif" height="590" width="480"/></div><div>3.gif</div>
+</div>
+<p>从前面的介绍可以知道，二阶贝塞尔曲线有两个数据点和一个控制点，只需要在代码中绘制出这些辅助点和辅助线即可，同时，控制点可以通过onTouchEvent来进行传递。</p>
+<pre><code>package com.xys.animationart.views;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
+
+/**
+ * 二阶贝塞尔曲线
+ * &lt;p/&gt;
+ * Created by xuyisheng on 16/7/11.
+ */
+public class SecondOrderBezier extends View {
+
+    private Paint mPaintBezier;
+    private Paint mPaintAuxiliary;
+    private Paint mPaintAuxiliaryText;
+
+    private float mAuxiliaryX;
+    private float mAuxiliaryY;
+
+    private float mStartPointX;
+    private float mStartPointY;
+
+    private float mEndPointX;
+    private float mEndPointY;
+
+    private Path mPath = new Path();
+
+    public SecondOrderBezier(Context context) {
+        super(context);
+    }
+
+    public SecondOrderBezier(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mPaintBezier = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaintBezier.setStyle(Paint.Style.STROKE);
+        mPaintBezier.setStrokeWidth(8);
+
+        mPaintAuxiliary = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaintAuxiliary.setStyle(Paint.Style.STROKE);
+        mPaintAuxiliary.setStrokeWidth(2);
+
+        mPaintAuxiliaryText = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaintAuxiliaryText.setStyle(Paint.Style.STROKE);
+        mPaintAuxiliaryText.setTextSize(20);
+    }
+
+    public SecondOrderBezier(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        mStartPointX = w / 4;
+        mStartPointY = h / 2 - 200;
+
+        mEndPointX = w / 4 * 3;
+        mEndPointY = h / 2 - 200;
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        mPath.reset();
+        mPath.moveTo(mStartPointX, mStartPointY);
+        // 辅助点
+        canvas.drawPoint(mAuxiliaryX, mAuxiliaryY, mPaintAuxiliary);
+        canvas.drawText(&quot;控制点&quot;, mAuxiliaryX, mAuxiliaryY, mPaintAuxiliaryText);
+        canvas.drawText(&quot;起始点&quot;, mStartPointX, mStartPointY, mPaintAuxiliaryText);
+        canvas.drawText(&quot;终止点&quot;, mEndPointX, mEndPointY, mPaintAuxiliaryText);
+        // 辅助线
+        canvas.drawLine(mStartPointX, mStartPointY, mAuxiliaryX, mAuxiliaryY, mPaintAuxiliary);
+        canvas.drawLine(mEndPointX, mEndPointY, mAuxiliaryX, mAuxiliaryY, mPaintAuxiliary);
+        // 二阶贝塞尔曲线
+        mPath.quadTo(mAuxiliaryX, mAuxiliaryY, mEndPointX, mEndPointY);
+        canvas.drawPath(mPath, mPaintBezier);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_MOVE:
+                mAuxiliaryX = event.getX();
+                mAuxiliaryY = event.getY();
+                invalidate();
+        }
+        return true;
+    }
+}</code></pre>
+<h3>三阶模拟</h3>
+<p>三阶贝塞尔曲线在Android中的API为：cubicTo()和rCubicTo()，这两个API在原理上是可以互相转换的——quadTo是基于绝对坐标，而rCubicTo是基于相对坐标，所以后面我都只以其中一个来进行讲解。</p>
+<p>有了二阶的基础，再来模拟三阶就非常简单了，无非是增加了一个控制点而已，先看下效果图：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/strip [1].gif" type="image/gif" data-filename="strip.gif" height="590" width="480"/></div><div>4.gif</div>
+</div>
+<p>代码只需要在二阶的基础上添加一些辅助点即可，下面只给出一些关键代码，详细代码请参考Github：</p>
+<pre><code>    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        mPath.reset();
+        mPath.moveTo(mStartPointX, mStartPointY);
+        // 辅助点
+        canvas.drawPoint(mAuxiliaryOneX, mAuxiliaryOneY, mPaintAuxiliary);
+        canvas.drawText(&quot;控制点1&quot;, mAuxiliaryOneX, mAuxiliaryOneY, mPaintAuxiliaryText);
+        canvas.drawText(&quot;控制点2&quot;, mAuxiliaryTwoX, mAuxiliaryTwoY, mPaintAuxiliaryText);
+        canvas.drawText(&quot;起始点&quot;, mStartPointX, mStartPointY, mPaintAuxiliaryText);
+        canvas.drawText(&quot;终止点&quot;, mEndPointX, mEndPointY, mPaintAuxiliaryText);
+        // 辅助线
+        canvas.drawLine(mStartPointX, mStartPointY, mAuxiliaryOneX, mAuxiliaryOneY, mPaintAuxiliary);
+        canvas.drawLine(mEndPointX, mEndPointY, mAuxiliaryTwoX, mAuxiliaryTwoY, mPaintAuxiliary);
+        canvas.drawLine(mAuxiliaryOneX, mAuxiliaryOneY, mAuxiliaryTwoX, mAuxiliaryTwoY, mPaintAuxiliary);
+        // 三阶贝塞尔曲线
+        mPath.cubicTo(mAuxiliaryOneX, mAuxiliaryOneY, mAuxiliaryTwoX, mAuxiliaryTwoY, mEndPointX, mEndPointY);
+        canvas.drawPath(mPath, mPaintBezier);
+    }</code></pre>
+<h3>模拟网页</h3>
+<p>如下所示的网页，模拟了三阶贝塞尔曲线的绘制，可以通过拖动曲线来获取两个控制点的坐标，而起始点分别是(0,0)和(1,1)。</p>
+<p><a href="http://cubic-bezier.com/" target="_blank">http://cubic-bezier.com/</a></p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [3].png" type="image/png" data-filename="1240.png" height="278" width="576"/></div><div>16.png</div>
+</div>
+<p>通过这个网页，也可以比较方便的获取三阶贝塞尔曲线的控制点坐标。</p>
+<h2>贝塞尔曲线应用</h2>
+<h3>圆滑绘图</h3>
+<p>当在屏幕上绘制路径时，例如手写板，最基本的方法是通过Path.lineTo将各个触点连接起来，而这种方式在很多时候会发现，两个点的连接是非常生硬的，因为它毕竟是通过直线来连接的，如果通过二阶贝塞尔曲线来将各个触点连接，就会圆滑的多，不会出现太多的生硬连接。</p>
+<p>先来看下代码，非常简单的绘制路径代码：</p>
+<pre><code>package com.xys.animationart.views;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
+
+/**
+ * 圆滑路径
+ * &lt;p/&gt;
+ * Created by xuyisheng on 16/7/19.
+ */
+public class DrawPadBezier extends View {
+
+    private float mX;
+    private float mY;
+    private float offset = ViewConfiguration.get(getContext()).getScaledTouchSlop();
+
+    private Paint mPaint;
+    private Path mPath;
+
+    public DrawPadBezier(Context context) {
+        super(context);
+    }
+
+    public DrawPadBezier(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mPath = new Path();
+        mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeWidth(5);
+        mPaint.setColor(Color.RED);
+    }
+
+    public DrawPadBezier(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mPath.reset();
+                float x = event.getX();
+                float y = event.getY();
+                mX = x;
+                mY = y;
+                mPath.moveTo(x, y);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                float x1 = event.getX();
+                float y1 = event.getY();
+                float preX = mX;
+                float preY = mY;
+                float dx = Math.abs(x1 - preX);
+                float dy = Math.abs(y1 - preY);
+                if (dx &gt;= offset || dy &gt;= offset) {
+                    // 贝塞尔曲线的控制点为起点和终点的中点
+                    float cX = (x1 + preX) / 2;
+                    float cY = (y1 + preY) / 2;
+//                    mPath.quadTo(preX, preY, cX, cY);
+                    mPath.lineTo(x1, y1);
+                    mX = x1;
+                    mY = y1;
+                }
+        }
+        invalidate();
+        return true;
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        canvas.drawPath(mPath, mPaint);
+    }
+}</code></pre>
+<p>先来看下通过mPath.lineTo来实现的绘图，效果如下所示：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [4].png" type="image/png" data-filename="1240.png" height="481" width="349"/></div><div>18.png</div>
+</div>
+<p>图片中的拐点有明显的锯齿效果，即通过直线的连接，再来看下通过贝塞尔曲线来连接的效果，通常情况下，贝塞尔曲线的控制点取两个连续点的中点：</p>
+<pre><code>mPath.quadTo(preX, preY, cX, cY);</code></pre>
+<p>通过二阶贝塞尔曲线的连接效果如图所示：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [5].png" type="image/png" data-filename="1240.png" height="459" width="334"/></div><div>19.png</div>
+</div>
+<p>可以明显的发现，曲线变得更加圆滑了。</p>
+<h3>曲线变形</h3>
+<p>通过控制贝塞尔曲线的控制点，就可以实现对一条路径的修改。所以，利用贝塞尔曲线，可以实现很多的路径动画，例如：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/strip [2].gif" type="image/gif" data-filename="strip.gif" height="724" width="480"/></div><div>5.gif</div>
+</div>
+<pre><code>package com.xys.animationart;
+
+import android.animation.ValueAnimator;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.animation.BounceInterpolator;
+
+/**
+ * 曲线变形
+ * &lt;p/&gt;
+ * Created by xuyisheng on 16/7/11.
+ */
+public class PathMorphBezier extends View implements View.OnClickListener{
+
+    private Paint mPaintBezier;
+    private Paint mPaintAuxiliary;
+    private Paint mPaintAuxiliaryText;
+
+    private float mAuxiliaryOneX;
+    private float mAuxiliaryOneY;
+    private float mAuxiliaryTwoX;
+    private float mAuxiliaryTwoY;
+
+    private float mStartPointX;
+    private float mStartPointY;
+
+    private float mEndPointX;
+    private float mEndPointY;
+
+    private Path mPath = new Path();
+    private ValueAnimator mAnimator;
+
+    public PathMorphBezier(Context context) {
+        super(context);
+    }
+
+    public PathMorphBezier(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mPaintBezier = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaintBezier.setStyle(Paint.Style.STROKE);
+        mPaintBezier.setStrokeWidth(8);
+
+        mPaintAuxiliary = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaintAuxiliary.setStyle(Paint.Style.STROKE);
+        mPaintAuxiliary.setStrokeWidth(2);
+
+        mPaintAuxiliaryText = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaintAuxiliaryText.setStyle(Paint.Style.STROKE);
+        mPaintAuxiliaryText.setTextSize(20);
+        setOnClickListener(this);
+    }
+
+    public PathMorphBezier(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+
+        mStartPointX = w / 4;
+        mStartPointY = h / 2 - 200;
+
+        mEndPointX = w / 4 * 3;
+        mEndPointY = h / 2 - 200;
+
+        mAuxiliaryOneX = mStartPointX;
+        mAuxiliaryOneY = mStartPointY;
+        mAuxiliaryTwoX = mEndPointX;
+        mAuxiliaryTwoY = mEndPointY;
+
+        mAnimator = ValueAnimator.ofFloat(mStartPointY, (float) h);
+        mAnimator.setInterpolator(new BounceInterpolator());
+        mAnimator.setDuration(1000);
+        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                mAuxiliaryOneY = (float) valueAnimator.getAnimatedValue();
+                mAuxiliaryTwoY = (float) valueAnimator.getAnimatedValue();
+                invalidate();
+            }
+        });
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        mPath.reset();
+        mPath.moveTo(mStartPointX, mStartPointY);
+        // 辅助点
+        canvas.drawPoint(mAuxiliaryOneX, mAuxiliaryOneY, mPaintAuxiliary);
+        canvas.drawText(&quot;辅助点1&quot;, mAuxiliaryOneX, mAuxiliaryOneY, mPaintAuxiliaryText);
+        canvas.drawText(&quot;辅助点2&quot;, mAuxiliaryTwoX, mAuxiliaryTwoY, mPaintAuxiliaryText);
+        canvas.drawText(&quot;起始点&quot;, mStartPointX, mStartPointY, mPaintAuxiliaryText);
+        canvas.drawText(&quot;终止点&quot;, mEndPointX, mEndPointY, mPaintAuxiliaryText);
+        // 辅助线
+        canvas.drawLine(mStartPointX, mStartPointY, mAuxiliaryOneX, mAuxiliaryOneY, mPaintAuxiliary);
+        canvas.drawLine(mEndPointX, mEndPointY, mAuxiliaryTwoX, mAuxiliaryTwoY, mPaintAuxiliary);
+        canvas.drawLine(mAuxiliaryOneX, mAuxiliaryOneY, mAuxiliaryTwoX, mAuxiliaryTwoY, mPaintAuxiliary);
+        // 三阶贝塞尔曲线
+        mPath.cubicTo(mAuxiliaryOneX, mAuxiliaryOneY, mAuxiliaryTwoX, mAuxiliaryTwoY, mEndPointX, mEndPointY);
+        canvas.drawPath(mPath, mPaintBezier);
+    }
+
+    @Override
+    public void onClick(View view) {
+        mAnimator.start();
+    }
+}</code></pre>
+<p>这里就是简单的改变二阶贝塞尔曲线的控制点来实现曲线的变形。</p>
+<p>网上一些比较复杂的变形动画效果，也是基于这种实现方式，其原理都是通过改变控制点的位置，从而达到对图形的变换，例如圆形到心形的变化、圆形到五角星的变换，等等。</p>
+<h3>波浪效果</h3>
+<p>波浪的绘制是贝塞尔曲线一个非常简单的应用，而让波浪进行波动，其实并不需要对控制点进行改变，而是可以通过位移来实现，这里我们是借助贝塞尔曲线来实现波浪的绘制效果，效果如图所示：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/strip [3].gif" type="image/gif" data-filename="strip.gif" height="738" width="480"/></div><div>6.gif</div>
+</div>
+<pre><code>package com.xys.animationart.views;
+
+import android.animation.ValueAnimator;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.animation.LinearInterpolator;
+
+/**
+ * 波浪图形
+ * &lt;p/&gt;
+ * Created by xuyisheng on 16/7/11.
+ */
+public class WaveBezier extends View implements View.OnClickListener {
+
+    private Paint mPaint;
+    private Path mPath;
+    private int mWaveLength = 1000;
+    private int mOffset;
+    private int mScreenHeight;
+    private int mScreenWidth;
+    private int mWaveCount;
+    private int mCenterY;
+
+    public WaveBezier(Context context) {
+        super(context);
+    }
+
+    public WaveBezier(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    public WaveBezier(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mPath = new Path();
+        mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaint.setColor(Color.LTGRAY);
+        mPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        setOnClickListener(this);
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        mScreenHeight = h;
+        mScreenWidth = w;
+        mWaveCount = (int) Math.round(mScreenWidth / mWaveLength + 1.5);
+        mCenterY = mScreenHeight / 2;
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        mPath.reset();
+        mPath.moveTo(-mWaveLength + mOffset, mCenterY);
+        for (int i = 0; i &lt; mWaveCount; i++) {
+            // + (i * mWaveLength)
+            // + mOffset
+            mPath.quadTo((-mWaveLength * 3 / 4) + (i * mWaveLength) + mOffset, mCenterY + 60, (-mWaveLength / 2) + (i * mWaveLength) + mOffset, mCenterY);
+            mPath.quadTo((-mWaveLength / 4) + (i * mWaveLength) + mOffset, mCenterY - 60, i * mWaveLength + mOffset, mCenterY);
+        }
+        mPath.lineTo(mScreenWidth, mScreenHeight);
+        mPath.lineTo(0, mScreenHeight);
+        mPath.close();
+        canvas.drawPath(mPath, mPaint);
+    }
+
+    @Override
+    public void onClick(View view) {
+        ValueAnimator animator = ValueAnimator.ofInt(0, mWaveLength);
+        animator.setDuration(1000);
+        animator.setRepeatCount(ValueAnimator.INFINITE);
+        animator.setInterpolator(new LinearInterpolator());
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                mOffset = (int) animation.getAnimatedValue();
+                postInvalidate();
+            }
+        });
+        animator.start();
+    }
+}</code></pre>
+<p>波浪动画实际上并不复杂，但三角函数确实对一些开发者比较困难，开发者可以通过下面的这个网站来模拟三角函数图像的绘制：</p>
+<p><a href="https://www.desmos.com/calculator" target="_blank">https://www.desmos.com/calculator</a></p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [6].png" type="image/png" data-filename="1240.png" height="304" width="576"/></div><div>17.png</div>
+</div>
+<h3>路径动画</h3>
+<p>贝塞尔曲线的另一个非常常用的功能，就是作为动画的运动轨迹，让动画目标能够沿曲线平滑的实现移动动画，也就是让物体沿着贝塞尔曲线运动，而不是机械的直线，本例实现效果如下所示：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/strip [4].gif" type="image/gif" data-filename="strip.gif" height="702" width="480"/></div><div>7.gif</div>
+</div>
+<pre><code>package com.xys.animationart.views;
+
+import android.animation.ValueAnimator;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PointF;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
+
+import com.xys.animationart.evaluator.BezierEvaluator;
+
+/**
+ * 贝塞尔路径动画
+ * &lt;p/&gt;
+ * Created by xuyisheng on 16/7/12.
+ */
+public class PathBezier extends View implements View.OnClickListener {
+
+    private Paint mPathPaint;
+    private Paint mCirclePaint;
+
+    private int mStartPointX;
+    private int mStartPointY;
+    private int mEndPointX;
+    private int mEndPointY;
+
+    private int mMovePointX;
+    private int mMovePointY;
+
+    private int mControlPointX;
+    private int mControlPointY;
+
+    private Path mPath;
+
+    public PathBezier(Context context) {
+        super(context);
+    }
+
+    public PathBezier(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mPathPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPathPaint.setStyle(Paint.Style.STROKE);
+        mPathPaint.setStrokeWidth(5);
+        mCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        mStartPointX = 100;
+        mStartPointY = 100;
+        mEndPointX = 600;
+        mEndPointY = 600;
+        mMovePointX = mStartPointX;
+        mMovePointY = mStartPointY;
+        mControlPointX = 500;
+        mControlPointY = 0;
+        mPath = new Path();
+        setOnClickListener(this);
+    }
+
+    public PathBezier(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        mPath.reset();
+        canvas.drawCircle(mStartPointX, mStartPointY, 30, mCirclePaint);
+        canvas.drawCircle(mEndPointX, mEndPointY, 30, mCirclePaint);
+        mPath.moveTo(mStartPointX, mStartPointY);
+        mPath.quadTo(mControlPointX, mControlPointY, mEndPointX, mEndPointY);
+        canvas.drawPath(mPath, mPathPaint);
+        canvas.drawCircle(mMovePointX, mMovePointY, 30, mCirclePaint);
+    }
+
+    @Override
+    public void onClick(View view) {
+        BezierEvaluator bezierEvaluator = new BezierEvaluator(new PointF(mControlPointX, mControlPointY));
+        ValueAnimator anim = ValueAnimator.ofObject(bezierEvaluator,
+                new PointF(mStartPointX, mStartPointY),
+                new PointF(mEndPointX, mEndPointY));
+        anim.setDuration(600);
+        anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                PointF point = (PointF) valueAnimator.getAnimatedValue();
+                mMovePointX = (int) point.x;
+                mMovePointY = (int) point.y;
+                invalidate();
+            }
+        });
+        anim.setInterpolator(new AccelerateDecelerateInterpolator());
+        anim.start();
+    }
+}</code></pre>
+<p>其中，用于改变运动点坐标的关键evaluator如下所示：</p>
+<pre><code>package com.xys.animationart.evaluator;
+
+import android.animation.TypeEvaluator;
+import android.graphics.PointF;
+
+import com.xys.animationart.util.BezierUtil;
+
+public class BezierEvaluator implements TypeEvaluator&lt;PointF&gt; {
+
+    private PointF mControlPoint;
+
+    public BezierEvaluator(PointF controlPoint) {
+        this.mControlPoint = controlPoint;
+    }
+
+    @Override
+    public PointF evaluate(float t, PointF startValue, PointF endValue) {
+        return BezierUtil.CalculateBezierPointForQuadratic(t, startValue, mControlPoint, endValue);
+    }
+}</code></pre>
+<p>这里的TypeEvaluator计算用到了计算贝塞尔曲线上点的计算算法，这个会在后面继续讲解。</p>
+<h2>贝塞尔曲线进阶</h2>
+<h3>求贝塞尔曲线上任意一点的坐标</h3>
+<p>求贝塞尔曲线上任意一点的坐标，这一过程，就是利用了De Casteljau算法。</p>
+<p><a href="http://www.cs.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/Bezier/de-casteljau.html" target="_blank">http://www.cs.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/Bezier/de-casteljau.html</a></p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [7].png" type="image/png" data-filename="1240.png" height="253" width="576"/></div><div>7.png</div>
+</div>
+<p>利用这一算法，有开发者开发了一个演示多阶贝塞尔曲线的效果的App，其原理就是通过绘制贝塞尔曲线上的点来进行绘制的，地址如下所示：</p>
+<p><a href="https://github.com/venshine/BezierMaker" target="_blank">https://github.com/venshine/BezierMaker</a></p>
+<p>下面这篇文章就详细的讲解了该算法的应用，我的代码也从这里提取而来：</p>
+<p><a href="http://devmag.org.za/2011/04/05/bzier-curves-a-tutorial/" target="_blank">http://devmag.org.za/2011/04/05/bzier-curves-a-tutorial/</a></p>
+<h3>计算</h3>
+<p>有了公式，只需要代码实现就OK了，我们先写两个公式：</p>
+<pre><code>package com.xys.animationart.util;
+
+import android.graphics.PointF;
+
+/**
+ * 计算贝塞尔曲线上的点坐标
+ * &lt;p/&gt;
+ * Created by xuyisheng on 16/7/13.
+ */
+public class BezierUtil {
+
+    /**
+     * B(t) = (1 - t)^2 * P0 + 2t * (1 - t) * P1 + t^2 * P2, t ∈ [0,1]
+     *
+     * @param t  曲线长度比例
+     * @param p0 起始点
+     * @param p1 控制点
+     * @param p2 终止点
+     * @return t对应的点
+     */
+    public static PointF CalculateBezierPointForQuadratic(float t, PointF p0, PointF p1, PointF p2) {
+        PointF point = new PointF();
+        float temp = 1 - t;
+        point.x = temp * temp * p0.x + 2 * t * temp * p1.x + t * t * p2.x;
+        point.y = temp * temp * p0.y + 2 * t * temp * p1.y + t * t * p2.y;
+        return point;
+    }
+
+    /**
+     * B(t) = P0 * (1-t)^3 + 3 * P1 * t * (1-t)^2 + 3 * P2 * t^2 * (1-t) + P3 * t^3, t ∈ [0,1]
+     *
+     * @param t  曲线长度比例
+     * @param p0 起始点
+     * @param p1 控制点1
+     * @param p2 控制点2
+     * @param p3 终止点
+     * @return t对应的点
+     */
+    public static PointF CalculateBezierPointForCubic(float t, PointF p0, PointF p1, PointF p2, PointF p3) {
+        PointF point = new PointF();
+        float temp = 1 - t;
+        point.x = p0.x * temp * temp * temp + 3 * p1.x * t * temp * temp + 3 * p2.x * t * t * temp + p3.x * t * t * t;
+        point.y = p0.y * temp * temp * temp + 3 * p1.y * t * temp * temp + 3 * p2.y * t * t * temp + p3.y * t * t * t;
+        return point;
+    }
+}</code></pre>
+<p>我们来将路径绘制到View中，看是否正确：</p>
+<pre><code>package com.xys.animationart.views;
+
+import android.animation.AnimatorSet;
+import android.animation.ValueAnimator;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PointF;
+import android.util.AttributeSet;
+import android.view.View;
+
+import com.xys.animationart.util.BezierUtil;
+
+/**
+ * 通过计算模拟二阶、三阶贝塞尔曲线
+ * &lt;p/&gt;
+ * Created by xuyisheng on 16/7/13.
+ */
+public class CalculateBezierPointView extends View implements View.OnClickListener {
+
+    private Paint mPaint;
+    private ValueAnimator mAnimatorQuadratic;
+    private ValueAnimator mAnimatorCubic;
+    private PointF mPointQuadratic;
+    private PointF mPointCubic;
+
+    public CalculateBezierPointView(Context context) {
+        super(context);
+    }
+
+    public CalculateBezierPointView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    public CalculateBezierPointView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mAnimatorQuadratic = ValueAnimator.ofFloat(0, 1);
+        mAnimatorQuadratic.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                PointF point = BezierUtil.CalculateBezierPointForQuadratic(valueAnimator.getAnimatedFraction(),
+                        new PointF(100, 100), new PointF(500, 100), new PointF(500, 500));
+                mPointQuadratic.x = point.x;
+                mPointQuadratic.y = point.y;
+                invalidate();
+            }
+        });
+
+        mAnimatorCubic = ValueAnimator.ofFloat(0, 1);
+        mAnimatorCubic.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                PointF point = BezierUtil.CalculateBezierPointForCubic(valueAnimator.getAnimatedFraction(),
+                        new PointF(100, 600), new PointF(100, 1100), new PointF(500, 1000), new PointF(500, 600));
+                mPointCubic.x = point.x;
+                mPointCubic.y = point.y;
+                invalidate();
+            }
+        });
+
+        mPointQuadratic = new PointF();
+        mPointQuadratic.x = 100;
+        mPointQuadratic.y = 100;
+
+        mPointCubic = new PointF();
+        mPointCubic.x = 100;
+        mPointCubic.y = 600;
+
+        setOnClickListener(this);
+    }
+
+    @Override
+    protected void onDraw(final Canvas canvas) {
+        super.onDraw(canvas);
+        canvas.drawCircle(mPointQuadratic.x, mPointQuadratic.y, 10, mPaint);
+        canvas.drawCircle(mPointCubic.x, mPointCubic.y, 10, mPaint);
+    }
+
+    @Override
+    public void onClick(View view) {
+        AnimatorSet set = new AnimatorSet();
+        set.playTogether(mAnimatorQuadratic, mAnimatorCubic);
+        set.setDuration(2000);
+        set.start();
+    }
+}</code></pre>
+<p>这次我们并没有通过API提供的贝塞尔曲线绘制方法来绘制二阶、三阶贝塞尔曲线，而是通过时间t和起始点来计算一条贝塞尔曲线上的所有点，可以发现，通过算法计算出来的点，与通过API所绘制出来的点，是完全吻合的。</p>
+<h2>贝塞尔曲线拟合计算</h2>
+<p>贝塞尔曲线有一个非常常用的动画效果——MetaBall算法。相信很多开发者都见过类似的动画，例如QQ的小红点消除，UC浏览器的下拉刷新loading等等。要做好这个动画，实际上最重要的就是通过贝塞尔曲线来拟合两个图形。</p>
+<p>效果如图所示：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [8].png" type="image/png" data-filename="1240.png" height="282" width="395"/></div><div>8.png</div>
+</div>
+<h3>矩形拟合</h3>
+<p>我们来看一下拟合的原理，实际上就是通过贝塞尔曲线来连接两个圆上的四个点，当我们调整下画笔的填充方式，并绘制一些辅助线，我们来看具体是如何进行拟合的，如图所示：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [9].png" type="image/png" data-filename="1240.png" height="463" width="576"/></div><div>9.png</div>
+</div>
+<p>可以发现，控制点为两圆圆心连线的中点，连接线为图中的这样一个矩形，当圆比较小时，这种通过矩形来拟合的方式几乎是没有问题的，但我们把圆放大，再来看下这种拟合，如图所示：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [10].png" type="image/png" data-filename="1240.png" height="589" width="514"/></div><div>10.png</div>
+</div>
+<p>当圆的半径扩大之后，就可以非常明显的发现拟合的连接点与圆有一定相交的区域，这样的拟合效果就不好了，我们将画笔模式调整回来，如图所示：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [11].png" type="image/png" data-filename="1240.png" height="600" width="518"/></div><div>11.png</div>
+</div>
+<p>所以，简单的矩形拟合，在圆半径小的时候，是可以的，但当圆半径变大之后，就需要更加严格的拟合了。</p>
+<p>这里我们先来讲解下，如何计算矩形拟合的几个关键点。</p>
+<p>从前面那张线图可以看出，标红的两个角是相等的，而这个角可以通过两个圆心的坐标来算出，有了这样一个角度，通过R x cos和 R x sin来计算矩形的一个顶点的坐标，类似的，其它坐标可求，关键代码如下所示：</p>
+<pre><code>private void metaBallVersion1(Canvas canvas) {
+        float x = mCircleTwoX;
+        float y = mCircleTwoY;
+        float startX = mCircleOneX;
+        float startY = mCircleOneY;
+
+        float dx = x - startX;
+        float dy = y - startY;
+        double a = Math.atan(dx / dy);
+        float offsetX = (float) (mCircleOneRadius * Math.cos(a));
+        float offsetY = (float) (mCircleOneRadius * Math.sin(a));
+
+        float x1 = startX + offsetX;
+        float y1 = startY - offsetY;
+
+        float x2 = x + offsetX;
+        float y2 = y - offsetY;
+
+        float x3 = x - offsetX;
+        float y3 = y + offsetY;
+
+        float x4 = startX - offsetX;
+        float y4 = startY + offsetY;
+
+        float controlX = (startX + x) / 2;
+        float controlY = (startY + y) / 2;
+
+        mPath.reset();
+        mPath.moveTo(x1, y1);
+        mPath.quadTo(controlX, controlY, x2, y2);
+        mPath.lineTo(x3, y3);
+        mPath.quadTo(controlX, controlY, x4, y4);
+        mPath.lineTo(x1, y1);
+
+        // 辅助线
+        canvas.drawLine(mCircleOneX, mCircleOneY, mCircleTwoX, mCircleTwoY, mPaint);
+        canvas.drawLine(0, mCircleOneY, mCircleOneX + mRadiusNormal + 400, mCircleOneY, mPaint);
+        canvas.drawLine(mCircleOneX, 0, mCircleOneX, mCircleOneY + mRadiusNormal + 50, mPaint);
+        canvas.drawLine(x1, y1, x2, y2, mPaint);
+        canvas.drawLine(x3, y3, x4, y4, mPaint);
+        canvas.drawCircle(controlX, controlY, 5, mPaint);
+        canvas.drawLine(mCircleTwoX, mCircleTwoY, mCircleTwoX, 0, mPaint);
+        canvas.drawLine(x1, y1, x1, mCircleOneY, mPaint);
+
+        canvas.drawPath(mPath, mPaint);
+    }</code></pre>
+<h3>切线拟合</h3>
+<p>如前面所说，矩形拟合在半径较小的情况下，是可以实现完美拟合的，而当半径变大后，就会出现贝塞尔曲线与圆相交的情况，导致拟合失败。</p>
+<p>那么如何来实现完美的拟合呢？实际上，也就是说贝塞尔曲线与圆的连接点到贝塞尔曲线的控制点的连线，一定是圆的切线，这样的话，无论圆的半径如何变化，贝塞尔曲线一定是与圆拟合的，具体效果如图所示：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/jpg.jpg" type="image/jpeg" data-filename="jpg.jpg" height="651" width="576"/></div><div>12.png</div>
+</div>
+<p>这时候我们把画笔模式调整回来看下填充效果，如图所示：</p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [12].png" type="image/png" data-filename="1240.png" height="590" width="513"/></div><div>13.png</div>
+</div>
+<p>这样拟合是非常完美的。那么要如何来计算这些拟合的关键点呢？在前面的线图中，我标记出了两个角，这两个角分别可以求出，相减，就可以获取切点与圆心的夹角了，这样，通过R x cos和R x sin就可以求出切点的坐标了。</p>
+<p>其中，小的角可以通过两个圆心的坐标来求出，而大的角，可以通过直角三角形（圆心、切点、控制点）来求出，即控制点到圆心的距离/半径。</p>
+<p>关键代码如下所示：</p>
+<pre><code>private void metaBallVersion2(Canvas canvas) {
+        float x = mCircleTwoX;
+        float y = mCircleTwoY;
+        float startX = mCircleOneX;
+        float startY = mCircleOneY;
+        float controlX = (startX + x) / 2;
+        float controlY = (startY + y) / 2;
+
+        float distance = (float) Math.sqrt((controlX - startX) * (controlX - startX) + (controlY - startY) * (controlY - startY));
+        double a = Math.acos(mRadiusNormal / distance);
+
+        double b = Math.acos((controlX - startX) / distance);
+        float offsetX1 = (float) (mRadiusNormal * Math.cos(a - b));
+        float offsetY1 = (float) (mRadiusNormal * Math.sin(a - b));
+        float tanX1 = startX + offsetX1;
+        float tanY1 = startY - offsetY1;
+
+        double c = Math.acos((controlY - startY) / distance);
+        float offsetX2 = (float) (mRadiusNormal * Math.sin(a - c));
+        float offsetY2 = (float) (mRadiusNormal * Math.cos(a - c));
+        float tanX2 = startX - offsetX2;
+        float tanY2 = startY + offsetY2;
+
+        double d = Math.acos((y - controlY) / distance);
+        float offsetX3 = (float) (mRadiusNormal * Math.sin(a - d));
+        float offsetY3 = (float) (mRadiusNormal * Math.cos(a - d));
+        float tanX3 = x + offsetX3;
+        float tanY3 = y - offsetY3;
+
+        double e = Math.acos((x - controlX) / distance);
+        float offsetX4 = (float) (mRadiusNormal * Math.cos(a - e));
+        float offsetY4 = (float) (mRadiusNormal * Math.sin(a - e));
+        float tanX4 = x - offsetX4;
+        float tanY4 = y + offsetY4;
+
+        mPath.reset();
+        mPath.moveTo(tanX1, tanY1);
+        mPath.quadTo(controlX, controlY, tanX3, tanY3);
+        mPath.lineTo(tanX4, tanY4);
+        mPath.quadTo(controlX, controlY, tanX2, tanY2);
+        canvas.drawPath(mPath, mPaint);
+
+        // 辅助线
+        canvas.drawCircle(tanX1, tanY1, 5, mPaint);
+        canvas.drawCircle(tanX2, tanY2, 5, mPaint);
+        canvas.drawCircle(tanX3, tanY3, 5, mPaint);
+        canvas.drawCircle(tanX4, tanY4, 5, mPaint);
+        canvas.drawLine(mCircleOneX, mCircleOneY, mCircleTwoX, mCircleTwoY, mPaint);
+        canvas.drawLine(0, mCircleOneY, mCircleOneX + mRadiusNormal + 400, mCircleOneY, mPaint);
+        canvas.drawLine(mCircleOneX, 0, mCircleOneX, mCircleOneY + mRadiusNormal + 50, mPaint);
+        canvas.drawLine(mCircleTwoX, mCircleTwoY, mCircleTwoX, 0, mPaint);
+        canvas.drawCircle(controlX, controlY, 5, mPaint);
+        canvas.drawLine(startX, startY, tanX1, tanY1, mPaint);
+        canvas.drawLine(tanX1, tanY1, controlX, controlY, mPaint);
+    }</code></pre>
+<h3>圆的拟合</h3>
+<p>贝塞尔曲线做动画，很多时候都需要使用到圆的特效，而通过二阶、三阶贝塞尔曲线来拟合圆，也不是一个非常简单的事情，所以，我直接把结论拿出来了，具体的算法地址如下所示：</p>
+<p><a href="http://spencermortensen.com/articles/bezier-circle/" target="_blank">http://spencermortensen.com/articles/bezier-circle/</a></p>
+<p><a href="http://stackoverflow.com/questions/1734745/how-to-create-circle-with-b%C3%A9zier-curves" target="_blank">http://stackoverflow.com/questions/1734745/how-to-create-circle-with-b%C3%A9zier-curves</a></p>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [13].png" type="image/png" data-filename="1240.png" height="362" width="576"/></div><div>14.png</div>
+</div>
+<div>
+<div><img src="贝塞尔曲线开发的艺术_files/1240 [14].png" type="image/png" data-filename="1240.png" height="856" width="576"/></div><div>15.png</div>
+</div>
+<p>有了贝塞尔曲线的控制点，再对其实现动画，就非常简单了，与之前的动画没有太大的区别。</p>
+<h2>源代码</h2>
+<p>本次的讲解代码已经全部上传到Github ：</p>
+<p><a href="https://github.com/xuyisheng/BezierArt" target="_blank">https://github.com/xuyisheng/BezierArt</a></p>
+<p>欢迎大家提issue。</p>
+</div></div></div><br/></div></span>
+</div></body></html> 
