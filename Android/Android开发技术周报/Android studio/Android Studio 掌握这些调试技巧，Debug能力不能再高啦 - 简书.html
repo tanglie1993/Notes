@@ -1,0 +1,133 @@
+<html>
+<head>
+  <title>Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="518"/>
+<h1>Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书</h1>
+
+<div>
+<span><div style="position:relative;"><div>
+<div>
+  <div>
+    <div>
+      <div>
+        <div>
+          <div><div><div><div><h1>Android Studio 掌握这些调试技巧，Debug能力不能再高啦</h1><div></div></div>
+          <div>
+            <span>字数2024</span>
+            <span>阅读4393</span>
+            
+            <span>喜欢184</span>
+          </div>
+
+          
+          
+          
+
+          <p>Debug断点跟踪调试是软件开发过程中分析代码、解决BUG的一个重要手段，不同IDE下的Debug工具的使用有所不同，但提供的调试功能一定是应有尽有。很多程序员的Debug能力都停留在基本的单步执行、断点跳跃上，殊不知还有很多鲜为人知但非常方便的调试技巧。本文就以Android Studio工具为例，展示一些一般人不知道的Debug调试技巧，掌握这些，你也算是Debug调试大师了。</p>
+
+<div></div>
+<p>Debug App有两种途径，第一种是直接点击下图运行按钮右侧的小虫状图标，运行并调试当前Project，这个我想大家都知道。</p>
+<div>
+<img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image.png" type="image/png" data-filename=""/><div>Debug App.png</div>
+</div>
+<p>第二种就是调试当前已经处于运行状态下的App，这也是我们用的更多的一种调试手段，即<code>Attach debugger to Android process</code>。点击运行按钮右侧第三个按钮，弹出<code>Choose Process</code>窗口，选择对应的进程，点击OK按钮即可进入调试模式，此时，我们便可以在需要的地方直接下断点调试代码了：</p>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [1].png" type="image/png" data-filename=""/></div><div>Attach debugger to Android process.png</div>
+</div>
+<p>接下来就是常见的调试方法了，在Debug窗口顶部工具栏有一排操作按钮，比如<code>Step Over</code>（单步执行）、<code>Step Into</code>（进入方法）等，如图所示：</p>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [2].png" type="image/png" data-filename=""/></div><div>Debug窗口.png</div>
+</div>
+<p>打断点和取消断点最直接的方式就是单击目标代码行的行号右侧空白处，然后在Debug窗口左侧有个断点浏览按钮<code>View Breakpoints</code>，位于停止按钮下方第一个，可以浏览Project中的所有断点，同时可以添加删除断点：</p>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [3].png" type="image/png" data-filename=""/></div><div>View Breakpoints.png</div>
+</div>
+
+<div></div>
+<p>有时候，我们的断点打在了循环体里面，但是我们只想看某一特定循环次数下的运行情况，难道要使用<code>Run to Cursor</code>功能不停地跳至下一次断点直至满足我们的要求吗？</p>
+<div>
+<img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [4].png" type="image/png" data-filename=""/><div>循环里的断点.png</div>
+</div>
+<p>如果你知道条件断点的话，一定会悔不当初。条件断点可以满足开发人员自己输入条件，比如<code>fori</code>循环中输入<code>i == 5</code>即可让程序直接运行至第六次循环，<code>for each</code>循环中针对list某一元素下的断点调试。只需要右键点击断点，在弹出的窗口中输入Condiction条件，点击<code>Done</code>按钮，然后当程序执行到循环体时，会在满足条件的一次循环中停下来，供我们调试：</p>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [5].png" type="image/png" data-filename=""/></div><div>条件断点.png</div>
+</div>
+
+<div></div>
+<p>打印日志也是跟踪程序分析问题的一个非常有效的手段，但是如果我们的程序已经运行并且处于调试模式，此时如果想打印日志更加直观的分析代码，难道还要停止调试、添加Log代码并重新编译运行吗？</p>
+<p>如果你知道日志断点，就不用如此大费周折，费时费力了。还是右键点击断点，在弹出的窗口中取消勾选<code>Suspeng</code>复选框（即表示程序运行至此断点时不会停下来供开发者调试），然后勾选<code>Log evaluated expression:</code>，并输入打印语句即可。这样，当Debug模式下的程序执行至此，不会停下来，而是在控制台中打印对应信息，如：</p>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [6].png" type="image/png" data-filename=""/></div><div>日志断点.png</div>
+</div>
+
+<div></div>
+<p>比如，我们的代码里有一个变量，这个变量的值会影响到程序的执行结果。如果我们想观察这个变量在不同的赋值下程序的执行结果怎么办呢？难道要一遍遍的在代码里修改变量值，然后重新运行程序吗？显然这是非常麻烦的操作。其实，如果利用Debug模式下的变量赋值（Set Value），只需要运行一次，就能达到我们的观察效果。在使用该变量的代码处打个断点，然后在<code>Variables</code>窗口找到对应的变量，修改变量值并执行即可。</p>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [7].png" type="image/png" data-filename=""/></div><div>Set Value.png</div>
+</div>
+
+<div></div>
+<p>在<code>Variables</code>变量区和<code>Watches</code>观察区可以查看Debug模式下，程序执行到断点处的变量值或者对象的各属性值，但是多多少少查看起来还是有些不方便。其实可以通过弹出窗口的形式查看属性值，只要将光标定位至断点代码行所用到的变量，IDE会自动弹出一个小窗口，如下图所示，此时，使用对应的快捷键或者点击这个小窗口里的变量即可弹出变量属性值窗口，Mac下的快捷键位<code>command + F1</code>，如图所示：</p>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [8].png" type="image/png" data-filename=""/></div><div>变量观察01.png</div>
+</div>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [9].png" type="image/png" data-filename=""/></div><div>变量观察02.png</div>
+</div>
+
+<div></div>
+<p>在断点处，如果有变量对象，系统提供了表达式求值功能，针对<code>Variables</code>视图中的变量对象，我们可以输入任何计算语句，实时查看表达式计算结果。具体操作为，右键<code>Variables</code>视图中的变量对象，选择<code>Evaluate Expression</code>，弹出表达式窗口，输入任何你想要的计算语句，点击<code>Evaluate</code>计算按钮，即可显示Result结果：</p>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [10].png" type="image/png" data-filename=""/></div><div>Evaluate Expression01.png</div>
+</div>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [11].png" type="image/png" data-filename=""/></div><div>Evaluate Expression02.png</div>
+</div>
+
+<div></div>
+<p>通常我们会对方法里的代码添加断点调试，很少对方法本身调试。其实，如果只是为了看到方法的参数和返回结果，我们可以在定义方法的第一行打断点，直接对方法本身调试，此时断点的展示图标样式也会与众不同：</p>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [12].png" type="image/png" data-filename=""/></div><div>方法断点.png</div>
+</div>
+
+<div></div>
+<p>有时候，我们想知道自定义的变量的何时何地发生了改变，就可以使用变量断点。变量断点的图标样式也与众不同，在变量定义行打断点，开启Debug模式，在程序执行的过程中，如果该变量的值发生改变，程序会自动停下来，并定位在改变变量值的地方，供开发者调试：</p>
+<div>
+<img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [13].png" type="image/png" data-filename=""/><div>变量断点.png</div>
+</div>
+
+<div></div>
+<p>程序在执行的过程中可能会出现各种各样的未知性异常，如果能在发生异常的时候第一时间让程序停下来，并定位到异常出现的地方，供开发者调试，那当然是极好的。而万能的Android Studio就提供了这样的功能。</p>
+<p>打开断点管理器，这里有两种方式打开：点击工具栏菜单<code>Run</code>，选择<code>View Breakpoints</code>；在Debug窗口直接点击<code>View Breakpoints</code>图标。点击左上角加号按钮，可以添加各种断点，包括前文提到的<code>Method Breakpoints</code>和<code>Field Watchpoints</code>断点，这里我们选择<code>Exception Breakpoints</code>异常断点，在弹出的<code>Enter Exception Class</code>窗口中输入需要监控的异常类别即可：</p>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [14].png" type="image/png" data-filename=""/></div><div>Breakpoints.png</div>
+</div>
+<div>
+<div><img src="Android Studio 掌握这些调试技巧，Debug能力不能再高啦 - 简书_files/Image [15].png" type="image/png" data-filename=""/></div><div>Exception Breakpoints.png</div>
+</div>
+
+<div></div>
+<p>以上便是使用Android Studio工具的开发过程中很是实用但却少见的Debug调试技巧，当然所有这些操作都可以通过快捷键打开，将鼠标光标移到对应图标处，都会显示对应快捷键组合，大家自行酌情使用。</p>
+<p>当然，如果你还有更好的调试技巧，欢迎留言补充，让我们一起在分享中学习，交流中进步。</p>
+</div></div></div>
+          <ol></ol>
+        </div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+
+
+</div></div></div></span>
+</div></body></html> 
