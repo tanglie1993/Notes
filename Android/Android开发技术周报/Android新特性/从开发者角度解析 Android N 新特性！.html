@@ -1,0 +1,111 @@
+<html>
+<head>
+  <title>从开发者角度解析 Android N 新特性！</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3696"/>
+<h1>从开发者角度解析 Android N 新特性！</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="font-size:62.5%;color:rgb(51, 51, 51);background:rgb(255, 255, 255);text-size-adjust:100%;text-rendering:optimizeLegibility;"><div style="font-size:1.5em;line-height:2;font-weight:400;font-family:&quot;Lantinghei SC&quot;, &quot;Microsoft Yahei&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft Sans Serif&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;color:rgb(34, 34, 34);font-style:normal;font-variant:normal;font-stretch:normal;"><div style="box-sizing:border-box;"><div style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:16px;line-height:1.62;font-family:&quot;PT Sans&quot;, HelveticaNeue, &quot;Helvetica Neue&quot;, Helvetica, Arial, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, sans-serif;">
+        <div style="text-align:center;">
+            <h1 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:2em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">从开发者角度解析 Android N 新特性！</h1>
+
+            <p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">作者：<a href="https://github.com/daimajia" style="color:rgb(65, 131, 196);text-decoration:none;" target="_blank">代码家</a></p>
+        </div>
+        
+        <div>
+            <p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">大清早看到 Google 官方博客发布 Android N 的开发者预览版，立马从床上跳起来开始仔仔细细的读起来。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">从开发者角度来看，Android N 的更新并不算大。网上之前流传的一些 Android N 可能出现的新特性，什么夜间模式，抽屉の消失，指纹识别接口什么的，目前来看很多都没有，现在看朋友圈转的好几篇文章更像是作者在贤者模式下的意淫。</p>
+<h1 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:2em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">Android N 的新特性</h1>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">废话不多说，我来盘点下 Android N 的新特性，同时分析下开发者角度下的 Android N。</p>
+<h2 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:1.8em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">Multi-Window Support （分屏多窗口支持）</h2>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">简单来说，就是屏幕上可以出现多个多个程序。想想你平时看视频的时候来了微信消息的时候，你得退出视频App，切到微信，回复消息，然后再切回来重新缓冲… 这是一个多么蛋疼的设定...</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">有了 Android N 以后，这个问题迎刃而解！</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">全新的 Android N 下将支持两种新的窗口模式：</p>
+<ul style="margin:0px;padding:0px;list-style:disc;margin-bottom:1.2em;margin-left:1.3em;">
+<li style="margin:0px;padding:0px;">Side-By-Side 模式：两个 App 瓜分一个屏幕</li>
+<li style="margin:0px;padding:0px;">One-above-the-other 模式：一个 App 浮动在另一个 App 之上</li>
+</ul>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">在 Android N TV 上，还将支持 Picture-in-picture （画中画） 模式，用户在浏览其他 App 的时候，视频可以浮动在屏幕上。 </p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;"><em style="font-style:normal;font-weight:inherit;color:rgb(0, 0, 0);">大致效果就是下面这个样子的：</em></p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;"><img src="从开发者角度解析 Android N 新特性！_files/610dc034gw1f1rfpwsb2tj20hs098dgv.jpg" type="image/jpeg" data-filename="610dc034gw1f1rfpwsb2tj20hs098dgv.jpg" alt="1" height="332" style="border:0px;display:block;margin:0px auto;max-width:100%;" width="640"/></p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">对开发者而言，想要支持多窗口也很简单，只需要在 AndroidManifest 文件里加上一个属性即可：</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;"><code style="padding:0px;margin:0px;font-size:90%;white-space:nowrap;background:rgb(241, 241, 241);border:1px solid rgb(225, 225, 225);border-radius:4px;font-style:normal;font-weight:400;font-family:Courier, &quot;Courier New&quot;, monospace;">android:resizeableActivity=[&quot;true&quot; | &quot;false&quot;]</code></p>
+<h1 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:2em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">Direct Replay &amp; Bundle Notifications (快捷回复和归拢通知)</h1>
+<h2 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:1.8em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">快捷回复</h2>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">新的 Android N 目测是借鉴了 iOS 里的快速回复功能，用户将可以在通知栏里快速回复消息，邮件等通信信息。对于商务人士和爱好打游戏的玩家来说，是个很赞的功能。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;"><em style="font-style:normal;font-weight:inherit;color:rgb(0, 0, 0);">快速回复截图</em></p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;"><img src="从开发者角度解析 Android N 新特性！_files/610dc034gw1f1rfq9g0idj208c0gygmg.jpg" type="image/jpeg" data-filename="610dc034gw1f1rfq9g0idj208c0gygmg.jpg" alt="3" height="610" style="border:0px;display:block;margin:0px auto;max-width:100%;" width="300"/></p>
+<h2 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:1.8em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">归拢通知</h2>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">邮件和 IM 类的 App 总是会在短时间内发来很多通知，在此之前，所有的通知栏是相互独立的，这些新到的通知占用了很多空间，却只能显示有限的信息。归拢通知就是把这些通知归拢起来，逻辑性更强，展示的也会更多。另外一大好处可能就是，用户可以一键消除掉所有同一个 App 发来的通知。个人感觉这个功能比 iOS 要先进一些，很多人的 iOS 通知栏里肯定存在着很对微信的通知对吧...</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;"><img src="从开发者角度解析 Android N 新特性！_files/610dc034gw1f1rfqgpgfqj208c0gyt9t.jpg" type="image/jpeg" data-filename="610dc034gw1f1rfqgpgfqj208c0gyt9t.jpg" alt="4" height="610" style="border:0px;display:block;margin:0px auto;max-width:100%;" width="300"/></p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">对开发者而言，全新的通知体系允许开发者更灵活的自定义通知的 UI（View）。具体细节看<a href="http://developer.android.com/preview/features/notification-updates.html?utm_campaign=android_launch_n_030916&amp;utm_source=anddev&amp;utm_medium=blog#direct" style="color:rgb(65, 131, 196);text-decoration:none;">这里</a>。</p>
+<h1 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:2em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">Data Saver （节约数据）</h1>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">Android N 增加了一个系统级的控制开关：节约数据。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">其实这个设定是一个中间设定，因为目前对于网络数据只有开和关两种属性，但有的时候，比如我们月底 4G 数据套餐快用光了，学生在宿舍用着收费的 Wifi，又或者出国漫游，在这些场景下，我们既想开着移动数据，又想告诉所有的 App，我当前的流量是有限的，大家不要用太多。当 App 在收到这个通知后，就会尽可能的减少网络请求，节省用户流量。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">可以看得出，这是一个很人性化而且实用的功能，给 Android 的 PM 点个赞。这个功能目前在 iOS 上是没有的，但在 Windows 10 上是有的，不过那个名字起得略微俗气，在网络里有一项叫：我当前使用的是收费网络。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">这个功能的普及可能需要一段时间，所以早期不能完全指望开发者给你节省流量，更何况是国内各大厂的 App，所以不要忘了在流量不够的时候，开启流量黑白名单。</p>
+<h1 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:2em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">对于开发者而言</h1>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">接下来的一部分，是 Android N 在 SDK 方面的一些提升。个人感觉没多少，而且不痛不痒，毕竟国内现在 Android 5.0 的统一大业都还差得很远。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">对于开发者们而言，最大的利好，莫过于：</p>
+<h2 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:1.8em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">支持 Java 8</h2>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">Android N 开始支持 Java 8 了，很酸爽对吧！终于扯掉了老奶奶的裹脚布！终于要迈开步子写代码了！终于能够时尚一把了！</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">很多 Geek 开发者为了 Java 中的 Lambda 表达式，折腾来折腾去的 Retrolambda 也即将要退出历史舞台了。 Kotlin 一贯标榜的便利，失色三分了。今天起，我也要开始学习 Java 8 了。</p>
+<h2 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:1.8em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">Jack （ Java Android Compiler Kit ）全新的编译工具集</h2>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">Jack 最大最大的优点，你不用再操心 65K 方法限制的问题了！ Jack 在 Compile 的时候就已经解决了！『65k 方法限制』将成为过去式中存在的名词了。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">其他的一些变化：</p>
+<ul style="margin:0px;padding:0px;list-style:disc;margin-bottom:1.2em;margin-left:1.3em;">
+<li style="margin:0px;padding:0px;">速度（每次都会提升速度</li>
+<li style="margin:0px;padding:0px;">Library File 的后缀（变成了 .jack</li>
+</ul>
+<h2 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:1.8em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">Background Optimizations（后台优化）</h2>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">Android N 为了节约内存和电量，移除了三种广播通知。移除的三种分别是：</p>
+<ul style="margin:0px;padding:0px;list-style:disc;margin-bottom:1.2em;margin-left:1.3em;">
+<li style="margin:0px;padding:0px;">ACTION_NEW_PICTURE：拍摄了新的图片</li>
+<li style="margin:0px;padding:0px;">ACTION_NEW_VIDEO：拍摄了新的视频</li>
+<li style="margin:0px;padding:0px;">CONNECTIVITY_ACTION： 用户网络发生变化</li>
+</ul>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">当我看到这些的时候，脑子里第一想法居然是好爽，那些国内的推送服务药丸！！推送服务又少了三种最有用的唤醒！！哈哈哈哈哈哈</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">不过对开发者来说影响还好，乍一看，CONNECTIVITY_ACTION 可能会影响比较大，但是官方给出了一个替代方案，想要接收网络变化的 App 需要注册一个 CONNECTIVITY_CHANGE 事件，当用户手机网络发生变化的时候，只有 App 正在运行的时候，才能收到 CONNECTIVITY_CHANGE 的回到，如果 App 已经被干掉，那么是不会回调的。这样既避免了网络变化监听的功能性缺失，又节约了用户电量，减少了唤醒。对国内第三方推送服务也是沉重的一击。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">官方对 ACTION_NEW_PICTURE 和 ACTION_NEW_VIDEO 移除，也提供了缓和之计。就是使用 <a href="http://developer.android.com/preview/features/background-optimization.html" style="color:rgb(65, 131, 196);text-decoration:none;"><code style="padding:0px;margin:0px;font-size:90%;white-space:nowrap;background:rgb(241, 241, 241);border:1px solid rgb(225, 225, 225);border-radius:4px;font-style:normal;font-weight:400;font-family:Courier, &quot;Courier New&quot;, monospace;">JobScheduler</code></a> 这也是 Android 团队安利已久的一个定时任务方案，大家不要辜负了 Android 开发团队的一番苦心，快去读读文档，争取在下个项目里用上。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">而且官方还说了，未来，很会广播机制都会有所改动。所以... 国内的 Android 目测也会越来越好用，国内无良厂商们能玩儿花样也会越来越少。撒花。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">同时：</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;"><code style="padding:0px;margin:0px;font-size:90%;white-space:nowrap;background:rgb(241, 241, 241);border:1px solid rgb(225, 225, 225);border-radius:4px;font-style:normal;font-weight:400;font-family:Courier, &quot;Courier New&quot;, monospace;">adb</code> 里也增加了测试 后台服务 不可用的命令，方便开发者做测试：</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">禁用后台服务：</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;"><code style="padding:0px;margin:0px;font-size:90%;white-space:nowrap;background:rgb(241, 241, 241);border:1px solid rgb(225, 225, 225);border-radius:4px;font-style:normal;font-weight:400;font-family:Courier, &quot;Courier New&quot;, monospace;">$ adb shell cmd appops set RUN_IN_BACKGROUND ignore</code></p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">重新启用：</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;"><code style="padding:0px;margin:0px;font-size:90%;white-space:nowrap;background:rgb(241, 241, 241);border:1px solid rgb(225, 225, 225);border-radius:4px;font-style:normal;font-weight:400;font-family:Courier, &quot;Courier New&quot;, monospace;">$ adb shell cmd appops set RUN_IN_BACKGROUND allow</code></p>
+<h2 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:1.8em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">Scoped Directory Access （特定文件夹权限）</h2>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">有的时候，App 可能只需要读写特定文件夹，在此之前，你得申请 <a href="http://developer.android.com/reference/android/Manifest.permission.html#READ_EXTERNAL_STORAGE" style="color:rgb(65, 131, 196);text-decoration:none;">READ_EXTERNAL_STORAGE</a>或者 <a href="http://developer.android.com/reference/android/Manifest.permission.html#WRITE_EXTERNAL_STORAGE" style="color:rgb(65, 131, 196);text-decoration:none;">WRITE_EXTERNAL_STORAGE</a> 的权限，这个权限会让用户很不放心而且对于心怀鬼胎的 App，没准也会瞎搞，新的体系下，App 可以申请一个特定文件夹的权限来证明自己的清白。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">做个干干净净的 App，就用这个特性吧！</p>
+<h2 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:1.8em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">Language and Locale (语言和地区)</h2>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">Android N 里用户可以选择多种地区。比如你会中文和日语，就是不会英语。你就可以同时选择中国和日本。这样 App 显示语言的顺序将会是中文，没有中文优先显示日文，而非现在的一旦找不到语言包，就默认选择了英语。</p>
+<h2 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:1.8em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">Direct Boot (直接启动)</h2>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">用户在开机但是还未解锁的情况下，很多 App 是无法启动的，这会导致一些问题，比如...你设置的第三方闹钟可能没响，你的微信可能收不到通知... Android N 下可以申请在开机未解锁情况下直接启动。</p>
+<h2 style="font-weight:100;letter-spacing:-0.1rem;margin:0px;padding:0px;font-family:&quot;PT Serif&quot;, Georgia, &quot;Times New Roman&quot;, Times, &quot;Songti SC&quot;, SimSun, sans-serif;color:rgb(0, 0, 0);font-size:1.8em;line-height:1.35;margin-top:1em;margin-bottom:0.6em;">TV Recording（TV 录制）</h2>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">这是 Android N TV 上的一个提升，允许 App 录制 TV 信号视频，很爽的，比如你在加班，而冰火第六季已然已经开演，先让 TV 录下来，回去再看…就酱...</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">以上，是所有关于 Android N 的变化。总体来看，变化不大，期待今年 Google I/O 2016 上 Google 会放出其他的一些黑科技来撩拨开发者的心房。Android N 的正式版大概会在第四季度到来，大家得再等等。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">我是代码家，这是我总结的，质量值得信赖。</p>
+<p style="margin:0px 0px 1.5em;padding:0px;color:rgb(34, 34, 34);line-height:1.9;margin-bottom:1.2em;">另外：🚫禁止一切名义的第三方全文转载，只可以留链接🚫</p>
+        </div>
+        <div style="border:1px solid rgb(238, 238, 238);list-style:none;padding:0.8em;">
+            <ul style="padding:0px;list-style:disc;margin:0px;">
+                <li style="margin:0px;padding:0px;font-size:0.9em;list-style:none;">作者：<a href="https://github.com/daimajia" style="color:rgb(65, 131, 196);text-decoration:none;" target="_blank">代码家</a>
+                </li>
+                <li style="margin:0px;padding:0px;font-size:0.9em;list-style:none;">发布时间：2016-03-10 07:56</li>
+                <li style="margin:0px;padding:0px;font-size:0.9em;list-style:none;">更新时间：2016-03-10 07:56</li>
+                <li style="margin:0px;padding:0px;font-size:0.9em;list-style:none;">版权声明：禁止任何形式的全文转载，如需合作，请<a href="http://gank.io/post/56e0b83c67765963436fcb94mailto:daimajia@gmail.com" style="color:rgb(65, 131, 196);text-decoration:none;">联络我</a>
+                </li>
+            </ul>
+        </div>
+    </div></div></div></div></div><br/></div></span>
+</div></body></html> 

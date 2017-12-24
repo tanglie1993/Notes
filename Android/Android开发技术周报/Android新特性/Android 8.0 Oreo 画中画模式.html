@@ -1,0 +1,44 @@
+<html>
+<head>
+  <title>Android 8.0 Oreo 画中画模式</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2878"/>
+<h1>Android 8.0 Oreo 画中画模式</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1> Android 8.0 Oreo 画中画模式 </h1><div><div></div></div></div>
+                <div>
+                                        
+                                                            <em>2017-08-25</em>
+
+                                        <em>Google Play</em>
+                                        <a href="https://mp.weixin.qq.com/s/DZACkOioPC1mGmtFnJzvfw?utm_source=androidweekly.cn&amp;utm_medium=websiteAndroid%208.0%20Oreo##" target="_blank">谷歌开发者</a>
+                    <span>谷歌开发者</span>
+
+                    
+                </div>
+                
+                
+                
+                
+                                                
+                                                                
+                
+                
+                    
+
+                    
+
+                    
+                    
+                    <div><div><div><p></p><div><img src="Android 8.0 Oreo 画中画模式_files/0.gif" type="image/gif" data-filename="0.gif" height="99" width="480"/></div><p></p><p></p><div><img src="Android 8.0 Oreo 画中画模式_files/640.webp" type="image/webp" data-filename="640.webp"/></div><p></p><p>Android 8.0 Oreo（API Level 26）允许活动启动画中画 Picture-in-picture（PIP）模式。PIP 是一种特殊类型的多窗口模式，主要用于视频播放。PIP 模式已经可用于 Android TV，而 Android 8.0 则让该功能可进一步用于其他 Android 设备。</p></div></div></div><div><div><div><p><strong>画中画 Picture-in-picture（PIP）模式</strong></p></div></div></div><div><div><div><p></p><div><img src="Android 8.0 Oreo 画中画模式_files/0 [1].gif" type="image/gif" data-filename="0.gif" height="564" width="320"/></div><p></p><p>当一个活动在画中画模式，它处于暂停状态，但应继续展示内容。出于这个原因，您应该确保您的应用程序不在的 onpause ( ) 中处理暂停播放。相反，您应该在 onstop ( ) 暂停播放·，在 onstart ( ) 中继续播放。</p><p></p><div><img src="Android 8.0 Oreo 画中画模式_files/Image.png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p><strong>指定您的活动可以使用画中画模式</strong></p><p>从 Android 8.0 开始，如果您支持画中画模式，您不需要在 Manifest 中设 android:resizeableActivity 为 true，您只需要在其他多窗口模式中设置  android:resizeableActivity</p><p>Android 8.0（API Level 26）引入了一个新的对象 PictureInPictureParams，您通过画中画方法指定一个活动应该表现的画中画模式。该对象指定性能例如首选纵横比。</p><p>现在不仅仅是在 Android TV 上，还可以在所有 Android 设备上使用 “添加画中画” 中描述的现有 PIP 方法。此外，Android 8.0 还提供以下方法来支持 PIP 模式：</p><ul><li><p>Activity.enterPictureInPictureMode (PictureInPictureParams args) : 将活动放在画中画模式中。在 <strong><em>args</em></strong> 中指定活动的宽高比和其他配置设置。如果 <strong><em>args</em></strong> 中的任何字段为空，系统将使用您上次调用的 Activity.setPictureInPictureParams ( ) 。指定的活动被放置在屏幕的一个角落；屏幕的其余部分都填充了屏幕上的先前活动。进入画中画模式的活动进入暂停状态，但仍保持启动状态。 如果用户点击画中画活动，则系统显示给用户交互菜单，在画中画模式中，没有任何触摸操作可以回到活动。</p></li><li><p>Activity.setPictureInPictureParams ( ) : 更新活动的画中画配置。 如果活动当前处于画中画模式，这时将会更新，这在活动比发生变化的时候是很有用的。 如果活动不在画中画模式中，这些设置不管您是否调用了 enterPictureInPictureMode ( ) 方法，它都会生效。</p></li></ul></div></div></div><div><div><div><p><strong>Android 多窗口支持</strong></p></div></div></div><div><div><div><p></p><div><img src="Android 8.0 Oreo 画中画模式_files/Image [1].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p><em><em>△ </em>两个应用在分屏模式中左右并排显示</em></p><p>从 Android 7.0 Nougat 开始，Android 允许多个应用同时共享屏幕。<strong>例如：</strong>用户可以分屏显示应用，在左边查看网页，同时在右边写邮件。 这些功能取决于：</p><ul><li><p>运行 Android 设备具有分屏模式。 在此模式中，系统以左右并排或上下并排的方式分屏显示两个应用。 用户可以拖动两个应用之间的分界线，放大其中一个应用，同时缩小另一个。</p></li><li><p>在运行 Android 的 Nexus Player 上，应用能以画中画模式显示，即在用户浏览网页或与其他应用交互的同时继续显示内容。</p></li><li><p>较大设备的制造商可选择启用自由形状模式，在该模式中，用户可以自由调整各 Activity 的尺寸。 若制造商启用此功能，设备将同时具有自由形状模式和分屏模式。</p></li></ul><p>用户可以通过以下方式切换到多窗口模式：</p><ul><li><p>若用户打开 Overview 屏幕并长按 Activity 标题，则可以拖动该 Activity 至屏幕突出显示的区域，使 Activity 进入多窗口模式。</p></li><li><p>若用户长按 Overview 按钮，设备上的当前 Activity 将进入多窗口模式，同时将打开 Overview 屏幕，用户可在该屏幕中选择要共享屏幕的另一个 Activity。</p></li></ul><p>用户可以在两个 Activity 共享屏幕的同时在这两个 Activity 之间拖放数据 （在此之前，用户只能在一个 Activity 内部拖放数据）。</p><p><strong>针对多窗口模式配置应用</strong></p><p>您可以对应用的 Activity 是否支持多窗口显示和显示方式进行配置。 您可以在 Manifest 文件中设置属性，以控制大小和布局。 根 Activity 的属性设置适用于其任务栈中的所有 Activity。 <strong>例如：</strong>如果根 Activity 已 android:resizeableActivity 设定为 true，则任务栈中的所有 Activity 都将可以调整大小。</p><p><strong>android:resizeableActivity</strong></p><p>在 Manifest 的 &lt;activity&gt; 或 &lt;application&gt; 节点中设置该属性，启用或禁用多窗口显示：</p><p>android:resizeableActivity=[&quot;true&quot;|&quot;false&quot;]</p><p>如果该属性设置为 true，Activity 将能以分屏和自由形状模式启动。 如果此属性设置为 false，Activity 将不支持多窗口模式。 如果该值为 false，且用户尝试在多窗口模式下启动 Activity，该 Activity 将全屏显示。</p><p><strong>多窗口模式中被禁用的功能</strong></p><p>在设备处于多窗口模式中时，某些功能会被禁用或忽略，因为这些功能对与其他 Activity 或应用共享设备屏幕的 Activity 而言没有意义。 此类功能包括：</p><ul><li><p>某些系统 UI 自定义选项将被禁用；<strong>例如：</strong>在非全屏模式中，应用无法隐藏状态栏。</p></li><li><p>系统将忽略对 android:screenOrientation 属性所作的更改。</p></li></ul><p><strong>布局属性</strong></p><p>&lt;layout&gt; 清单元素支持以下几种属性，这些属性影响 Activity 在多窗口模式中的行为：</p><p>android:defaultWidth</p><p>以自由形状模式启动时 Activity 的默认宽度。</p><p>android:defaultHeight</p><p>以自由形状模式启动时 Activity 的默认高度。</p><p>android:gravity</p><p>以自由形状模式启动时 Activity 的初始位置。</p><p>android:minimalHeight、android:minimalWidth</p><p>分屏和自由形状模式中 Activity 的最小高度和最小宽度。 如果用户在分屏模式中移动分界线，使 Activity 尺寸低于指定的最小值，系统会将 Activity 裁剪为用户请求的尺寸。</p><p><strong>例如：</strong>以下节点显示了如何指定 Activity 在自由形状模式中显示时 Activity 的默认大小、位置和最小尺寸：</p><pre>&lt;activityandroid:name=&quot;.MyActivity&quot;&gt;&lt;layoutandroid:defaultHeight=&quot;500dp&quot;android:defaultWidth=&quot;600dp&quot;android:gravity=&quot;top|end&quot;android:minimalHeight=&quot;450dp&quot;android:minimalWidth=&quot;300dp&quot;/&gt;&lt;/activity&gt;</pre><p></p><div><img src="Android 8.0 Oreo 画中画模式_files/Image [2].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>以上就是 Android 画中画和多窗口功能的全部内容，如果您有其他的 Android 8.0 Oreo 兼容性的问题，我们非常感谢您在留言板里提出。 如果您觉得文章对身边的人有帮助，就动手转发吧，让更多的人关注我们并提出意见。</p><div><div><div><p><strong><strong>推荐阅读：</strong></strong></p></div></div></div><p><a href="http://mp.weixin.qq.com/s?__biz=MzAwODY4OTk2Mg==&amp;mid=2652044487&amp;idx=1&amp;sn=ce2de5e0f31ffe526667156f2ac26ce9&amp;chksm=808d5c82b7fad594d5d5ab0e4e387fa53b6519e945755fcca740c8a01a50ea6b23328c80aa64&amp;scene=21#wechat_redirect" target="_blank">Android 8.0 Oreo 现已推出！</a></p><p><a href="http://mp.weixin.qq.com/s?__biz=MzAwODY4OTk2Mg==&amp;mid=2652043947&amp;idx=1&amp;sn=00c1c89f498300736aca54b0adae2fd0&amp;chksm=808d5aeeb7fad3f8c23a0a725984172d859b73a2f4235be43a6a6eeaacd51caaebfe0b92a87f&amp;scene=21#wechat_redirect" target="_blank">Android O 迁移应用官方指南</a></p><p><a href="http://mp.weixin.qq.com/s?__biz=MzAwODY4OTk2Mg==&amp;mid=2652044433&amp;idx=1&amp;sn=f608cecd5775b26c41cff19b10152588&amp;chksm=808d5cd4b7fad5c26e54247e1e9c9673db8321876c6ec5d7b08fff8685b4a31ea84a910750d3&amp;scene=21#wechat_redirect" target="_blank">掌握 Android O 行为变更指南，参与互动赢收藏版 Android 公仔！</a></p><p><a href="http://mp.weixin.qq.com/s?__biz=MzAwODY4OTk2Mg==&amp;mid=2652044238&amp;idx=1&amp;sn=d9803bb27ebb7b1974a276294c121f0a&amp;chksm=808d5b8bb7fad29d04054d77178c2e7559ed2f74718a5a071071b346c8ae00c23f00cd8958a8&amp;scene=21#wechat_redirect" target="_blank">什么？Android O 图标能自适应了？！</a></p><p><a href="http://mp.weixin.qq.com/s?__biz=MzAwODY4OTk2Mg==&amp;mid=2652044459&amp;idx=1&amp;sn=316a0a69db9d5a05e8dbcb4ff5a1f751&amp;chksm=808d5ceeb7fad5f8693dfbf4e272b7fe99862e0d827b4de584eef52231369f711757d497d83d&amp;scene=21#wechat_redirect" target="_blank">Instant App 常见问题官方指南 | Android 开发者 FAQ Vol.6</a></p><p></p><div><img src="Android 8.0 Oreo 画中画模式_files/Image [3].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

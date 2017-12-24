@@ -1,0 +1,55 @@
+<html>
+<head>
+  <title>什么？Android O 图标能自适应了？！</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2869"/>
+<h1>什么？Android O 图标能自适应了？！</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1> 什么？Android O 图标能自适应了？！ </h1><div><div></div></div></div>
+                <div>
+                                        原创
+                                                            <em>2017-07-28</em>
+
+                                        <em>Google Play</em>
+                                        <a href="https://mp.weixin.qq.com/s/cwO63MyztVAh0_ooaBNKRg?utm_source=androidweekly.cn&amp;utm_medium=website##" target="_blank">谷歌开发者</a>
+                    谷歌开发者
+
+                    
+                </div>
+                
+                
+                
+                
+                                                
+                                                                
+                
+                <div>
+                    
+
+                    
+
+                    
+                    
+                    <div><div><div><div><p></p><div><img src="什么？Android O 图标能自适应了？！_files/0.gif" type="image/gif" data-filename="0.gif" height="99" width="480"/></div><p></p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/640.webp" type="image/webp" data-filename="640.webp"/></div><p></p><p>Android O 引入了一种新的应用图标格式：<strong>自适应图标</strong>。自适应图标可以统一所有应用图标的形状，为用户展现有趣的视觉效果，从而使设备提供更为一致的体验。本文会向您解释它的工作原理，以及一些设计这种图标的技术。</p></div></div></div><div><div><div><p><strong>基础元素部分</strong></p></div></div></div><div><div><div><p><strong>尺寸和形状</strong></p><p>自适应图标的大小为 108dp * 108dp，但最大只能遮盖 72dp * 72dp 的面积。不同的设备可以提供不同的遮盖，但必须是凸形的（不能凹进去），图标边缘距离中心不小于 33dp。</p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image.png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p><em>△ 内容 + 遮罩 = 成品，注意刚才强调的，不要使用凹进去的轮廓</em></p><p>考虑到遮罩的最小面积，您可以画一个 66dp 直径的圆来作为安全区域的参考，以保证图标不被剪裁。</p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [1].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p><em>△ 安全区域的参考</em></p><p><strong>参考线</strong></p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [2].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>参考线的形状是图标网格的基础，它可以让您的图标的视觉比例与其他应用图标一致。参考线的一些具体设置如下：</p><ul><li><p>圆形：直径为 52dp 或 32dp</p></li><li><p>方形：44dp * 44dp，圆角半径为 4dp</p></li><li><p>矩形：52dp * 36dp 或 36dp * 52dp，圆角半径为 4dp</p></li></ul><p><strong>内容图层</strong></p><p>自适应图标实际上由两层内容堆叠而成：前景和背景。两层图形的大小均为 108dp * 108dp; 背景必须完全不透明，而前景允许出现一定的透明度。</p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [3].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [4].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>简单计算一下：由于 108dp * 108dp 图标被遮盖到了 72dp * 72dp 大小，每条边外部被切掉的 18dp 可以被认为是 “额外的” 内容，只在动效中显示。</p></div></div></div><div><div><div><p><strong>设计时需要注意的地方</strong></p></div></div></div><div><div><div><p>用于创建产品图标的 Material Design 设计规范在这里仍然适用。具体来说，图标结构、阴影和修饰效果仍然存在，但您现在可以将多种元素分散放置在前景或背景图层中，以产生不同的效果。</p><p>我们相信，如果您将图标的品牌标记放置在前景上，再把它们放置在纯色背景上，图标的显示效果就会非常出色。您的图标会完全与设备贴合。聪明绝顶的设计师们将会如何探索这些新的设计要求，并使用有趣和创新的方式来创造多少令人愉快的图标？只要想象一下设计社区里可能涌现出来诸多杰作就颇令人兴奋呢。下面列出一些要记住的事情和一些可供探索的想法。</p><p><strong>剪裁</strong></p><p>由于自适应图标的动态特性，您无法知道将要应用的遮罩的形状究竟会是什么样子。因此，最好将所有关键元素（如品牌 logo）放在安全区内，并远离遮罩边缘。</p><p><strong>背景锚定</strong></p><p>放置一些看起来像是前景的元素，但实际上它们被画在背景图层上，这也意味着他们可以在后面独立移动。例如，下面计算器应用将大多数元素放置在前景中，而将等号按钮放置在背景内的高光色块中：</p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [5].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>这样一来就为动效提供了一个有趣的机会，您可以把视觉锚点标定在明亮的色块上，但它又比前景元素的移动量少，从而创造出一种深度感。</p><p><strong>被遮盖的遮罩</strong></p><p>我们认为如果将遮盖元素放置在前景中，可能会很有趣  ——  您会发现本该是固定的内容也能灵动起来。这里我们为 Google Play Store 设计了一个参考图标用来简单地讲述这个思路，即将彩色三角形放置在白色背景上的前景中，如下图所示，已经成型的 logo 单独放在一个图层里。</p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [6].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p><em>△ 一定有设计师认为这是一张透明底的图片对不对？</em></p><p>但是！如果放弃这种做法，转而使用彩色背景和白色前景（被镂空出了三角形轮廓），就能实现相同的静态输出：</p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [7].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>但上面这种做法允许下方图层的颜色 “渗出”，并独立于遮罩进行移动，从而在移动或放大时显示出背景的不同部分。下图就是两种方案的对比：</p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [8].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p><strong>光与影</strong></p><p>放置在不同图层中的光照和阴影效果，在相互作用时，可以产生有趣的现象。例如，在前景元素上使用长阴影，并在遮盖区域内移动时，可以产生出很好玩的视觉效果。类似地，光照效果可以放置在前景图层中，而不是被固定到背景中。例如，“高光” 层可以放置在前景中，以模拟光源。将其放置在前景中，意味着它在运动时将在背景层上播放，并以不同的速率向它移动。</p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [9].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>请当心，不要创建没有意义的效果。例如，从前景元素中分离出来的阴影，或是在背景元素后移动的阴影。还要记住，许多图标可能会一起被看到，所以请保守地定制光照效果，并时刻遵循 Material Design 中对图标光影的设计要求。</p><p><strong>迟滞效果</strong></p><p>您可以将元素放置在背景图层中，这时它们会被前景层完全遮蔽，仅在动效下显示。</p><p> </p><div><img src="什么？Android O 图标能自适应了？！_files/Image [10].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p></div></div></div><div><div><div><p><strong>资源和工具</strong></p></div></div></div><div><div><div><p><strong>Sketch 源文件</strong>（请注意里面的关键元素都符号化了，必要的时候请断开符号和副本的依赖关系）：</p><p>https://github.com/nickbutcher/AdaptiveIconPlayground/raw/master/art/ic_launcher.sketch</p><p><strong>Illustrator 源文件</strong>：</p><p>https://github.com/nickbutcher/AdaptiveIconPlayground/raw/master/art/adaptive-icon.ai</p><p><strong>自适应图标 Playground</strong></p><p>在开发自适应图标时，我们已经明白，在运用动效时，许多细微之处来自前景和背景元素的相互作用。这仍然是一个开放的问题，因为我们尚未看到设备和启动器制造商将如何实现这一点。为了提前让大家能预览一下 “实机” 效果，我们创建了一个小型测试应用，以帮助您对它进行评估，同时创建您的图标：</p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [11].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p><p>该应用使用自适应图标显示设备上安装的所有应用。滚动网格会对图标应用视差效果，触摸图标则会应用缩放效果。您可以配置效果的强度，并更改适用于所有图标的遮罩形状。希望此工具能够帮助您感知您的图标将会如何被显示出来，在不同的设备上将会如何移动。</p><p><strong>Github 地址</strong>:</p><p>https://github.com/nickbutcher/AdaptiveIconPlayground</p></div></div></div><div><div><div><p><strong>尽管去适应吧<br/></strong></p></div></div></div><div><div><div><p>希望这篇文章能够为您提供一些信息和灵感，从而帮助您为应用设计出很棒的自适应图标。大家也可以看到我们虽然提供了一些思路，但更多只是在抛砖引玉。我们期待着大家的作品。</p><p>点击 “<strong>阅读原文</strong>” 了解更多自适应图标的信息。</p><div><div><div><p><strong><strong>推荐阅读：</strong></strong></p></div></div></div><p><a href="http://mp.weixin.qq.com/s?__biz=MzAwODY4OTk2Mg==&amp;mid=2652044159&amp;idx=1&amp;sn=4c4b4f17baaf05ff903fab836c0797b7&amp;chksm=808d5b3ab7fad22c2c6acbefe4cab4912a273367c091a4cf42b6f66b7c40250a586a821691d2&amp;scene=21#wechat_redirect" target="_blank">万众瞩目Instant Apps终于全面问世啦</a></p><p><a href="http://mp.weixin.qq.com/s?__biz=MzAwODY4OTk2Mg==&amp;mid=2652044072&amp;idx=1&amp;sn=f3ecc47c6a997799fac523405d6cd8a8&amp;chksm=808d5b6db7fad27b388725880fbb01938705f214728b54296c54e41c96b3696119e435a2c456&amp;scene=21#wechat_redirect" target="_blank">【视频】Material Design设计规范的诞生</a></p><p><a href="http://mp.weixin.qq.com/s?__biz=MzAwODY4OTk2Mg==&amp;mid=2652044140&amp;idx=2&amp;sn=07bc7bd6de65462d47de3d179d7373b8&amp;chksm=808d5b29b7fad23fcf1b8660894b030ae1f0abe360c9d3776aa67e83d4060d31c30e5ef38314&amp;scene=21#wechat_redirect" target="_blank">课程提醒 | 全新Play管理中心重点使用秘诀</a></p><p><a href="http://mp.weixin.qq.com/s?__biz=MzAwODY4OTk2Mg==&amp;mid=2652044140&amp;idx=1&amp;sn=0876cafd36ad6d306d836ebe35c6c594&amp;chksm=808d5b29b7fad23fbd073d4ad1ed779475b7585c74f481870e518d1ce20d847834783f1e6621&amp;scene=21#wechat_redirect" target="_blank">Kotlin 语言入门宝典 | Android 开发者 FAQ Vol.5</a></p><p></p><div><img src="什么？Android O 图标能自适应了？！_files/Image [12].png" type="image/png" data-filename="" height="1" width="1"/></div><p></p></div></div></div></div>
+                </div>
+                
+                
+                
+                                
+                
+
+                
+                                
+                
+                            </div></div></div><br/></div></span>
+</div></body></html> 
