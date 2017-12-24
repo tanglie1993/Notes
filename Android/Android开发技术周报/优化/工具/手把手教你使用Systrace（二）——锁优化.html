@@ -1,0 +1,102 @@
+<html>
+<head>
+  <title>手把手教你使用Systrace（二）——锁优化</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2852"/>
+<h1>手把手教你使用Systrace（二）——锁优化</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>手把手教你使用Systrace（二）——锁优化</h1><div><div></div></div></div><p><a href="https://zhuanlan.zhihu.com/p/27331842" target="_blank">手把手教你使用Systrace（一）</a>中介绍了Systrace的使用方法，虽然看起来不明觉厉的样子，但你们可能觉得它只是徒有虚名；今天我就以*<b>*锁优化</b>**为例来展示下Systrace的强大功能。至于如何看图表如何分析数据，这种略枯燥的教程我们下期再说。</p><p>在多线程环境中，锁是一个让人又爱又恨的东西。合理地使用锁可以以一种非常简单的方式来保证线程安全，但是滥用锁有会导致各种各样的问题——而且这种问题一般都难以排查。锁滥用常见的有两个问题：死锁和优先级反转。死锁这个臭名昭著的问题就不提了，那么何谓优先级反转？多个优先级不同的线程在等待一个锁，如果低优先级的线程拿到了锁，那么其余较高优先级的线程就会进入等待状态，在低优先级线程运行同步代码段这段时间内，本应策马狂奔的高优先级线程被低优先级的线程强行五五开，这就发生了「优先级反转」</p><p>一般来说，锁相关的问题如果没有靠谱的工具，是很难解决的。因为进程的运行与调度往往在旦夕之间，出现优先级反转的时机又转瞬即逝，而进程在每次运行的时候线程之间的时序又通常各不相同；另外如果系统复杂模块众多，即使拿到了锁相关的信息，往往也难以直观分析。不过在Systrace面前，这些个疑难杂症就是跳梁小丑，分分钟把它们治理的服服帖帖的；而它的使用又是异常简单，不信你看——</p><p><b>## 使用</b></p><p>首先准备一台 **<b>Android 7.0</b>** 也即API Level在24以上的手机（重要！原因下面说明）；在手机上准备好你需要分析的环境（比如装好Apk，切换到要分析的App界面等，见上文不赘述），然后使用systrace执行如下命令：</p><blockquote>./systrace.py -t 8 <b>dalvik</b> -a [your-app-package-name]</blockquote><p>然后打开trace.html文件，如下图：</p><p>我标红的那几个位置显示此线程在执行过程中由于锁问题出现了等待情况！我们把鼠标移动到这个色块，然后单击查看下面的提示：</p><blockquote>monitor contention with owner *$#@#$#%$(手工混淆） (27254) waiters=0 blocking from ClassA.functionB(android.content.Context, java.lang.String)(:-1)</blockquote><p>提示信息很清楚有木有——本线程与线程ID为 27254 的线程出现了锁争用，被阻塞的函数为`ClassA.functionB` （忽略我的手工混淆 ^_&amp;）。然后我们看看 27254 的线程在干啥：</p><p>果然这个线程在调用同一个函数，三下五除二搞定！现在我们知道问题原因，至于如何解决就需要具体问题具体分析了。</p><p>再举个栗子，还是上面那种Trace图，我们看第二个monitor contention的情况，其中上面个线程的提示信息是：</p><blockquote>monitor contention with owner NORMAL_THREAD_1 (27274) waiters=1 blocking from boolean ExternalServiceManagerImpl.createExternalService(ServiceDescription)(ExternalServiceManagerImpl.java:55)</blockquote><p>从图中看这两个线程调用的是同一个函数，接下来我们看下面那个线程的提示信息：</p><blockquote>monitor contention with owner NORMAL_THREAD_1 (27274) waiters=0 blocking from boolean ExternalServiceManagerImpl.createExternalService(ServiceDescription)(ExternalServiceManagerImpl.java:55)</blockquote><p>现在已经很明显了：这两个线程都在等一个线程ID为 27274，线程名字为 NORMAL_THREAD_1的线程；于是我们去看看这个现在在搞什么鬼：</p><p>纳尼？？分析到这里，线索已经断了——从Systrace上看不到这个线程现在在干什么。我们需要进一步的信息，怎么做？**<b>加更多的信息</b>**。比如，线程池运行的时候把线程名字修改为Runnable的名字；再比如我们已经知道锁住的代码在 `ExternalServiceManagerImpl.java` 第55行，那么我们可以在这里打印堆栈，查看所有的调用者等等。</p><p>从上面两个例子可以看到，Systrace对于锁问题的分析是非常有帮助的：可以直观地给出锁和被锁线程的信息，甚至详细到堆栈；但是Systrace也只能帮你到这里了，至于发生锁问题的原因是什么又会导致什么结果往往还需要发挥你自己的聪明才智，继续一步一步进行「假设－验证－分析」才能找到问题的答案——光靠工具是不行的。</p><p>好了，这里对于如何使用Systrace进行锁优化的内容差不多就这样了；是不是觉得，这也太简单了吧？哈哈，我也觉得。</p><p><b>## 原理</b></p><p>上文提到必须是 Android 7.0以上的系统，这是为什么？而我又是如何发现这个结论的？感兴趣的童鞋可以继续阅读下去，不关心的可以忽略。</p><p>问题源于我想使用Systrace分析 `synchornized` 同步引起的锁问题，而要做到这一点其实比较简单，只需要在**每一个**`synchornized` 语句前后写上如下代码：</p><div><pre><code>Trace.beginSection(&quot;sync&quot;);
+synchornized(this) {
+    Trace.endSection();
+    // 内部代码
+}
+</code></pre></div><p>不过说起来简单，要在<b>每一个</b> `synchornized` 都插上如上代码还是有点技术含量的。我思考有两种办法可以解决：</p><ol><li>在smali层面进行代码插桩，因为`synchornized`用虚拟机指令表示其实就是 `monitor_enter` 和 `monitor_exit`，只需要在 `monitor_enter` 前后插入Trace代码即可，这种方法我试验过是完全可行的，感兴趣的可以自己实现；</li><li>在虚拟机层面解决，我们的Java代码最终是交给虚拟机执行的，那么虚拟机在执行这个 `synchornized` 的时候是如何做的呢，如果我Hook掉这个过程的代码，在前后插入Trace不是也是可行的吗？</li></ol><p>所以问题就变成了：「synchorinzed 在Android虚拟机内部是如何实现的？」</p><p>以ART为例，我们来看看虚拟机的实现代码。ART虚拟机有解释和编译两种代码执行模式，这两种模式是等价的；但是编译模式运行的是机器指令，难以理解和分析，又由于这两种执行方式结果一样，我们分析解释模式即可。</p><p>上文提到，synchornized 用虚拟机指令表示就是 `monitor_enter`指令，那么ART的解释器是如何执行这条指令的呢？以 Android 5.0 Lollipop为例，代码在 `art/runtime/interpreter/<a href="http://link.zhihu.com/?target=http%3A//interpreter_goto_table_impl.cc" target="_blank">http://interpreter_goto_table_impl.cc</a>`:</p><div><pre><code>HANDLE_INSTRUCTION_START(MONITOR_ENTER) {
+    Object* obj = shadow_frame.GetVRegReference(inst-&gt;VRegA_11x(inst_data));
+    if (UNLIKELY(obj == nullptr)) {
+      ThrowNullPointerExceptionFromInterpreter();
+      HANDLE_PENDING_EXCEPTION();
+    } else {
+      DoMonitorEnter&lt;do_access_check&gt;(self, &amp;shadow_frame, obj);
+      POSSIBLY_HANDLE_PENDING_EXCEPTION(self-&gt;IsExceptionPending(), 1);
+    }
+  }
+</code></pre></div><p>也就是解释器在遇到 `monitor_enter` 指令之后会执行 `DoMonitorEnter`方法，我们继续跟踪：</p><div><pre><code>template &lt;bool kMonitorCounting&gt;
+static inline void DoMonitorEnter(Thread* self,
+                                  ShadowFrame* frame,
+                                  Object* ref)
+    NO_THREAD_SAFETY_ANALYSIS
+    REQUIRES(!Roles::uninterruptible_) {
+  StackHandleScope&lt;1&gt; hs(self);
+  Handle&lt;Object&gt; h_ref(hs.NewHandle(ref));
+  h_ref-&gt;MonitorEnter(self);
+  if (kMonitorCounting &amp;&amp; frame-&gt;GetMethod()-&gt;MustCountLocks()) {
+    frame-&gt;GetLockCountData().AddMonitor(self, h_ref.Get());
+  }
+}
+</code></pre></div><p>这里其实就是执行了 Object对象的 `MonitorEnter` 方法，此方法在 `art/runtime/mirror/<a href="http://link.zhihu.com/?target=http%3A//object-inl.cc" target="_blank">http://object-inl.cc</a>`:</p><div><pre><code>inline mirror::Object* Object::MonitorEnter(Thread* self) {
+  return Monitor::MonitorEnter(self, this);
+}
+</code></pre></div><p>如果我们要Hook的话，上面这几个方法都是不行的，因为他们内联了，没有导出符号。继续跟踪，上面方法直接调用了 Monitor类的 `MonitorEnter`：</p><div><pre><code>mirror::Object* Monitor::MonitorEnter(Thread* self, mirror::Object* obj) {
+  DCHECK(self != nullptr);
+  DCHECK(obj != nullptr);
+  self-&gt;AssertThreadSuspensionIsAllowable();
+  obj = FakeLock(obj);
+  uint32_t thread_id = self-&gt;GetThreadId();
+  size_t contention_count = 0;
+  StackHandleScope&lt;1&gt; hs(self);
+  Handle&lt;mirror::Object&gt; h_obj(hs.NewHandle(obj));
+  while (true) {
+    LockWord lock_word = h_obj-&gt;GetLockWord(true);
+    switch (lock_word.GetState()) {
+      case LockWord::kUnlocked: {
+        // 太长，略。。
+      }
+      case LockWord::kFatLocked: {
+        Monitor* mon = lock_word.FatLockMonitor();
+        mon-&gt;Lock(self);
+        return h_obj.Get();  // Success!
+      }
+      case LockWord::kHashCode:
+        // Inflate with the existing hashcode.
+        Inflate(self, nullptr, h_obj.Get(), lock_word.GetHashCode());
+        continue;  // Start from the beginning.
+      default: {
+        LOG(FATAL) &lt;&lt; &quot;Invalid monitor state &quot; &lt;&lt; lock_word.GetState();
+        UNREACHABLE();
+      }
+    }
+  }
+}
+</code></pre></div><p>上面这个方法是一个很好的Hook点，我们查看一下 `libart.so`里面是否有符号：</p><div><pre><code>$ nm -D libart.so | grep MonitorEnter | gc++filt
+0029ddc8 T art::Monitor::MonitorEnter(art::Thread*, art::mirror::Object*)
+0024b2c4 T art::JNIEnvExt::RecordMonitorEnter(_jobject*)
+</code></pre></div><p>可以看到，符号是导出了的；因此我们只需要Hook此函数，在前后加上atrace调用，就能拿到Systrace的信息了。如果你不想Hook，也可以直接修改源码，然后编译一个自己的libart.so 做成image安装到手机上自己分析。</p><p>正当我准备这么干的时候，Android N发布了，带来了一系列的改进；于是我第一时间去扒了源码看，结果，哈哈：</p><div><pre><code>mirror::Object* Monitor::MonitorEnter(Thread* self, mirror::Object* obj, bool trylock) {
+  // 略。。。
+  while (true) {
+    LockWord lock_word = h_obj-&gt;GetLockWord(true);
+    switch (lock_word.GetState()) {
+      case LockWord::kUnlocked: {
+        LockWord thin_locked(LockWord::FromThinLockId(thread_id, 0, lock_word.ReadBarrierState()));
+        if (h_obj-&gt;CasLockWordWeakSequentiallyConsistent(lock_word, thin_locked)) {
+          AtraceMonitorLock(self, h_obj.Get(), false /* is_wait */);
+          // CasLockWord enforces more than the acquire ordering we need here.
+          return h_obj.Get();  // Success!
+        }
+        continue;  // Go again.
+      }
+        // 略
+    }
+  }
+}
+</code></pre></div><p>看到那句闪亮的 `AtraceMonitorLock` 没？Android N已经在系统层面加上了tracer调用，没必要去hook或者编译虚拟机了，哈哈。</p><p>最后，我这里其实只介绍了 `synchornized` 引起的同步等待情况，那么 `object.wait` Systrace能分析到吗？JUC下面的 `java.util.concurrent.locks.Lock` 呢？C++层的mutex lock呢？这些问题就留给读者分析去了 ^_^&amp;</p></div></div></div><br/></div></span>
+</div></body></html> 
