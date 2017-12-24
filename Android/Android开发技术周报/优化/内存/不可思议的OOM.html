@@ -1,0 +1,370 @@
+<html>
+<head>
+  <title>不可思议的OOM</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2824"/>
+<h1>不可思议的OOM</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>不可思议的OOM</h1><div><div></div></div></div>
+
+        
+        <div>
+                    <div>
+            
+            
+            <a target="_blank"><span>关注</span></a>
+            
+            <div>
+              
+                
+              <span>字数 4036</span>
+            <span>评论 13</span><span>赞赏 1</span></div>
+          </div>
+          
+        </div>
+        
+
+        
+        
+          <p>摘要:<br/>
+ 本文发现了一类OOM（OutOfMemoryError），<strong>这类OOM的特点是崩溃时java堆内存和设备物理内存都充足</strong>，探索并解释了这类OOM抛出的原因。</p>
+<p>关键字:<br/>
+ OutOfMemoryError ，OOM，pthread_create failed , Could not allocate JNI Env</p>
+<h1>一. 引子</h1>
+<p> 对于每一个移动开发者，内存是都需要小心使用的资源，而线上出现的OOM（OutOfMemoryError）都会让开发者抓狂，因为我们通常仰仗的直观的堆栈信息对于定位这种问题通常帮助不大。<br/>
+ 网上有很多资料教我们如何“紧衣缩食“的利用宝贵的堆内存（比如，使用小图片，bitmap复用等），可是:</p>
+<blockquote>
+<ul>
+<li><strong>线上的OOM真的全是由于堆内存紧张导致的吗？</strong></li>
+<li><strong>有没有App堆内存宽裕，设备物理内存也宽裕的情况下发生OOM的可能？</strong></li>
+</ul>
+</blockquote>
+<p> <strong>内存充裕的时候出现OOM崩溃？</strong>看似不可思议，然而，最近笔者在调查一个问题的时候，通过自研的APM平台发现公司的一个产品的大部分OOM确实有这样的特征，即：</p>
+<ul>
+<li><strong>OOM崩溃时，java堆内存远远低于Android虚拟机设定的上限，并且物理内存充足，SD卡空间充足</strong></li>
+</ul>
+<p> 既然内存充足，这时候为什么会有OOM崩溃呢？</p>
+<h1>二. 问题描述</h1>
+<p> 在详细描述问题之前，先弄清楚一个问题：</p>
+<p>    <strong>什么导致了OOM的产生？</strong></p>
+<p>下面是几个关于Android官方声明内存限制阈值的API：</p>
+<pre><code>ActivityManager.getMemoryClass()：     虚拟机java堆大小的上限，分配对象时突破这个大小就会OOM
+ActivityManager.getLargeMemoryClass()：manifest中设置largeheap=true时虚拟机java堆的上限
+Runtime.getRuntime().maxMemory() ：    当前虚拟机实例的内存使用上限，为上述两者之一
+Runtime.getRuntime().totalMemory() ：  当前已经申请的内存，包括已经使用的和还没有使用的
+Runtime.getRuntime().freeMemory() ：   上一条中已经申请但是尚未使用的那部分。那么已经申请并且正在使用的部分used=totalMemory() - freeMemory()
+ActivityManager.MemoryInfo.totalMem:   设备总内存
+ActivityManager.MemoryInfo.availMem:   设备当前可用内存
+/proc/meminfo                                           记录设备的内存信息
+</code></pre>
+<p>        图2-1 Android内存指标</p>
+<p> 通常认为OOM发生是由于java堆内存不够用了，即</p>
+<pre><code>Runtime.getRuntime().maxMemory()这个指标满足不了申请堆内存大小时
+</code></pre>
+<p>        图2-2 Java堆OOM产生原因<br/>
+ 这种OOM可以非常方便的验证（比如: 通过new byte[]的方式尝试申请超过阈值maxMemory()的堆内存），通常这种OOM的错误信息通常如下：</p>
+<pre><code>java.lang.OutOfMemoryError: Failed to allocate a XXX byte allocation with XXX free bytes and XXXKB until OOM
+</code></pre>
+<p>        图2-3 堆内存不够导致的OOM的错误信息<br/>
+ 而前面已经提到了，<strong>本文中发现的OOM案例中堆内存充裕（Runtime.getRuntime().maxMemory()大小的堆内存还剩余很大一部分），设备当前内存也很充裕（ActivityManager.MemoryInfo.availMem还有很多）</strong>。这些OOM的错误信息大致有下面两种：</p>
+<ol>
+<li>这种OOM在Android6.0，Android7.0上各个机型均有发生，文中简称为<strong>OOM一</strong>，错误信息如下：</li>
+</ol>
+<pre><code>java.lang.OutOfMemoryError: Could not allocate JNI Env
+</code></pre>
+<p>        图2-4 OOM一的错误信息</p>
+<ol>
+<li>集中发生在Android7.0及以上的华为手机（EmotionUI_5.0及以上）的OOM，简称为<strong>OOM二</strong>，对应错误信息如下：</li>
+</ol>
+<pre><code>java.lang.OutOfMemoryError: pthread_create (1040KB stack) failed: Out of memory
+</code></pre>
+<p>        图2-5 OOM二的错误信息</p>
+<h1>三. 问题分析及解决</h1>
+<h2>3.1 代码分析</h2>
+<p> Android系统中，OutOfMemoryError这个错误是怎么被系统抛出的？下面基于Android6.0的代码进行简单分析：</p>
+<ol>
+<li>Android虚拟机最终抛出OutOfMemoryError的代码位于 <strong>/art/runtime/thread.cc</strong>
+</li>
+</ol>
+<pre><code>void Thread::ThrowOutOfMemoryError(const char* msg)
+参数msg携带了OOM时的错误信息
+</code></pre>
+<p>        图3-1 ART Runtime抛出的位置</p>
+<ol>
+<li>搜索代码可以发现以下几个地方调用了上述方法抛出OutOfMemoryError错误</li>
+</ol>
+<ul>
+<li>第一个地方是堆操作时</li>
+</ul>
+<pre><code>系统源码文件：
+    /art/runtime/gc/heap.cc
+函数：
+    void Heap::ThrowOutOfMemoryError(Thread* self, size_t byte_count, AllocatorType allocator_type)
+抛出时的错误信息：
+    oss &lt;&lt; &quot;Failed to allocate a &quot; &lt;&lt; byte_count &lt;&lt; &quot; byte allocation with &quot; &lt;&lt; total_bytes_free  &lt;&lt; &quot; free bytes and &quot; &lt;&lt; PrettySize(GetFreeMemoryUntilOOME()) &lt;&lt; &quot; until OOM&quot;;
+</code></pre>
+<p>        图3-2 Java堆OOM<br/>
+ 这种抛出的其实就是堆内存不够用的时候，即前面提到的申请堆内存大小超过了Runtime.getRuntime().maxMemory()</p>
+<ul>
+<li>第二个地方是创建线程时</li>
+</ul>
+<pre><code>系统源码文件：
+    /art/runtime/thread.cc
+函数：
+    void Thread::CreateNativeThread(JNIEnv* env, jobject java_peer, size_t stack_size, bool is_daemon)
+抛出时的错误信息：
+    &quot;Could not allocate JNI Env&quot;
+  或者
+    StringPrintf(&quot;pthread_create (%s stack) failed: %s&quot;, PrettySize(stack_size).c_str(), strerror(pthread_create_result)));
+</code></pre>
+<p>        图3-3 线程创建时OOM<br/>
+ 对比错误信息，可以知道我们遇到的OOM崩溃就是这个时机，即创建线程的时候（Thread::CreateNativeThread）产生的。</p>
+<ul>
+<li>还有其他的一些错误信息如”[XXXClassName] of length XXX would overflow“是系统限制String/Array的长度所致，不在本文讨论之列。</li>
+</ul>
+<p>那么，我们关心的就是Thread::CreateNativeThread时抛出的OOM错误，<strong>创建线程为什么会导致OOM呢？</strong></p>
+<h2>3.2 推断</h2>
+<p> 既然抛出来OOM，一定是线程创建过程中触发了某些我们不知道的限制，既然不是Art虚拟机为我们设置的堆上限，那么可能是更底层的限制。<br/>
+ Android系统基于linux，所以linux的限制对于Android同样适用，这些限制有：</p>
+<ol>
+<li>
+<strong>/proc/pid/limits 描述着linux系统对对应进程的限制</strong>，下面是一个样例：</li>
+</ol>
+<pre><code>Limit                     Soft Limit           Hard Limit           Units     
+Max cpu time              unlimited            unlimited            seconds   
+Max file size             unlimited            unlimited            bytes     
+Max data size             unlimited            unlimited            bytes     
+Max stack size            8388608              unlimited            bytes     
+Max core file size        0                    unlimited            bytes     
+Max resident set          unlimited            unlimited            bytes     
+Max processes             13419                13419                processes 
+Max open files            1024                 4096                 files     
+Max locked memory         67108864             67108864             bytes     
+Max address space         unlimited            unlimited            bytes     
+Max file locks            unlimited            unlimited            locks     
+Max pending signals       13419                13419                signals   
+Max msgqueue size         819200               819200               bytes     
+Max nice priority         40                   40                   
+Max realtime priority     0                    0                    
+Max realtime timeout      unlimited            unlimited            us 
+</code></pre>
+<p>        图3-4 Linux进程限制示例<br/>
+ 用排除法筛选上面样例中的limits:</p>
+<ul>
+<li>Max stack size，Max processes的限制是整个系统的，不是针对某个进程的，排除</li>
+<li>Max locked memory ，排除，后面会分析，线程创建过程中分配线程私有stack使用的mmap调用没有设置MAP_LOCKED，所以这个限制与线程创建过程无关</li>
+<li>Max pending signals，c层信号个数阈值，无关，排除</li>
+<li>Max msgqueue size，Android IPC机制不支持消息队列，排除</li>
+</ul>
+<p> 剩下的limits项中，<strong>Max open files</strong>这一项限制最可疑<br/>
+ Max open files表示<strong>每个进程最大打开文件的数目</strong>，进程<strong>每打开一个文件就会产生一个文件描述符fd（记录在/proc/pid/fd下面）</strong>，这个限制表明<strong>fd的数目不能超过Max open files规定的数目</strong>。<br/>
+ 后面分析线程创建过程中会发现过程中涉有及到文件描述符。</p>
+<ol>
+<li><strong>/proc/sys/kernel中描述的限制</strong></li>
+</ol>
+<p> 这些限制中与线程相关的是<strong>/proc/sys/kernel/threads-max，规定了每个进程创建线程数目的上限</strong>，所以线程创建导致OOM的原因也有可能与这个限制相关。</p>
+<h2>3.3 验证</h2>
+<p>下面对上述的推断进行验证，分两步：本地验证和线上验收。</p>
+<ul>
+<li>本地验证：在本地验证推断，<strong>试图复现与图[2-4]OOM一与图[2-5]OOM二所示错误消息一致的OOM</strong>
+</li>
+<li>线上验收：<strong>下发插件，验收线上用户OOM时确实是由于上面的推断的原因导致的</strong>。</li>
+</ul>
+<h3>本地验证</h3>
+<p><strong>实验一：</strong><br/>
+ 触发大量网络连接（每个连接处于独立的线程中）并保持，每打开一个socket都会增加一个fd（/proc/pid/fd下多一项）<br/>
+ 注：不只有这一种增加fd数的方式，也可以用其他方法，比如打开文件，创建handlerthread等等</p>
+<ul>
+<li>实验预期：<br/>
+当进程fd数（可以通过 ls /proc/pid/fd | wc -l 获得）突破 /proc/pid/limits中规定的Max open files时，产生OOM</li>
+<li>实验结果：<br/>
+当fd数目到达 /proc/pid/limits中规定的Max open files时，继续开线程确实会导致OOM的产生。错误信息及堆栈如下：</li>
+</ul>
+<pre><code>E/art: ashmem_create_region failed for 'indirect ref table': Too many open files
+E/AndroidRuntime: FATAL EXCEPTION: main
+                  Process: com.netease.demo.oom, PID: 2435
+                  java.lang.OutOfMemoryError: Could not allocate JNI Env
+                      at java.lang.Thread.nativeCreate(Native Method)
+                      at java.lang.Thread.start(Thread.java:730)
+                      ......
+</code></pre>
+<p>        图3-5 FD数超限导致OOM的详细信息<br/>
+ 可以看出，<strong>此OOM发生时的错误信息确与线上发现的OOM一的“Could not allocate JNI Env”</strong>吻合，因此线上上报的OOM一<strong>可能</strong>就是由FD数超限导致的，不过最终确定需要到线上进行验证(下一小节).<br/>
+ 此外从ART虚拟机的Log中看出，还有一个关键的信息<strong>“ art: ashmem_create_region failed for 'indirect ref table': Too many open files”</strong>，后面会用于问题定位及解释。</p>
+<p><strong>实验二：</strong><br/>
+ 创建大量的空线程（不做任何事情，直接sleep）</p>
+<ul>
+<li><p>实验预期：<br/>
+当线程数（可以在/proc/pid/status中的threads项实时查看）超过/proc/sys/kernel/threads-max中规定的上限时产生OOM崩溃</p></li>
+<li><p>实验结果：</p></li>
+</ul>
+<ol>
+<li>在Android7.0及以上的华为手机（EmotionUI_5.0及以上）的手机产生OOM，这些手机的线程数限制都很小(应该是华为rom特意修改的limits)，每个进程只允许最大同时开500个线程，因此很容易复现了。OOM时错误信息如下：</li>
+</ol>
+<pre><code>W libc    : pthread_create failed: clone failed: Out of memory
+W art     : Throwing OutOfMemoryError &quot;pthread_create (1040KB stack) failed: Out of memory&quot;
+E AndroidRuntime: FATAL EXCEPTION: main
+                  Process: com.netease.demo.oom, PID: 4973
+                  java.lang.OutOfMemoryError: pthread_create (1040KB stack) failed: Out of memory
+                      at java.lang.Thread.nativeCreate(Native Method)
+                      at java.lang.Thread.start(Thread.java:745)
+                      ......
+</code></pre>
+<p>        图3-6 线程数超限导致的OOM详细信息<br/>
+ 可以看出<strong>错误信息与我们线上遇到的OOM二吻合：&quot;pthread_create (1040KB stack) failed: Out of memory&quot;</strong><br/>
+ 另外ART虚拟机还有一个关键Log：<strong>“pthread_create failed: clone failed: Out of memory”</strong>，后面会用于问题定位及解释。</p>
+<ol>
+<li>其他Rom的手机线程数的上限都比较大，不容易复现上述问题。但是，<strong>对于32位的系统，当进程的逻辑地址空间不够的时候也会产生OOM</strong>,每个线程通常需要mapp 1MB左右的stack空间（stack大小可以自行设置），32为系统进程逻辑地址4GB，用户空间少于3GB。逻辑地址空间不够（<strong>已用逻辑空间地址可以查看/proc/pid/status中的VmPeak/VmSize记录</strong>），此时创建线程产生的OOM具有如下信息：</li>
+</ol>
+<pre><code>W/libc: pthread_create failed: couldn't allocate 1069056-bytes mapped space: Out of memory
+W/art: Throwing OutOfMemoryError &quot;pthread_create (1040KB stack) failed: Try again&quot;
+E/AndroidRuntime: FATAL EXCEPTION: main
+                  Process: com.netease.demo.oom, PID: 8638
+                  java.lang.OutOfMemoryError: pthread_create (1040KB stack) failed: Try again
+                       at java.lang.Thread.nativeCreate(Native Method)
+                       at java.lang.Thread.start(Thread.java:1063)
+                       ......
+</code></pre>
+<p>        图3-7 逻辑地址空间占满导致的OOM</p>
+<h3>线上验收及问题解决</h3>
+<p> <strong>本地尝试复现的OOM错误信息中图[3-5]与线上OOM一情况比较吻合，图[3-6]与线上OOM二的情况比较吻合</strong>，但线上的OOM一真的时FD数目超限，OOM二真的是由于华为手机线程数超限的原因导致的吗？最终确定还需要取线上设备的数据进行验证．</p>
+<p><strong>验证方法：</strong><br/>
+ 下发插件到线上用户，当Thread.UncaughtExceptionHandler捕获到OutOfMemoryError时记录/proc/pid目录下的如下信息：</p>
+<ol>
+<li>/proc/pid/fd目录下文件数(fd数)</li>
+<li>/proc/pid/status中threads项（当前线程数目）</li>
+<li>OOM的日志信息（出了堆栈信息还包含其他的一些warning信息</li>
+</ol>
+<p><strong>线上OOM一验证</strong><br/>
+ 发生OOM一的线上设备中采集到的信息：</p>
+<ol>
+<li>
+<strong>/proc/pid/fd目录下文件数与/proc/pid/limits中的Max open files 数目持平</strong>，证明FD数目已经满了</li>
+<li>崩溃时日志信息与图[3-5]基本一致</li>
+</ol>
+<p>由此，证明<strong>线上的OOM一确实是由于FD数目过多导致的OOM，推断验证成功</strong>．</p>
+<p><strong>OOM一的定位与解决：</strong><br/>
+ 最终原因是App中使用的长连接库再某些时候会有瞬时发出大量http请求的bug(导致FD数激增)，已修复</p>
+<p><strong>线上OOM二验证</strong><br/>
+ 集中在华为系统的OOM二崩溃时收集到的信息样例如下，（收集的样例中包含的devicemodel有VKY-AL00，TRT-AL00A，BLN-AL20，BLN-AL10，DLI-AL10，TRT-TL10，WAS-AL00等）：</p>
+<ol>
+<li>/proc/pid/status中threads记录全部到达上限：Threads:    500</li>
+<li>崩溃时日志信息与图[3-6]基本一致</li>
+</ol>
+<p>推断验证成功，即<strong>线程数受限导致创建线程时clone failed导致了线上的OOM二</strong>。</p>
+<p><strong>OOM二的定位与解决：</strong><br/>
+ 关于App业务代码中的问题还在定位修复中</p>
+<h2>3.4 解释</h2>
+<p>下面从代码分析本文描述的OOM是怎么发生的，首先线程创建的简易版流程图如下所示：</p>
+<div>
+
+<div>图3-8 线程创建流程</div>
+</div>
+<p>上图中，线程创建大概有两个关键的步骤：</p>
+<ul>
+<li>第一列中的<strong>创建线程私有的结构体JNIENV</strong>(JNI执行环境，用于C层调用Java层代码)</li>
+<li>第二列中的<strong>调用posix C库的函数pthread_create进行线程创建工作</strong>
+</li>
+</ul>
+<p>下面对流程图中关键节点（图中有标号的）进行说明：</p>
+<ol>
+<li>图中节点①， /art/runtime/thread.cc中的函数Thread:CreateNativeThread部分节选代码如下：</li>
+</ol>
+<pre><code>    std::string msg(child_jni_env_ext.get() == nullptr ?
+        &quot;Could not allocate JNI Env&quot; :
+        StringPrintf(&quot;pthread_create (%s stack) failed: %s&quot;, PrettySize(stack_size).c_str(), strerror(pthread_create_result)));
+    ScopedObjectAccess soa(env);
+    soa.Self()-&gt;ThrowOutOfMemoryError(msg.c_str());
+</code></pre>
+<p>        图3-9 Thread:CreateNativeThread节选<br/>
+可知：</p>
+<ul>
+<li>JNIENV创建不成功时产生OOM的错误信息为<strong>&quot;Could not allocate JNI Env&quot;，与文中OOM一一致</strong>
+</li>
+<li>pthread_create失败时抛出OOM的错误信息为&quot;pthread_create (%s stack) failed: %s&quot;．其中详细的错误信息由pthread_create的返回值（错误码）给出．错误码与错误描述的对应关系可以参见<strong>bionic/libc/include/sys/_errdefs.h</strong>中的定义．文中OOM二的具体错误信息为&quot;Out of memory&quot;，就说明pthread_create的返回值为12.</li>
+</ul>
+<pre><code>...
+__BIONIC_ERRDEF( EAGAIN         ,  11, &quot;Try again&quot; )
+__BIONIC_ERRDEF( ENOMEM         ,  12, &quot;Out of memory&quot; )
+...
+__BIONIC_ERRDEF( EMFILE         ,  24, &quot;Too many open files&quot; )
+...
+</code></pre>
+<p>        图3-10 系统错误定义_errdefs.h</p>
+<ol>
+<li>图中节点②和③是创建JNIENV过程的关键节点，节点②/art/runtime/mem_map.cc中<strong>函数MemMap:MapAnonymous的作用是为JNIENV结构体中Indirect_Reference_table（C层用于存储JNI局部/全局变量）申请内存</strong>，申请内存的方法是节点③所示的函数<strong>ashmem_create_region（创建一块ashmen匿名共享内存,并返回一个文件描述符）</strong>．节点②代码节选如下：</li>
+</ol>
+<pre><code>  if (fd.get() == -1) {
+      *error_msg = StringPrintf(&quot;ashmem_create_region failed for '%s': %s&quot;, name, strerror(errno));
+      return nullptr;
+  }
+</code></pre>
+<p>        图3-11　MemMap:MapAnonymous节选<br/>
+ 我们<strong>线上的OOM一的错误信息＂ashmem_create_region failed for 'indirect ref table': Too many open files＂，与此处打印的信息吻合</strong>．＂Too many open files＂的错误描述说明此处的errno（系统全局错误标识）为24(见图[3-10]系统错误定义_errdefs.h)．<br/>
+ 由此看出我们线上的<strong>OOM一是由于文件描述符数目已满，ashmem_create_region无法返回新的FD而导致的</strong>．</p>
+<ol>
+<li>图中节点④和⑤是调用C库创建线程时的环节，创建线程首先<strong>调用__allocate_thread函数申请线程私有的栈内存(stack)等</strong>，然后<strong>调用clone方法进行线程创建</strong>．申请stack采用的时mmap的方式，节点⑤代码节选如下：</li>
+</ol>
+<pre><code>  if (space == MAP_FAILED) {
+    __libc_format_log(ANDROID_LOG_WARN,
+                      &quot;libc&quot;,
+                      &quot;pthread_create failed: couldn't allocate %zu-bytes mapped space: %s&quot;,
+                      mmap_size, strerror(errno));
+    return NULL;
+  }
+</code></pre>
+<p>        图3-12  __create_thread_mapped_space节选<br/>
+ <strong>打印的错误信息与图[3-7]中进程逻辑地址占满导致的OOM错误信息吻合</strong>，图[3-7]中错误信息＂ Try again＂说明系统全局错误标识errno为11(见图[3-10]系统错误定义_errdefs.h).<br/>
+ pthread_create过程中，节点４相关代码如下：</p>
+<pre><code> int rc = clone(__pthread_start, child_stack, flags, thread, &amp;(thread-&gt;tid), tls, &amp;(thread-&gt;tid));
+  if (rc == -1) {
+    int clone_errno = errno;
+    // We don't have to unlock the mutex at all because clone(2) failed so there's no child waiting to
+    // be unblocked, but we're about to unmap the memory the mutex is stored in, so this serves as a
+    // reminder that you can't rewrite this function to use a ScopedPthreadMutexLocker.
+    pthread_mutex_unlock(&amp;thread-&gt;startup_handshake_mutex);
+    if (thread-&gt;mmap_size != 0) {
+      munmap(thread-&gt;attr.stack_base, thread-&gt;mmap_size);
+    }
+    __libc_format_log(ANDROID_LOG_WARN, &quot;libc&quot;, &quot;pthread_create failed: clone failed: %s&quot;, strerror(errno));
+    return clone_errno;
+  }
+</code></pre>
+<p>        图3-13 pthread_create节选<br/>
+ <strong>此处输出的错误日志&quot;pthread_create failed: clone failed: %s&quot;与我们线上发现的OOM二吻合</strong>，图[3-6]中的错误描述＂ Out of memory＂说明系统全局错误标识errno为12(见图[3-10]系统错误定义_errdefs.h).<br/>
+ 由此线上的<strong>OOM二就是由于线程数的限制而在节点5 clone失败导致OOM</strong>.</p>
+<h1>四. 结论及监控</h1>
+<h2>4.1 导致OOM发生的原因</h2>
+<p>综上，可以导致OOM的原因有以下几种：</p>
+<ol>
+<li>
+<strong>文件描述符(fd)数目超限</strong>，即proc/pid/fd下文件数目突破/proc/pid/limits中的限制。可能的发生场景有：<br/>
+短时间内大量请求导致socket的fd数激增，大量（重复）打开文件等</li>
+<li>
+<strong>线程数超限</strong>，即proc/pid/status中记录的线程数（threads项）突破/proc/sys/kernel/threads-max中规定的最大线程数。可能的发生场景有：<br/>
+app内多线程使用不合理，如多个不共享线程池的OKhttpclient等等</li>
+<li>传统的<strong>java堆内存超限</strong>，即申请堆内存大小超过了 Runtime.getRuntime().maxMemory()</li>
+<li>（低概率）32为系统进程逻辑空间被占满导致OOM.</li>
+<li>其他</li>
+</ol>
+<h2>4.2 监控措施</h2>
+<p>可以利用linux的inotify机制进行监控:</p>
+<ul>
+<li>watch /proc/pid/fd来监控app打开文件的情况,</li>
+<li>watch /proc/pid/task来监控线程使用情况．</li>
+</ul>
+<h1>五. Demo</h1>
+<p>POC(Proof of concept) 代码参见：<a href="https://link.jianshu.com/?t=https://github.com/piece-the-world/OOMDemo" target="_blank">https://github.com/piece-the-world/OOMDemo</a></p>
+
+        </div></div></div><br/></div></span>
+</div></body></html> 

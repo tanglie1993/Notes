@@ -1,0 +1,34 @@
+<html>
+<head>
+  <title>android内存优化总结</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1633"/>
+<h1>android内存优化总结</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>android内存优化总结</h1><div><div></div></div></div>
+          <div>
+            字数1820
+            阅读4953
+            
+            
+          </div>
+
+          
+          
+          
+
+          <div><p>之前做过公司产品的内存优化，不过时间有一段时间了，可能记忆不全，欢迎大家添加补充，有错误之处也方便指出。</p><h1><b>1、追查内存的方法</b></h1><p>第一步：使用lint</p><p>                  lint会提醒你很多使用不得当的地方，主要会集中再这么几个地方</p><p>                （1）handler等长周期匿名内部类的使用，具体原因下文表</p><p>                （2）数据结构的优化，hashmap向稀疏数组的优化</p><p>                 （3）未使用的图片资源</p><p>当然lint还会有很多很好的提醒，比如硬编码，layout层级问题等，这里就不说明了。</p><p>第二步：使用脚本每隔1s输出对应包的PSS值</p><p>                 PSS的定义是：Proportional Set Size 实际使用的物理内存（比例分配共享库占用的内存）,共享内存则是：framework的代码与资源在ram中占有的内存。所以PSS值除了自身应用占有的内存外还包括共享内存中比例分配到单个应用身上的内存，所以我觉得用这个值来定义是否进行了优化是比较合适的。</p><p>第三步：使用核心然后再退出的功能，查看PSS值是否飙升或者在使用后长时间不降低下来</p><p>                 如果遇到飙升虽然后续能降低下来，但是依然有可能OOM，这样我们也需要去追查是什么原因了，看如何能够减少内存的使用。</p><p>                 而内存使用长时间不降低下来肯定是因为对象使用后还被引用着导致未被销毁，当遇到这些情况后，我们要引入下一个工具了MAT</p><p>第四步：使用MAT分析内存</p><p>                http://my.oschina.net/biezhi/blog/286223，这块内容比较多，我也是参考博文进行分析的，具体的大家可以通过这篇文章来了解和发现内存使用情况。</p><h1><b>2、内存消耗过大的原因</b></h1><p>              2.1 handler,resultreceiver等生命周期较长的匿名内部类，匿名内部类会持有外部类的引用，从而导致短期就算activity退出但其实其中的activity也会被引用从而导致相关的资源未被回收。</p><p>               2.2 数据结构的优化，hashmap替换成sparsearray</p><p>               2.3 图片的优化，采用缓存，图片缩略加载基于不同手机的分辨率获取不同尺寸的图片，必要时可以进行缩放以及色彩优化</p><p>android 色彩模式说明：</p><p>ALPHA_8：每个像素占用1byte内存。</p><p>ARGB_4444:每个像素占用2byte内存</p><p>ARGB_8888:每个像素占用4byte内存</p><p>RGB_565:每个像素占用2byte内存</p><p>Android默认的色彩模式为ARGB_8888，这个色彩模式色彩最细腻，显示质量最高。但同样的，占用的内存也最大。</p><p>                 另外bitmap要记得recycle。</p><p>                 2.4 对象生命周期，这里有如下几点要注意</p><p>                （一）开发上尽量避免内存中太多对象的存在，比如可以用数据库来实现</p><p>                （二）切勿在循环调用的地方去产生对象，比如很多人不会注意的在getview里new onclicklistener(),这样的方式拖动的次数越多那么就会产生越多的对象。当然还有在onDraw的地方newPaint等操作，这些都是需要避免的。</p><p>                 （三）使用完对象要及时销毁，比如能局部变量的不要使用全局变量，功能用完成后要去掉对他的引用。</p><p>                  （四）大内存对象长生命周期，现有的内存回收机制都是分为新生代，中生代，老年代进行回收，而老年代的回收会对性能影响颇大，所以要尽量避免这样的对象存在。</p><p>                  （五）bitmap记得recycle,cursor要记得close</p><p>                  （六）各种监听，广播等，注册后忘记取消等。</p><p>                   2.5  慎用service</p><p>                  理论上linux系统在内存充足时不会在程序退出就Kill这个进程，而是会保存进程到lrucache中从而方便下次快速启动。而android的几大组件的生命周期中，前台可见的activity优先级最高最难回收，然后前台不可见的activity次之，service是第三，而空进程则是最容易被回收的。</p><p>                 如果启动太多的service同时使用完毕后也不关系，那么就会造成内存的占用，即使是切换其他的程序这个service占用的内存也很难被回收，当内存过紧时就会造成系统的不稳定。</p><p>              推荐IntentService。</p><p>               2.6 代码细节注意</p><p>                Enums的内存消耗通常是static constants的2倍。你应该尽量避免在Android上使用enums。</p><p>               在Java中的每一个类(包括匿名内部类)都会使用大概500 bytes。</p><p>               每一个类的实例花销是12-16 bytes。</p><p>               往HashMap添加一个entry需要额一个额外占用的32 bytes的entry对象。</p><p>               在已知数量大小的情况下，初始化容器时订好容器大小，比如new arraylist(3)那么数组就只会分配三个空间。</p><p>               2.7 单例的使用</p><p>               一般来说我们是不推荐用单例的，因为大家为了偷懒写代码更方便一个劲的整成了单例，越多的单例使用导致内存中长时间存活的对象过多，也会让内存占用过多。</p><p>                2.8 无效的资源</p><p>               包括没有用到的图片等资源，以及可以缩小内存的外部library，比如视频sdk中我们使用了更小的一个。</p><h1>
+<b>3、后续处理</b><br/>
+</h1><p>               其实我觉得我的方法并不是一个十分良好的方法，我也只做了核心的功能的测试和优化，而其实代码中还有很多的地方也可以优化，但是并没有时间和太好的方法进行优化了，所以将这些内存使用问题分享给团队，让每个人自查自己代码，同时在以后开发中注意，那么就会让工程代码质量更高。</p><p>             如果大家有更好的追查方法，也欢迎分享给我！</p><p>             转载请注明原文件链接，以及作者：昱全yuquan</p><p>4、Update</p><p>       4.1 非UI线程调用View的post(Runnable r)函数</p><p>       匿名内部回调接口类持有view的引用，再回调时通过post(Runnable r)的方式，希望操作能够在UI THREAD执行操作，做一些更新UI的操作，这样就可以不要写handler相关的逻辑，写法简单。</p><p>        但是这样就会造成内存泄露，当view被detach的时候，view的attachinfo为空，这个从ViewRootImpl到父View，子View一层层传下来的attachinfo，当view被detach的时候，这个attachinfo会为空。于是Post函数执行如下操作：</p><p>         ViewRootImpl.getRunQueue().post(action);</p><p>         在getRunQueue中会通过静态的sRunQueues去绑定到当前的线程中，也就是这个异步线程中，只要这个线程存在这个引用关系就会一直存在而不被释放。</p><p>        static final ThreadLocal sRunQueues = new ThreadLocal()。</p></div>
+        </div></div></div><br/></div></span>
+</div></body></html> 

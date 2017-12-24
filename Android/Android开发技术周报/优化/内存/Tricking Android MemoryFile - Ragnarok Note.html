@@ -1,0 +1,66 @@
+<html>
+<head>
+  <title>Tricking Android MemoryFile - Ragnarok Note</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3472"/>
+<h1>Tricking Android MemoryFile - Ragnarok Note</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:62.5%;-webkit-tap-highlight-color:rgba(0, 0, 0, 0);"><div style="box-sizing:border-box;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-size:14px;line-height:1.42857;color:rgb(51, 51, 51);background-color:rgb(255, 255, 255);"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;">
+  <div style="box-sizing:border-box;display:block;">
+    <h2 style="box-sizing:border-box;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;margin-top:20px;margin-bottom:10px;font-size:30px;">
+      <a href="http://ragnraok.github.io/tricking-android-memoryfile.html" rel="bookmark" style="box-sizing:border-box;color:rgb(66, 139, 202);text-decoration:none;" title="Permalink to Tricking Android MemoryFile">Tricking Android MemoryFile</a></h2>
+ 
+  </div>
+  
+     
+  <div style="box-sizing:border-box;padding:5px 0px 15px;line-height:1.8;">
+    <p style="box-sizing:border-box;margin:0px 0px 10px;">之前在做一个内存优化的时候，使用到了MemoryFile，由此发现了MemoryFile的一些特性以及一个非常trickly的使用方法，因此在这里记录一下</p>
+<h3 style="box-sizing:border-box;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;margin-top:20px;margin-bottom:10px;font-size:24px;">What is it</h3>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">MemoryFile是android在最开始就引入的一套框架，其内部实际上是封装了android特有的内存共享机制<a href="http://elinux.org/Android_Kernel_Features#ashmem" style="box-sizing:border-box;color:rgb(66, 139, 202);text-decoration:none;">Ashmem</a>匿名共享内存，简单来说，Ashmem在Android内核中是被注册成一个特殊的字符设备，Ashmem驱动通过在内核的一个自定义<a href="https://en.wikipedia.org/wiki/Slab_allocation" style="box-sizing:border-box;color:rgb(66, 139, 202);text-decoration:none;">slab</a>缓冲区中初始化一段内存区域，然后通过mmap把申请的内存映射到用户的进程空间中（通过<a href="https://en.wikipedia.org/wiki/Tmpfs" style="box-sizing:border-box;color:rgb(66, 139, 202);text-decoration:none;">tmpfs</a>），这样子就可以在用户进程中使用这里申请的内存了，另外，Ashmem的一个特性就是可以在系统内存不足的时候，回收掉被标记为&quot;unpin&quot;的内存，这个后面会讲到，另外，MemoryFile也可以通过Binder跨进程调用来让两个进程共享一段内存区域。由于整个申请内存的过程并不再Java层上，可以很明显的看出使用MemoryFile申请的内存实际上是<strong style="box-sizing:border-box;font-weight:bold;">并不会</strong>占用Java堆内存的。</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">MemoryFile暴露出来的用户接口可以说跟他的名字一样，基本上跟我们平时的文件的读写基本一致，也可以使用InputStream和OutputStream来对其进行读写等操作：</p>
+<div style="box-sizing:border-box;"><pre style="line-height:1.42857;font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;font-size:13px;color:rgb(51, 51, 51);word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;"><span style="box-sizing:border-box;"></span><span style="box-sizing:border-box;">MemoryFile</span> <span style="box-sizing:border-box;">memoryFile</span> <span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">=</span> <span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">new</span> <span style="box-sizing:border-box;">MemoryFile</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">(</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">null</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">,</span> <span style="box-sizing:border-box;">inputStream</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">.</span><span style="box-sizing:border-box;color:rgb(0, 128, 128);">available</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">());</span>
+<span style="box-sizing:border-box;">memoryFile</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">.</span><span style="box-sizing:border-box;color:rgb(0, 128, 128);">allowPurging</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">(</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">false</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">);</span>
+<span style="box-sizing:border-box;">OutputStream</span> <span style="box-sizing:border-box;">outputStream</span> <span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">=</span> <span style="box-sizing:border-box;">memoryFile</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">.</span><span style="box-sizing:border-box;color:rgb(0, 128, 128);">getOutputStream</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">();</span>
+<span style="box-sizing:border-box;">outputStream</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">.</span><span style="box-sizing:border-box;color:rgb(0, 128, 128);">write</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">(</span><span style="box-sizing:border-box;color:rgb(0, 153, 153);">1024</span><span style="box-sizing:border-box;color:rgb(0, 0, 0);font-weight:bold;">);</span>
+</pre></div>
+
+
+<p style="box-sizing:border-box;margin:0px 0px 10px;">上面可以看到<code style="box-sizing:border-box;font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;font-size:90%;padding:2px 4px;color:rgb(199, 37, 78);white-space:nowrap;background-color:rgb(249, 242, 244);border-radius:4px;">allowPurging</code>这个调用，这个就是之前说的&quot;pin&quot;和&quot;unpin&quot;，在设置了allowPurging为false之后，这个MemoryFile对应的Ashmem就会被标记成&quot;pin&quot;，那么即使在android系统内存不足的时候，也不会对这段内存进行回收。另外，由于Ashmem默认都是&quot;unpin&quot;的，因此申请的内存在某个时间点内都可能会被回收掉，这个时候是不可以再读写了</p>
+<h3 style="box-sizing:border-box;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;margin-top:20px;margin-bottom:10px;font-size:24px;">Tricks</h3>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">MemoryFile是一个非常trickly的东西，由于并不占用Java堆内存，我们可以将一些对象用MemoryFile来保存起来避免GC，另外，这里可能android上有个BUG：</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">在4.4及其以上的系统中，如果在应用中使用了MemoryFile，那么在dumpsys meminfo的时候，可以看到多了一项Ashmem的值：</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;"><img src="Tricking Android MemoryFile - Ragnarok Note_files/Image.jpg" type="image/jpeg" data-filename="" alt="" height="337" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;" width="700"/></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">可以看出来虽然MemoryFile申请的内存不计入Java堆也不计入Native堆中，但是占用了Ashmem的内存，这个实际上是算入了app当前占用的内存当中</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">但是在4.4以下的机器中时，使用MemoryFile申请的内存居然是<strong style="box-sizing:border-box;font-weight:bold;">不算入</strong>app的内存中的：</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;"><img src="Tricking Android MemoryFile - Ragnarok Note_files/Image [1].jpg" type="image/jpeg" data-filename="" alt="" height="392" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;" width="700"/></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">而且这里我也算过，也是不算入Native Heap中的，另外，这个时候去系统设置里面看进程的内存占用，也可以看出来其实并没有计入Ashmem的内存的</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">这个应该是android的一个BUG，但是我搜了一下并没有搜到对应的issue，搞不好这里也可能是一个feature</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">而在大名鼎鼎的Fresco当中，他们也有用到这个bug来避免在decode bitmap的时候，将文件的字节读到Java堆中，使用了MemoryFile，并利用了这个BUG然这部分内存不算入app中，这里分别对应了Fresco中的<a href="https://github.com/facebook/fresco/blob/master/imagepipeline/src/main/java/com/facebook/imagepipeline/platform/GingerbreadPurgeableDecoder.java" style="box-sizing:border-box;color:rgb(66, 139, 202);text-decoration:none;">GingerbreadPurgeableDecoder</a>和<a href="https://github.com/facebook/fresco/blob/master/imagepipeline/src/main/java/com/facebook/imagepipeline/platform/KitKatPurgeableDecoder.java" style="box-sizing:border-box;color:rgb(66, 139, 202);text-decoration:none;">KitKatPurgeableDecoder</a>，Fresco在decode图片的时候会在4.4和4.4以下的系统中分别使用这两个不同的decoder</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">从这个地方可以看出来，使用MemoryFile，在4.4以下的系统当中，可以帮我们的app额外<strong style="box-sizing:border-box;font-weight:bold;">&quot;偷&quot;</strong>一些内存，并且可以不计入app的内存当中</p>
+<h3 style="box-sizing:border-box;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;margin-top:20px;margin-bottom:10px;font-size:24px;">Summary</h3>
+<p style="box-sizing:border-box;margin:0px 0px 10px;">这里主要是简单介绍了MemoryFile的基本原理和用法，并且阐述了一个MemoryFile中一个可以帮助开发者&quot;偷&quot;内存的地方，这个是一个非常trickly的方法，虽然4.4以下使用这块的内存并不计入进程当中，但是并不推荐大量使用，因为当设置了allowPurging为false的时候，这个对应的Ashmem内存区域是被&quot;pin&quot;了，那么在android系统内存不足的时候，是不能够把这段内存区域回收的，如果长时间没有释放的话，这样子相当于无端端占用了大量手机内存而又无法回收，那对系统的稳定性肯定会造成影响</p>
+<h3 style="box-sizing:border-box;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;margin-top:20px;margin-bottom:10px;font-size:24px;">References</h3>
+<ol style="box-sizing:border-box;margin-top:0px;margin-bottom:10px;">
+<li style="box-sizing:border-box;"><a href="http://blog.csdn.net/luoshengyang/article/details/6664554" style="box-sizing:border-box;color:rgb(66, 139, 202);text-decoration:none;">Android系统匿名共享内存Ashmem（Anonymous Shared Memory）驱动程序源代码分析</a></li>
+<li style="box-sizing:border-box;"><a href="http://elinux.org/Android_Kernel_Features#ashmem" style="box-sizing:border-box;color:rgb(66, 139, 202);text-decoration:none;">Android Kernel Features(Ashmem)</a></li>
+</ol>
+  </div>
+   <div style="box-sizing:border-box;display:block;color:rgb(153, 153, 153);padding-bottom:30px;">
+    Posted on <abbr style="box-sizing:border-box;border-bottom:1px dotted rgb(153, 153, 153);cursor:help;" title="2016-01-10T00:00:00+08:00">
+      日 10 一月 2016
+    </abbr>
+    <address style="box-sizing:border-box;margin-bottom:20px;font-style:normal;line-height:1.42857;display:inline;">
+      by <a href="http://ragnraok.github.io/author/ragnarok-zhou.html" style="box-sizing:border-box;color:rgb(66, 139, 202);text-decoration:none;">Ragnarok Zhou</a>
+    </address> in <a href="http://ragnraok.github.io/category/android.html" style="box-sizing:border-box;color:rgb(66, 139, 202);text-decoration:none;">Android</a> Tagged   </div>
+</div></div></div></div></div><br/></div></span>
+</div></body></html> 

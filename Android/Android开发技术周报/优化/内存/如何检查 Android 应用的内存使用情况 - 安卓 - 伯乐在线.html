@@ -1,0 +1,295 @@
+<html>
+<head>
+  <title>如何检查 Android 应用的内存使用情况 - 安卓 - 伯乐在线</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1556"/>
+<h1>如何检查 Android 应用的内存使用情况 - 安卓 - 伯乐在线</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>如何检查 Android 应用的内存使用情况</h1><div><div></div></div></div>
+	
+	
+	
+	<div>
+	
+		<p>
+
+            2015/05/01 ·  <a href="http://android.jobbole.com/category/tech-share/" target="_blank">技术分享</a>
+            
+            
+
+            
+             ·  <a href="http://android.jobbole.com/tag/android/" target="_blank">android</a>, <a href="http://android.jobbole.com/tag/%e5%86%85%e5%ad%98/" target="_blank">内存</a>
+            
+</p>
+
+
+
+
+
+
+	</div>
+	
+
+	
+	
+
+        
+		<p>Android是为移动设备而设计的，所以应该关注应用的内存使用情况。尽管Android的Dalvik虚拟机会定期执行垃圾回收操作，但这也不意味着就可以忽视应用在何时何处进行内存分配和释放。为了提供良好的用户体验，做到系统在不同应用间流畅切换，当用户和应用无交互时，避免应用不必要的内存消耗是很重要的。</p>
+<p>尽管在开发过程中很好的遵守了<a href="http://developer.android.com/training/articles/memory.html" target="_blank">《管理应用内存》</a>（<a href="http://developer.android.com/training/articles/memory.html" target="_blank">Managing Your App Memory</a> ）中的原则（也是应该遵守的），仍然可能会有对象泄露或引入其他的内存bug。唯一来确定应用使用了尽可能少的内存的方法，就是使用工具来分析应用的内存使用情况。本指南介绍了如何去调查内存使用情况。</p>
+<h2>解析日志信息</h2>
+<p>最简单的调查应用内存使用情况的地方就是Dalvik日志信息。可以在<a href="http://developer.android.com/tools/help/logcat.html" target="_blank">logcat</a>（输出信息可以在Device Monitor或者IDE中查看到，例如Eclipse和Android Studio）中找到这些日志信息。每次有垃圾回收发生，logcat会打印出带有下面信息的日志消息：</p>
+<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>dalvikvmGC_ReasonAmount_freedHeap_statsExternal_memory_statsPause_time</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>触发垃圾回收执行的原因和垃圾回收的类型。原因主要包括：</p>
+<p>GC_CONCURRENT</p>
+<p>并发垃圾回收，当堆开始填满时触发来释放内存。</p>
+<p>GC_FOR_MALLOC</p>
+<p>堆已经满了时应用再去尝试分配内存触发的垃圾回收，这时系统必须暂停应用运行来回收内存。</p>
+<p>GC_HPROF_DUMP_HEAP</p>
+<p>创建HPROF文件来分析应用时触发的垃圾回收。</p>
+<p>GC_EXPLICIT</p>
+<p>显式垃圾回收，例如当调用 <a href="http://android.jobbole.com/80926/#gc()" target="_blank">gc()</a>（应该避免手动调用而是要让垃圾回收器在需要时主动调用）时会触发。</p>
+<p>GC_EXTERNAL_ALLOC</p>
+<p>这种只会在API 10和更低的版本（新版本内存都只在Dalvik堆中分配）中会有。回收外部分配的内存（例如存储在本地内存或NIO字节缓冲区的像素数据）。</p>
+
+<p>执行垃圾回收后内存释放的数量。</p>
+
+<p>空闲的百分比和（活动对象的数量）/（总的堆大小）。</p>
+<p>外部内存状态</p>
+<p>API 10和更低版本中的外部分配的内存（分配的内存大小）/（回收发生时的限制值）。</p>
+
+<p>越大的堆的暂停时间就越长。并发回收暂停时间分为两部分：一部分在回收开始时，另一部分在回收将近结束时。</p>
+
+<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>dalvikvmGC_CONCURRENT freed2049K3571K9991Kexternal4703K5261Kpaused</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>随着这些日志消息的增多，注意堆状态（上面例子中的3571K/9991K）的变化。如果值一直增大并且不会减小下来，那么就可能有内存泄露了。</p>
+<h2>查看堆的更新</h2>
+<p>为了得到应用内存的使用类型和时间，可以在Device Monitor中实时查看应用堆的更新：</p>
+<p>1.打开Device Monitor。</p>
+<p>从&lt;sdk&gt;/tools/路径下加载monitor工具。</p>
+<p>2.在Debug Monitor窗口，从左边的进程列表中选择要查看的应用进程。</p>
+<p>3.点击进程列表上面的<strong>Update Heap</strong>。</p>
+<p>4.在右侧面板中选择<strong>Heap</strong>标签页。</p>
+<p>Heap视图显示了堆内存使用的基本状况，每次垃圾回收后会更新。要看更新后的状态，点击<strong>Gause GC</strong>按钮。</p>
+<p></p><div><img src="如何检查 Android 应用的内存使用情况 - 安卓 - 伯乐在线_files/7cc829d3gw1ernpgzid4ej21680f0dos.jpg" type="image/jpeg" data-filename="7cc829d3gw1ernpgzid4ej21680f0dos.jpg" height="205" width="576"/></div><p></p>
+<p><strong>图1.</strong>Device Monitor工具显示<strong>[1] Update Heap</strong>和 <strong>[2] Cause GC</strong>按钮。右边的Heap标签页显示堆的情况。</p>
+<h2>跟踪内存分配</h2>
+<p>当要减少内存问题时，应该使用Allocation Tracker来更好的了解内存消耗大户在哪分配。Allocation Tracker不仅在查看内存的具体使用上很有用，也可以分析应用中的关键代码路径，例如滑动。</p>
+<p>例如，在应用中滑动列表时跟踪内存分配，可以看到内存分配的动作，包括在哪些线程上分配和哪里进行的分配。这对优化代码路径来减轻工作量和改善UI流畅性都极其有用。</p>
+<p>使用Allocation Tracker：</p>
+<p>1.打开Device Monitor 。</p>
+<p>从&lt;sdk&gt;/tools/路径下加载monitor工具。</p>
+<p>2.在DDMS窗口，从左侧面板选择应用进程。<br/>
+3.在右侧面板中选择<strong>Allocation Tracker</strong>标签页。<br/>
+4.点击<strong>Start Tracking</strong>。<br/>
+5.执行应用到需要分析的代码路径处。<br/>
+6.点击<strong>Get Allocations</strong>来更新分配列表。</p>
+<p>列表显示了所有的当前分配和512大小限制的环形缓冲区的情况。点击行可以查看分配的堆栈跟踪信息。堆栈不只显示了分配的对象类型，还显示了属于哪个线程哪个类哪个文件和哪一行。</p>
+<p></p><div><img src="如何检查 Android 应用的内存使用情况 - 安卓 - 伯乐在线_files/7cc829d3gw1ernph0xtc5j21680lydwz.jpg" type="image/jpeg" data-filename="7cc829d3gw1ernph0xtc5j21680lydwz.jpg" height="299" width="576"/></div>
+<strong>图2. </strong>Device Monitor工具显示了在Allocation Tracker中当前应用的内存分配和堆栈跟踪的情况。<p></p>
+<p><strong>注意：</strong>总会有一些分配是来自与 DdmVmInternal 和 allocation tracker本身。</p>
+<p>尽管移除掉所有严重影响性能的代码是不必要的（也是不可能的），但是allocation tracker还是可以帮助定位代码中的严重问题。例如，应用可能在每个draw操作上创建新的<a href="http://android.jobbole.com/reference/android/graphics/Paint.html" target="_blank">Paint</a>对象。把对象改成全局变量就是一个很简单的改善性能的修改。</p>
+<h2>查看总体内存分配</h2>
+<p>为了进一步的分析，查看应用内存中不同内存类型的分配情况，可以使用下面的 <a href="http://developer.android.com/tools/help/adb.html" target="_blank">adb</a>  命令：</p>
+<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>shell dumpsys meminfopackage_name</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>应用当前的内存分配输出列表，单位是千字节。</p>
+<p>当查看这些信息时，应当熟悉下面的分配类型：</p>
+<p>私有(Clean and Dirty) 内存</p>
+<p>进程独占的内存。也就是应用进程销毁时系统可以直接回收的内存容量。通常来说，“private dirty”内存是其最重要的部分，因为只被自己的进程使用。它只在内存中存储，因此不能做分页存储到外存（Android不支持swap）。所有分配的Dalvik堆和本地堆都是“private dirty”内存；Dalvik堆和本地堆中和Zygote进程共享的部分是共享dirty内存。</p>
+<p> 实际使用内存 (PSS)</p>
+<p>这是另一种应用内存使用的计算方式，把跨进程的共享页也计算在内。任何独占的内存页直接计算它的PSS值，而和其它进程共享的页则按照共享的比例计算PSS值。例如，在两个进程间共享的页，计算进每个进程PPS的值是它的一半大小。</p>
+<p>PSS计算方式的一个好处是：把所有进程的PSS值加起来就可以确定所有进程总共占用的内存。这意味着用PSS来计算进程的实际内存使用、进程间对比内存使用和总共剩余内存大小是很好的方式。</p>
+<p>例如，下面是平板设备中Gmail进程的输出信息。它显示了很多信息，但是具体要讲解的是下面列出的一些关键信息。</p>
+<p><strong>注意：</strong>实际看到的信息可能和这里的稍有不同，输出的详细信息可能会根据平台版本的不同而不同。</p>
+<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>MEMINFO googleandroid</div><div>Shared PrivateShared Private</div><div>Total   Clean   Dirty   Dirty   Clean   Clean    Alloc    </div><div>Native</div><div>Dalvik </div><div>Dalvik Other</div><div>Stack</div><div>Cursor</div><div>Ashmem</div><div>Other </div><div>Other </div><div>Unknown</div><div>TOTAL2435817972163881696816595</div><div>Objects</div><div>ViewsViewRootImpl</div><div>AppContextsActivities</div><div>AssetsAssetManagers</div><div>Local BindersProxy Binders</div><div>Death Recipients</div><div>OpenSSL Sockets</div><div>MEMORY_USED</div><div>PAGECACHE_OVERFLOWMALLOC_SIZE</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p>通常来说，只需关心Pss Total列和Private Dirty列就可以了。在一些情况下，Private Clean列和Heap Alloc列也会提供很有用的信息。下面是一些应该查看的内存分配类型(行中列出的类型)：</p>
+<p>Dalvik Heap</p>
+<p>应用中Dalvik分配使用的内存。Pss Total包含所有的Zygote分配（如上面PSS定义所描述的，共享跨进程的加权）。Private Dirty是应用堆独占的内存大小，包含了独自分配的部分和应用进程从Zygote复制分裂时被修改的Zygote分配的内存页。</p>
+<p><strong> 注意：</strong>新平台版本有Dalvik Other这一项。Dalvik Heap中的Pss Total和Private Dirty不包括Dalvik的开销，例如即时编译（JIT）和垃圾回收（GC），然而老版本都包含在Dalvik的开销里面。</p>
+<p> Heap Alloc是应用中Dalvik堆和本地堆已经分配使用的大小。它的值比Pss Total和Private Dirty大，因为进程是从Zygote中复制分裂出来的，包含了进程共享的分配部分。</p>
+<p> .so mmap和.dex mmap</p>
+<p>mmap映射的.so(本地) 和.dex(Dalvik)代码使用的内存。Pss Total 包含了跨应用共享的平台代码；Private Clean是应用独享的代码。通常来说，实际映射的内存大小要大一点——这里显示的内存大小是执行了当前操作后应用使用的内存大小。然而，.so mmap 的private dirty比较大，这是由于在加载到最终地址时已经为本地代码分配好了内存空间。</p>
+<p> Unknown</p>
+<p>无法归类到其它项的内存页。目前，这主要包含大部分的本地分配，就是那些在工具收集数据时由于地址空间布局随机化(Address Space Layout Randomization ，ASLR)不能被计算在内的部分。和Dalvik堆一样， Unknown中的Pss Total把和Zygote共享的部分计算在内，Unknown中的Private Dirty只计算应用独自使用的内存。</p>
+<p>TOTAL</p>
+<p>进程总使用的实际使用内存(PSS)，是上面所有PSS项的总和。它表明了进程总的内存使用量，可以直接用来和其它进程或总的可以内存进行比较。</p>
+<p>Private Dirty和Private Clean是进程独自占用的总内存，不会和其它进程共享。当进程销毁时，它们（特别是Private Dirty）占用的内存会重新释放回系统。Dirty内存是已经被修改的内存页，因此必须常驻内存（因为没有swap）；Clean内存是已经映射持久文件使用的内存页（例如正在被执行的代码），因此一段时间不使用的话就可以置换出去。</p>
+<p>ViewRootImpl</p>
+<p>进程中活动的根视图的数量。每个根视图与一个窗口关联，因此可以帮助确定涉及对话框和窗口的内存泄露。</p>
+<p>AppContexts和Activities</p>
+<p>当前驻留在进程中的<a href="http://android.jobbole.com/reference/android/content/Context.html" target="_blank">Context</a>和<a href="http://android.jobbole.com/reference/android/app/Activity.html" target="_blank">Activity</a>对象的数量。可以很快的确认常见的由于静态引用而不能被垃圾回收的泄露的 <a href="http://android.jobbole.com/reference/android/app/Activity.html" target="_blank">Activity</a>对象。这些对象通常有很多其它相关联的分配，因此这是追查大的内存泄露的很好办法。</p>
+<p><strong>注意：</strong><a href="http://android.jobbole.com/reference/android/view/View.html" target="_blank">View</a> 和 <a href="http://android.jobbole.com/reference/android/graphics/drawable/Drawable.html" target="_blank">Drawable</a> 对象也持有所在<a href="http://android.jobbole.com/reference/android/app/Activity.html" target="_blank">Activity</a>的引用，因此，持有<a href="http://android.jobbole.com/reference/android/view/View.html" target="_blank">View</a> 或 <a href="http://android.jobbole.com/reference/android/graphics/drawable/Drawable.html" target="_blank">Drawable</a> 对象也可能会导致应用<a href="http://android.jobbole.com/reference/android/app/Activity.html" target="_blank">Activity</a>泄露。</p>
+<h2>获取堆转储</h2>
+<p>堆转储是应用堆中所有对象的快照，以二进制文件HPROF的形式存储。应用堆转储提供了应用堆的整体状态，因此在查看堆更新的同时，可以跟踪可能已经确认的问题。</p>
+<p>检索堆转储：</p>
+<p>1.打开Device Monitor。</p>
+<p>从&lt;sdk&gt;/tools/路径下加载monitor工具。</p>
+<p>2.在DDMS窗口，从左侧面板选择应用进程。</p>
+<p>3.点击<strong>Dump HPROF file</strong>，显示见图3。</p>
+<p>4.在弹出的窗口中，命名HPROF文件，选择存放位置，然后点击<strong>Save</strong>。</p>
+<p></p><div><img src="如何检查 Android 应用的内存使用情况 - 安卓 - 伯乐在线_files/7cc829d3gw1ernph1t0t1j21680fk7cw.jpg" type="image/jpeg" data-filename="7cc829d3gw1ernph1t0t1j21680fk7cw.jpg" height="212" width="576"/></div><p></p>
+<p><strong>图3.</strong>Device Monitor工具显示了<strong>[1] Dump HPROF file</strong>按钮。</p>
+<p>如果需要能更精确定位问题的堆转储，可以在应用代码中调用<a href="http://android.jobbole.com/80926/#dumpHprofData(java.lang.String)" target="_blank">dumpHprofData()</a>来生成堆转储。</p>
+<p>堆转储的格式基本相同，但与Java HPROF文件不完全相同。Android堆转储的主要不同是由于很多的内存分配是在Zygote进程中。但是由于Zygote的内存分配是所有应用进程共享的，这些对分析应用堆没什么关系。</p>
+<p>为了分析堆转储，你需要像jhat或<a href="http://www.eclipse.org/mat/downloads.php" target="_blank">Eclipse内存分析工具</a>(MAT)一样的标准工具。当然，第一步需要做的是把HPROF文件从Android的文件格式转换成J2SE HRPOF的文件格式。可以使用&lt;sdk&gt;/platform-tools/路径下的hprof-conv工具来转换。hprof-conv的使用很简单，只要带上两个参数就可以：原始的HPROF文件和转换后的HPROF文件的存放位置。例如：</p>
+<div>
+		
+			
+			
+			
+			<div>
+				<table>
+					<tbody><tr>
+				<td>
+					
+				</td>
+						<td><div><div>hproforiginalhprof convertedhprof</div></div></td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+<p><strong>注意：</strong>如果使用的是集成在Eclipse中的DDMS，那么就不需要再执行HPROF转换操作——默认已经转换过了。</p>
+<p>现在就可以在MAT中加载转换过的HPROF文件了，或者是在可以解析J2SE HPROF格式的其它堆分析工具中加载。</p>
+<p>分析应用堆时，应该查找由下导致的内存泄露：</p>
+<ul>
+<li>对Activity、Context、View、Drawable的长期引用，以及其它可能持有Activity或Context容器引用的对象</li>
+<li>非静态内部类（例如持有Activity实例的Runnable）</li>
+<li>不必要的长期持有对象的缓存</li>
+</ul>
+<h3>使用Eclipse内存分析工具</h3>
+<p><a href="http://www.eclipse.org/mat/downloads.php" target="_blank">Eclipse内存分析工具</a>（MAT）是一个可以分析堆转储的工具。它是一个功能相当强大的工具，功能远远超过这篇文档的介绍，这里只是一些入门的介绍。</p>
+<p>在MAT中打开类型转换过的HPROF文件，在总览界面会看到一张饼状图，它展示了占用堆的最大对象。在图表下面是几个功能的链接：</p>
+<ul>
+<li> <strong>Histogram view</strong>显示所有类的列表和每个类有多少实例。</li>
+</ul>
+<p>正常来说类的实例的数量应该是确定的，可以用这个视图找到额外的类的实例。例如，一个常见的源码泄露就是<a href="http://android.jobbole.com/reference/android/app/Activity.html" target="_blank">Activity</a>类有额外的实例，而正确的是在同一时间应该只有一个实例。要找到特定类的实例，在列表顶部的&lt;Regex&gt;域中输入类名查找。</p>
+<p>当一个类有太多的实例时，右击选择<strong>List objects&gt;with incoming references</strong>。在显示的列表中，通过右击选择<strong>Path To GC Roots&gt; exclude weak references</strong>来确定保留的实例。</p>
+<ul>
+<li><strong>Dominator tree</strong>是按照保留堆大小来显示的对象列表。</li>
+</ul>
+<p>应该注意的是那些保留的部分堆大小粗略等于通过<a href="http://android.jobbole.com/80926/#LogMessages" target="_blank">GC logs</a>、<a href="http://android.jobbole.com/80926/#ViewHeap" target="_blank">heap updates</a>或<a href="http://android.jobbole.com/80926/#TrackAllocations" target="_blank">allocation tracker</a>观察到的泄露大小的对象。</p>
+<p>当看到可疑项时，右击选择<strong>Path To GC Roots&gt;exclude weak references</strong>。打开新的标签页，标签页中列出了可疑泄露的对象的引用。</p>
+<p><strong>注意：</strong>在靠近饼状图中大块堆的顶部，大部分应用会显示<a href="http://android.jobbole.com/reference/android/content/res/Resources.html" target="_blank">Resources</a>的实例，但这通常只是因为在应用使用了很多res/路径下的资源。</p>
+<p></p><div><img src="如何检查 Android 应用的内存使用情况 - 安卓 - 伯乐在线_files/7cc829d3gw1ernph39edqj21680i813r.jpg" type="image/jpeg" data-filename="7cc829d3gw1ernph39edqj21680i813r.jpg" height="249" width="576"/></div><p></p>
+<p><strong>图4.</strong>MAT显示了Histogram view和搜索”MainActivity”的结果。</p>
+<p>想要获得更多关于MAT的信息，请观看2011年Google I/O大会的演讲–《<a href="http://www.youtube.com/watch?v=_CruQY55HOk" target="_blank">Android 应用内存管理</a>》（<a href="http://www.youtube.com/watch?v=_CruQY55HOk" target="_blank">Memory management for Android apps</a>），在大约<a href="http://android.jobbole.com/80926/#t=1270" target="_blank">21:10</a> 的时候有关于MAT的实战演讲。也可以参考文档《<a href="http://wiki.eclipse.org/index.php/MemoryAnalyzer" target="_blank">Eclipse 内存分析文档</a>》（<a href="http://wiki.eclipse.org/index.php/MemoryAnalyzer" target="_blank">Eclipse Memory Analyzer documentation</a>）。</p>
+<h3>对比堆转储</h3>
+<p>为了查看内存分配的变化，比较不同时间点应用的堆状态是很有用的方法。对比两个堆转储可以使用MAT：</p>
+<p>1.按照上面描述得到两个HPROF文件，具体查看<a href="http://android.jobbole.com/80926/#HeapDump" target="_blank">获取堆转储</a>章节。</p>
+<p>2.在MAT中打开第一个HPROF文件（<strong>File&gt;Open Heap Dump</strong>）。</p>
+<p>3.在Navigation History视图（如果不可见，选择<strong>Window&gt;Navigation History</strong>），右击<strong>Histogram</strong>，选择<strong>Add to Comp are Basket</strong>。</p>
+<p>4.打开第二个HRPOF文件，重复步骤2和3。</p>
+<p>5.切换到<strong>Compare Basket</strong>视图，点击Compare the Results（在视图右上角的红色“！”图标）。</p>
+<h2>触发内存泄露</h2>
+<p>使用上述描述工具的同时，还应该对应用代码做压力测试来尝试复现内存泄露。一个检查应用潜在内存泄露的方法，就是在检查堆之前先运行一会。泄露会慢慢达到分配堆的大小的上限值。当然，泄露越小，就要运行应用越长的时间来复现。</p>
+<p>也可以使用下面的方法来触发内存泄露：</p>
+<p>1.在不同Activity状态时，重复做横竖屏切换操作。旋转屏幕可能导致应用泄露 <a href="http://developer.android.com/reference/android/app/Activity.html" target="_blank">Activity</a>、<a href="http://developer.android.com/reference/android/content/Context.html" target="_blank">Context</a> 或 <a href="http://developer.android.com/reference/android/view/View.html" target="_blank">View</a>对象，因为系统会重新创建 <a href="http://developer.android.com/reference/android/app/Activity.html" target="_blank">Activity</a>，如果应用在其它地方持有这些对象的引用，那么系统就不能回收它们。</p>
+<p>2.在不同Activity状态时，做切换应用操作（切换到主屏幕，然后回到应用中）。</p>
+<p><strong>提示：</strong>也可以使用monkey测试来执行上述步骤。想要获得更多运行 monkey 测试的信息，请查阅 <a href="http://developer.android.com/tools/help/monkeyrunner_concepts.html" target="_blank">monkeyrunner</a> 文档。</p>
+
+        <div>加入伯乐在线专栏作者。扩大知名度，还能得赞赏！详见《<a href="http://blog.jobbole.com/99322" target="_blank">招募专栏作者</a>》</div>
+        
+        
+    
+
+
+
+
+        
+
+<div>
+	
+	<h3>
+	关于作者：<a href="http://www.jobbole.com/members/will" target="_blank">will</a>
+	</h3>
+	
+
+    <div>
+
+        
+            简介还没来得及写 :）        
+        
+            <a href="http://www.jobbole.com/members/will" target="_blank"> 个人主页</a> ·
+            <a href="http://android.jobbole.com/author/will/" target="_blank"> 我的文章</a>
+
+             · <a href="http://www.jobbole.com/members/will/reputation/" target="_blank" title="声望值"> 10</a>        
+    </div>
+	
+</div>
+
+
+	</div></div></div><br/></div></span>
+</div></body></html> 

@@ -1,0 +1,155 @@
+<html>
+<head>
+  <title>使用Android studio分析内存泄露</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1635"/>
+<h1>使用Android studio分析内存泄露</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>使用Android studio分析内存泄露</h1><div><div></div></div></div>
+          <div>
+            
+            <span>阅读28342</span>
+            
+            
+          </div>
+
+          
+          
+          
+
+          <blockquote><p>This post is a permitted translation of <a href="https://techblog.badoo.com/blog/2014/08/28/android-handler-memory-leaks/" target="_blank">badoo Tech Blog</a> and I add some text and screenshots for android studio users.<br/><strong>Origin Author</strong>: <a href="https://techblog.badoo.com/authors/dmytro-voronkevych/" target="_blank">Dmytro Voronkevych</a><br/><strong>follow badoo on <a href="https://twitter.com/badootech" target="_blank">Tweet</a> </strong><br/><strong>Translator</strong>: Miao1007</p></blockquote>
+<p>截至androidstudio1.5，内部已经<a href="https://www.youtube.com/watch?v=BKU-wmTAPdc" target="_blank">支持</a>分析泄漏，或者跑Lint进行静态检查即可，故本文不再更新。</p>
+<hr/>
+<p>Android使用java作为平台开发，帮助了我们解决了很多底层问题，比如内存管理，平台依赖等等。然而，我们也经常遇到<code>OutOfMemoey</code>问题，垃圾回收到底去哪了？</p>
+<p>接下来是一个<code>Handler Leak</code>的例子，它一般会在编译器中被警告提示。</p>
+<h3>所需要的工具</h3>
+<ul>
+<li>Android Studio 1.1 or higher</li>
+<li>Eclipse MemoryAnalyzer</li>
+</ul>
+
+<pre><code>public class NonStaticNestedClassLeakActivity extends ActionBarActivity {
+
+  TextView textView;
+
+  public static final String  = NonStaticNestedClassLeakActivity.class.getSimpleName();
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(.layout.activity_non_static_nested_class_leak);
+    textView = (TextView)findViewById(.id.textview);
+    Handler handler =  Handler();
+
+    handler.postDelayed( Runnable() {
+      @Override public void 
+        textView.setText(&quot;Done&quot;);
+      }//a mock for long time work
+    }, 800000L);
+
+
+  }
+}</code></pre>
+<p>这是一个非常基础的Activity.注意这个匿名的<code>Runnable</code>被送到了Handler中，而且延迟非常的长。现在我们运行这个Activity,反复旋转屏幕，然后导出内存并分析。</p>
+<h3>导入 Memory 到Eclipse MemoryAnalyzer</h3>
+<h4>使用Androidstudio导出 heap dump</h4>
+<div>
+<div><img src="使用Android studio分析内存泄露_files/jpg.jpg" type="image/jpeg" data-filename="jpg.jpg" height="140" width="576"/></div><div>Android Studio dump Memory Analyze</div>
+</div>
+<ul>
+<li>点击左下角的Android</li>
+<li>选中你的程序的包名</li>
+<li>点击 initiates garbage collection on selected vm</li>
+<li>点击 dump java heap for selected client</li>
+</ul>
+<h4>打开MAT，进行分析</h4>
+<p>MAT是对java heap中变量分析的一个工具，它可以用于分析内存泄露。</p>
+<ul>
+<li>点击<code>OQL</code>图标</li>
+<li>在窗口输入<code>select * from instanceof android.app.Activity</code>并按<code>Ctrl + F5</code>或者<code>!</code>按钮</li>
+<li>奇迹出现了，现在你发现泄露了许多的activity</li>
+<li>这个真是相当的不容乐观，我们来分析一下为什么GC没有回收它</li>
+</ul>
+<div>
+<div><img src="使用Android studio分析内存泄露_files/jpg [1].jpg" type="image/jpeg" data-filename="jpg.jpg" height="326" width="576"/></div></div>
+<blockquote><p>在OQL（Object Query Language）窗口下输入的查询命令可以获得所有在内存中的Activities，这段查询代码是不是非常简单高效呢？</p></blockquote>
+<p>点击一个activity对象，右键选中<code>Path to GC roots</code></p>
+<div>
+<div><img src="使用Android studio分析内存泄露_files/jpg [2].jpg" type="image/jpeg" data-filename="jpg.jpg" height="250" width="576"/></div><div>GC root</div>
+</div>
+<div>
+<div><img src="使用Android studio分析内存泄露_files/jpg [3].jpg" type="image/jpeg" data-filename="jpg.jpg" height="167" width="576"/></div><div>Message in looper hold a reference to Activity</div>
+</div>
+<p>在打开的新窗口中，你可以发现，你的Activity是被<code>this$0</code>所引用的，它实际上是匿名类对当前类的引用。<code>this$0</code>又被<code>callback</code>所引用，接着它又被<code>Message</code>中一串的<code>next</code>所引用，最后到主线程才结束。</p>
+<blockquote><p>任何情况下你在class中创建非静态内部类，内部类会（自动）拥有对当前类的一个强引用。</p></blockquote>
+<p>一旦你把<code>Runnable</code>或者<code>Message</code>发送到<code>Handler</code>中，它就会被放入<code>LooperThread</code>的消息队列，并且被保持引用，直到<code>Message</code>被处理。发送postDelayed这样的消息，你输入延迟多少秒，它就会泄露至少多少秒。而发送没有延迟的消息的话，当队列中的消息过多时，也会照成一个临时的泄露。</p>
+<h4>尝试使用static inner class来解决</h4>
+<p>现在把<code>Runnable</code>变成静态的class</p>
+<div>
+<div><img src="使用Android studio分析内存泄露_files/jpg [4].jpg" type="image/jpeg" data-filename="jpg.jpg" height="450" width="576"/></div><div>StaticClass</div>
+</div>
+<p>现在，摇一摇手机，导出内存</p>
+<div>
+<div><img src="使用Android studio分析内存泄露_files/jpg [5].jpg" type="image/jpeg" data-filename="jpg.jpg" height="372" width="576"/></div><div>StaticClass_memory_analyze</div>
+</div>
+<p>为什么又出现了泄露呢？我们看一看<code>Activities</code>的引用.</p>
+<div>
+<div><img src="使用Android studio分析内存泄露_files/jpg [6].jpg" type="image/jpeg" data-filename="jpg.jpg" height="246" width="576"/></div><div>StaticClass_memory_analyze_explained</div>
+</div>
+<p>看到下面的<code>mContext</code>的引用了吗，它被<code>mTextView</code>引用，这样说明，使用静态内部类还远远不够，我们仍然需要修改。</p>
+<h4>使用弱引用 + static Runnable</h4>
+<p>现在我们把刚刚内存泄露的罪魁祸首 - TextView改成弱引用。</p>
+<div>
+<div><img src="使用Android studio分析内存泄露_files/jpg [7].jpg" type="image/jpeg" data-filename="jpg.jpg" height="499" width="576"/></div><div>StaticClassWithWeakRef_code</div>
+</div>
+<p>再次注意我们对TextView保持的是<strong>弱引用</strong>，现在让它运行，摇晃手机</p>
+<blockquote><p>小心地操作WeakReferences，它们随时可以为空，在使用前要判断是否为空.</p></blockquote>
+<div>
+<div><img src="使用Android studio分析内存泄露_files/jpg [8].jpg" type="image/jpeg" data-filename="jpg.jpg" height="268" width="576"/></div><div>StaticClassWithWeakRef_memory_analyze</div>
+</div>
+<p>哇！现在只有一个Activity的实例了，这回终于解决了我们的问题。</p>
+<p>所以，我们应该记住：</p>
+<ul>
+<li>使用静态内部类</li>
+<li>Handler/Runnable的依赖要使用弱引用。</li>
+</ul>
+<p>如果你把现在的代码与开始的代码相比，你会发现它们大不相同，开始的代码易懂简介，你甚至可以脑补出运行结果。</p>
+<p>而现在的代码更加复杂，有很多的模板代码，当把<code>postDelayed</code>设置为一个短时间，比如<code>50ms</code>的情况下，写这么多代码就有点亏了。其实，还有一个更简单的方法。</p>
+<h3>onDestroy中手动控制声明周期</h3>
+<p>Handler可以使用<code>removeCallbacksAndMessages(null)</code>，它将移除这个Handler所拥有的<code>Runnable</code>与<code>Message</code>。</p>
+<pre><code>//Fixed by manually control lifecycle
+  @Override protected  onDestroy {
+    super.onDestroy();
+    myHandler.removeCallbacksAndMessages();
+  }</code></pre>
+<p>现在运行，旋转手机，导出内存</p>
+<div>
+<div><img src="使用Android studio分析内存泄露_files/jpg [9].jpg" type="image/jpeg" data-filename="jpg.jpg" height="317" width="576"/></div><div>removeCallbacks_memory_analyze</div>
+</div>
+<p>Good！只有一个实例。</p>
+<p>这样写可以让你的代码更加简洁与可读。唯一要记住的就是就是要记得在生命周期onDestory的时候手动移除所有的消息。</p>
+<h3>使用WeakHander</h3>
+<p>（这个是第三方库，我就不翻译了，大家去<a href="https://github.com/badoo/android-weak-handler" target="_blank">Github</a>上去学习吧）</p>
+
+<p>在Handler中使用<code>postDelayed</code>需要额外的注意，为了解决问题，我们有三种方法</p>
+<ul>
+<li>使用静态内部Handler/Runnable + 弱引用</li>
+<li>在onDestory的时候，手动清除Message</li>
+<li>使用Badoo开发的第三方的 <a href="https://github.com/badoo/android-weak-handler" target="_blank">WeakHandler</a>
+</li>
+</ul>
+<p>这三种你可以任意选用，第二种看起来更加合理，但是需要额外的工作。第三种方法是我最喜欢的，当然你也要注意WeakHandler不能与外部的强引用共同使用。</p>
+
+<p>本博客将长期保持原创性，翻译文章费时费力，如果你认为我的<strong>免费劳动</strong>有价值的话，不妨帮忙<code>点赞</code>或者<code>关注我</code>吧！</p>
+</div></div></div><br/></div></span>
+</div></body></html> 

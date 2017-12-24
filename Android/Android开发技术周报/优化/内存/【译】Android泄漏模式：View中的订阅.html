@@ -1,0 +1,210 @@
+<html>
+<head>
+  <title>【译】Android泄漏模式：View中的订阅</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3132"/>
+<h1>【译】Android泄漏模式：View中的订阅</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:10px;-webkit-tap-highlight-color:transparent;"><div style="box-sizing:border-box;font-size:17px;line-height:1.42857;color:rgb(51, 51, 51);background-color:rgb(255, 255, 255);min-width:768px;font-family:-apple-system, &quot;SF UI Text&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;">
+        <h1 style="box-sizing:border-box;color:inherit;margin-top:20px;margin-bottom:10px;font-size:34px;margin:20px 0px 0px;font-family:-apple-system, &quot;SF UI Display&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;font-weight:700;line-height:1.3;word-break:break-word;">【译】Android泄漏模式：View中的订阅</h1>
+
+        
+        <div style="box-sizing:border-box;margin:30px 0px 40px;">
+          <a href="https://www.jianshu.com/u/df40282480b4" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 51, 51);text-decoration:none;cursor:pointer;width:48px;height:48px;display:inline-block;vertical-align:middle;">
+            <img src="【译】Android泄漏模式：View中的订阅_files/96.jpg" type="image/jpeg" data-filename="96.jpg" alt="96" height="46" style="box-sizing:border-box;vertical-align:middle;border:1px solid rgb(221, 221, 221);width:100%;height:100%;border-radius:50%;" width="46"/>
+</a>          <div style="box-sizing:border-box;vertical-align:middle;display:inline-block;margin-left:8px;">
+            <span style="box-sizing:border-box;margin-right:3px;font-size:16px;vertical-align:middle;"><a href="https://www.jianshu.com/u/df40282480b4" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 51, 51);text-decoration:none;cursor:pointer;">小鄧子</a></span>
+            
+            <a style="cursor:pointer;background-color:rgb(66, 192, 46);color:rgb(255, 255, 255);text-decoration:none;display:inline-block;margin-bottom:0px;font-weight:400;text-align:center;vertical-align:middle;touch-action:manipulation;box-sizing:border-box;background-image:none;border:1px solid transparent;white-space:nowrap;user-select:none;border-radius:40px;line-height:normal;border-color:rgb(66, 192, 46);font-size:12px;padding:0px 7px 0px 5px;"><i style="box-sizing:border-box;font-size:inherit;font-style:normal;-webkit-font-smoothing:antialiased;font-family:iconfont;font-weight:400;"><span style="font-size:inherit;font-style:normal;font-family:iconfont;font-weight:400;"></span></i><span style="box-sizing:border-box;margin-left:2px;display:inline;">关注</span></a>
+            
+            <div style="box-sizing:border-box;margin-top:5px;font-size:12px;color:rgb(150, 150, 150);">
+              
+                <span style="box-sizing:border-box;padding-right:5px;" title="">2016.10.16 00:29*</span>
+              <span style="box-sizing:border-box;padding-right:5px;">字数 916</span>
+            <span style="box-sizing:border-box;padding-right:5px;">阅读 3100</span><span style="box-sizing:border-box;padding-right:5px;">评论 24</span><span style="box-sizing:border-box;padding-right:5px;">喜欢 36</span><span style="box-sizing:border-box;padding-right:5px;">赞赏 5</span></div>
+          </div>
+          
+        </div>
+        
+
+        
+        <div style="box-sizing:border-box;color:rgb(47, 47, 47);font-size:16px;font-weight:400;line-height:1.7;word-break:break-word;">
+          <blockquote style="box-sizing:border-box;margin:0px 0px 20px;padding:20px;font-size:16px;border-left:6px solid rgb(180, 180, 180);margin-bottom:25px;background-color:rgb(247, 247, 247);font-weight:400;line-height:30px;word-break:break-word;">
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;padding:0px;margin-left:22px;margin-bottom:0px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">原文链接： <a href="https://link.jianshu.com/?t=https://medium.com/square-corner-blog/android-leak-pattern-subscriptions-in-views-18f0860aa74c#.adusrf3w8" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Android leak pattern: subscriptions in views</a>
+</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">原文出自： <a href="https://link.jianshu.com/?t=https://medium.com/@pyricau" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Pierre-Yves Ricau</a>
+</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">译文出自： <a href="https://www.jianshu.com/users/df40282480b4/latest_articles" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">小鄧子的简书</a>
+</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">译者：       小鄧子</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:0px;">状态： 完成</li>
+</ul>
+</blockquote>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们通过一些自定义的view来构建Square register模块。有时候这些view需要监听一个比他们自身声明周期还要长的对象。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">例如，一个HeaderView(译者注:类似于头像控件)可能需要监听用户名的改变，而这个用户名来自于一个Authentic单例。</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">HeaderView</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">extends</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">FrameLayout</span> </span>{
+  <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">final</span> Authenticator authenticator;
+
+  <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">HeaderView</span><span style="box-sizing:border-box;">(Context context, AttributeSet attrs)</span> </span>{...}
+
+  <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onFinishInflate</span><span style="box-sizing:border-box;">()</span> </span>{
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">final</span> TextView usernameView = (TextView) findViewById(R.id.username);
+    authenticator.username().subscribe(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Action1&lt;String&gt;() {
+      <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">call</span><span style="box-sizing:border-box;">(String username)</span> </span>{
+        usernameView.setText(username);
+      }
+    });
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onFinishInflate()</code>是一个用来填充自定义view，并试图找到其子view的绝佳时机。所以我们决定在这个地方处理绑定视图的逻辑，并订阅用户名的变化。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">上面的代码存在一个非常严重的bug：<strong style="box-sizing:border-box;font-weight:700;">没有解除订阅</strong>。当尝试回收view时，<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">Action1</code>始终处于订阅状态。因为<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">Action1</code>是一个匿名内部类，它持有外部类的引用，也就是持有对HeaderView的引用。<strong style="box-sizing:border-box;font-weight:700;">现在整个视图层级结构都发生了泄露</strong>，无法被回收。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">修复这个bug，我们可以在<strong style="box-sizing:border-box;font-weight:700;">view从window中分离的时候取消订阅</strong>：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">HeaderView</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">extends</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">FrameLayout</span> </span>{
+  <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">final</span> Authenticator authenticator;
+  <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> Subscription usernameSubscription;
+
+  <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">HeaderView</span><span style="box-sizing:border-box;">(Context context, AttributeSet attrs)</span> </span>{...}
+
+  <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onFinishInflate</span><span style="box-sizing:border-box;">()</span> </span>{
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">final</span> TextView usernameView = (TextView) findViewById(R.id.username);
+    usernameSubscription = authenticator.username().subscribe(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Action1&lt;String&gt;() {
+      <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">call</span><span style="box-sizing:border-box;">(String username)</span> </span>{...}
+    });
+  }
+
+   <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onDetachedFromWindow</span><span style="box-sizing:border-box;">()</span> </span>{
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">super</span>.onDetachedFromWindow();
+    usernameSubscription.unsubscribe();
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">问题被修复了吗？不完全是！我最近看了LeakCanary的报告，由一段类似代码所引发的内存泄露：</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:1050px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:150.0%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="【译】Android泄漏模式：View中的订阅_files/700.png" type="image/png" data-filename="700.png" height="1050" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+
+</div>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">让我们再看一遍代码：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">HeaderView</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">extends</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">FrameLayout</span> </span>{
+  <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">final</span> Authenticator authenticator;
+  <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> Subscription usernameSubscription;
+
+  <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">HeaderView</span><span style="box-sizing:border-box;">(Context context, AttributeSet attrs)</span> </span>{...}
+
+  <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onFinishInflate</span><span style="box-sizing:border-box;">()</span> </span>{...}
+
+   <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onDetachedFromWindow</span><span style="box-sizing:border-box;">()</span> </span>{
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">super</span>.onDetachedFromWindow();
+    usernameSubscription.unsubscribe();
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">不知为什么<strong style="box-sizing:border-box;font-weight:700;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">View.onDetachedFromWindow()</code></strong>没有被调用，这就是造成泄露的原因。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">在调试的过程中，我发现<strong style="box-sizing:border-box;font-weight:700;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">View.onAttachedToWindow()</code>同样没有被调用</strong>。如果一个View没有被Attach过，那么理所应当的也不会发生Detach。所以，<strong style="box-sizing:border-box;font-weight:700;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">View.onFinishInflate()</code>被调用了，而<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">View.onAttachedToWindow()</code>则没有</strong>。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">让我们多了解一些这个<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">View.onAttachedToWindow()</code>：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;">当view被添加到一个<strong style="box-sizing:border-box;font-weight:700;">已经加载到window的父view中时</strong>，<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">addView()</code>的内部会<strong style="box-sizing:border-box;font-weight:700;">立即调用</strong><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onAttachedToWindow()</code>。</p></li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><p style="box-sizing:border-box;margin:0px 0px 25px;overflow:visible;word-break:break-word;">当View被添加到一个还<strong style="box-sizing:border-box;font-weight:700;">没有加载至window的父view中时</strong>，<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onAttachedToWindow()</code>将会在<strong style="box-sizing:border-box;font-weight:700;">父view被加载到window后执行</strong>。</p></li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们用Android中的惯用方式来填充view层级：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">MyActivity</span> </span>{
+  <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onCreate</span><span style="box-sizing:border-box;">(Bundle savedInstanceState)</span> </span>{
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">super</span>.onCreate(savedInstanceState);
+    setContentView(R.layout.my_activity);
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">这时，<strong style="box-sizing:border-box;font-weight:700;">视图层级中的每一个view都会收到<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">View.onFinishInflate()</code>的回调通知</strong>，而不是<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">View.onAttachedToWindow()</code>，而原因是：</p>
+<blockquote style="box-sizing:border-box;margin:0px 0px 20px;padding:20px;font-size:16px;border-left:6px solid rgb(180, 180, 180);margin-bottom:25px;background-color:rgb(247, 247, 247);font-weight:400;line-height:30px;word-break:break-word;">
+<p style="box-sizing:border-box;margin:0px 0px 25px;font-size:16px;font-weight:400;line-height:1.7;margin-bottom:0px;word-break:break-word;"><em style="box-sizing:border-box;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">View.onAttachedToWindow()</code>只在第一次view遍历时被调用，将发生在<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">Activity.onStart()</code>之后</em>。</p>
+</blockquote>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;"><a href="https://link.jianshu.com/?t=https://github.com/android/platform_frameworks_base/blob/76fdbb7/core/java/android/view/ViewRootImpl.java#L1516" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">&lt;u&gt;ViewRootImpl&lt;/u&gt;</a>执行了<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onAttachedToWindow()</code>的分发操作：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">ViewRootImpl</span> </span>{
+  <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">performTraversals</span><span style="box-sizing:border-box;">()</span> </span>{
+    <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// ...</span>
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (mFirst) {
+      host.dispatchAttachedToWindow(mAttachInfo, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">0</span>);
+    }
+    <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// ...</span>
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">所以说，我们不能在<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onCreated()</code>中得到Attach结果，那么在<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onStart()</code>之后就一定能吗？它总是在<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onCreated()</code>之后被调用吗？</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">不一定！<a href="https://link.jianshu.com/?t=https://developer.android.com/reference/android/app/Activity.html#onCreate%28android.os.Bundle%29" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">&lt;u&gt;Activity.onCreate()&lt;/u&gt;</a>的文档给出了答案：</p>
+<blockquote style="box-sizing:border-box;margin:0px 0px 20px;padding:20px;font-size:16px;border-left:6px solid rgb(180, 180, 180);margin-bottom:25px;background-color:rgb(247, 247, 247);font-weight:400;line-height:30px;word-break:break-word;">
+<p style="box-sizing:border-box;margin:0px 0px 25px;font-size:16px;font-weight:400;line-height:1.7;margin-bottom:0px;word-break:break-word;">你可以在这个函数内直接调用<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">finish()</code>，这种情况下<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onDestroy()</code>会被立即调用，那么将<strong style="box-sizing:border-box;font-weight:700;">不再执行剩余的生命周期回调</strong>(<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onStart()</code>,<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onResume()</code>,<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onPause()</code>等等）。</p>
+</blockquote>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我终于顿悟了！</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们在<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onCreated()</code>中判断intent，如果intent的内容失效了，则立即调用<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">finish()</code>并返回一个代表错误信息的结果。</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">MyActivity</span> </span>{
+  <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onCreate</span><span style="box-sizing:border-box;">(Bundle savedInstanceState)</span> </span>{
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">super</span>.onCreate(savedInstanceState);
+    setContentView(R.layout.my_activity);
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (!intentValid(getIntent()) {
+      setResult(Activity.RESULT_CANCELED, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>);
+      finish();
+    }
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">虽然整个层级视图都被填充了，但是Attach至window还没有发生，因此Detach的动作也不会发生。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">那么根据这种情况，这里有一张更新后的Activity生命周期图表：</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:rgb(238, 238, 238);transition:background-color 0.1s linear;margin:0px auto;max-width:513px;max-height:663px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:129.24%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img height="0" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(4px);opacity:0.3;cursor:zoom-in;" width="0"></img></div>
+</div>
+
+</div>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">因此，有了这些认识之后，我们应该将订阅的代码移至<code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:4px;font-size:12px;color:rgb(101, 123, 131);background-color:rgb(246, 246, 246);padding:2px 4px;border:none;white-space:pre-wrap;">onAttachedToWindow()</code>中：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">HeaderView</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">extends</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">FrameLayout</span> </span>{
+  <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">final</span> Authenticator authenticator;
+  <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> Subscription usernameSubscription;
+
+  <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">HeaderView</span><span style="box-sizing:border-box;">(Context context, AttributeSet attrs)</span> </span>{...}
+
+  <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onAttachedToWindow</span><span style="box-sizing:border-box;">()</span> </span>{
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">final</span> TextView usernameView = (TextView) findViewById(R.id.username);
+    usernameSubscription = authenticator.username().subscribe(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Action1&lt;String&gt;() {
+      <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">call</span><span style="box-sizing:border-box;">(String username)</span> </span>{...}
+    });
+  }
+
+   <span style="box-sizing:border-box;">@Override</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onDetachedFromWindow</span><span style="box-sizing:border-box;">()</span> </span>{
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">super</span>.onDetachedFromWindow();
+    usernameSubscription.unsubscribe();
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">这是为了更好的解决问题：保证对称访问是好的。与之前的实现方式不同，现在我们可以任意次数的添加或者移除那个view了。</p>
+
+        </div>
+        
+
+        <div style="box-sizing:border-box;margin:40px 0px 30px;">
+          <a href="https://www.jianshu.com/nb/1470721" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(155, 155, 155);font-size:12px;">
+            <i style="box-sizing:border-box;font-style:normal;-webkit-font-smoothing:antialiased;font-size:15px;margin-right:2px;font-family:iconfont;font-weight:400;"><span style="font-size:15px;font-style:normal;font-family:iconfont;font-weight:400;"></span></i>
+            <span style="box-sizing:border-box;">Android译文集</span>
+</a>          <div style="box-sizing:border-box;float:right;margin-top:5px;font-size:12px;line-height:1.7;color:rgb(155, 155, 155);">
+            © 著作权归作者所有
+          </div>
+          <div style="box-sizing:border-box;float:right;margin-top:5px;margin-right:20px;font-size:12px;line-height:1.7;">
+            <a style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(155, 155, 155);">举报文章</a>
+          </div>
+        </div>
+    </div></div></div></div></div></div><br/></div></span>
+</div></body></html> 
