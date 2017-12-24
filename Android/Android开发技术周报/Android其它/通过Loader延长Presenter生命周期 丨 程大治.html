@@ -1,0 +1,220 @@
+<html>
+<head>
+  <title>通过Loader延长Presenter生命周期 丨 程大治</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1051"/>
+<h1>通过Loader延长Presenter生命周期 丨 程大治</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>通过Loader延长Presenter生命周期</h1><div><div></div></div></div>
+										<div>
+					<a href="http://blog.chengdazhi.com/index.php/131#comments" target="_blank">10 Replies</a>				</div>
+					
+
+				
+			<p><a href="https://medium.com/@czyrux/presenter-surviving-orientation-changes-with-loaders-6da6d86ffbbf" target="_blank">原文链接：https://medium.com/@czyrux/presenter-surviving-orientation-changes-with-loaders-6da6d86ffbbf</a></p>
+<p>前些时分享了一篇有关<a href="http://blog.chengdazhi.com/index.php/115" target="_blank">设计Presenter</a>的文章，今天分享一篇有关Presenter生命周期的文章，在自己学习之余希望能对你有所启发。</p>
+<p></p><div><img src="通过Loader延长Presenter生命周期 丨 程大治_files/133e_JFV1EdHmseiiCrq_-Q.png" type="image/png" data-filename="1*33e_JFV1EdHmseiiCrq_-Q.png" alt="mvp" height="307" width="461"/></div><p></p>
+<p>全世界都在用MVP，因为这样架构一个应用可以有效防止Activity/Fragment过于臃肿，将各模块解耦并使代码更易于测试。有关MVP的文章数不胜数，在这里就不过多介绍了。</p>
+<p>MVP架构背后的核心思想就是将Activity/Fragment变成一个单纯的View，负责展示数据并将各种事件分发给中间人，也就是Presenter。Presenter会处理每一个事件，从Model层获取或上传数据，并将获得的数据进行处理并让View层展示。Presenter与View（这里是Activity/Fragment）的通信，是通过Activity/Fragment所继承的View接口来间接完成的。</p>
+<p>这样数据展示过程的任务就分开了，并使测试更加方便，因为Presenter不包含任何依赖Android的代码。</p>
+<h2>Presenter与手机状态</h2>
+<p>开发者们对于MVP的核心概念与整体实现基本达成了共识，但有关一些比较细节的问题仍存在争论。而这篇文章所讨论的问题就是当手机的状态发生改变时（比如旋转手机）如何处理Presenter对象。一般有如下几种方案：</p>
+<h4>就让Presenter一起挂掉吧</h4>
+<p>在这种方案下当Activity/Fragment挂掉时Presenter也一起挂掉了。此时如果想要保存一些状态信息的话就要借助onSaveInstanceState()方法了，需要在View的实现类中保存状态并在重新onCreate()时利用状态信息重新实例化Presenter，或者直接把保存下来的instance Bundle直接传给Presenter以便Presenter处理。如果是纯数据的话这样也没什么不好的，但如果要保存一些后台线程的引用的话就很难办了。</p>
+<h4>将Presenter保存在一个地方，再次onCreate时还原</h4>
+<p>我见到的最多的就是这个方案，不过具体的实现方法千差万别。</p>
+<p>最简单最naive的实现方式，就是在Activity/Fragment中保留对Presenter的静态引用。这样我们可以再手机旋转时保留Presenter对象，但整个Applicaiton中只能有一个同样的Activity/Fragment-Presenter实例组合。但当一个ViewPager中有多个相同的Fragment时，这种方法就行不通了。</p>
+<p>另一个方式就是调用Fragment的setRetainInstance(true)方法。设置Fragment的这个属性可以保证Fragment不会被destroy，这样Presenter就随之被保留。但这种方式仍有局限，对一个子Fragment或是Activity这样就不起作用。</p>
+<p>最后一种方式就是使用<strong>单例缓存机制并通过标识符来存储一个Presenter类的不同实例</strong>。为了保留Presenter，Activity/Fragment需要在onSaveInstanceState()中传递Presenter实例的标识符。这里的问题是如何实现这种逻辑以及何时将Presenter从单例缓存中移除。</p>
+<h2>什么是Loader？它有什么用？</h2>
+<p>我们都知道，当手机状态发生改变比如旋转时，Activity会重新启动。Loader是Android框架中提供的在手机状态改变时不会被销毁的工具。Loader的生命周期是是由系统控制的，只有在向Loader请求数据的Activity/Fragment被永久销毁时才会被清除，所以也不需要自己写代码来清空它。</p>
+<p>一般Loader是用来在后台加载数据的，而且是用它的子类CursorLoader或AsyncTaskLoader，尤其是CursorLoader，直接就绑定了Content Provider和数据库。当然如果写个类继承Loader基类的话也不需要开启后台线程。</p>
+<h2>听起来好厉害。但这和Presenter有什么关系？</h2>
+<p>就像刚才说的一样，关键问题就是在哪里存储Presenter以及什么时候销毁它们。而我们刚刚就看到了Loader的强大之处：由安卓系统框架提供，有单独生命周期，会被自动回收且不必在后台运行。</p>
+<p>所以思考一下需求以及Loader的功能，我们可以让Loader作为Presenter的提供者，而不需要担心手机状态改变。</p>
+<blockquote><p>将同步的Loader作为存放Presenter的缓存。</p>
+</blockquote>
+<p>这里的重点就在于同步使用Loader时，我们可以知道在生命周期的哪个阶段Presenter被创建了并且可以工作了。甚至是在Activity/Fragment可见之前。</p>
+<p>要注意的是，Activity和Fragment在何时传递Presenter对象这个问题上是有区别的。对于任何一个Activity实例，只需要在调用super.onStart()之后就可以使用Presenter了，但对于Fragment实例来说，首次创建时可以在super.onStart()之后传入，但在Fragment被重新create时，就必须要在super.onResume()之后传入了。所以在Fragment中，只需要在onResume()方法执行后将Presenter传入就行了。</p>
+<p>使这种方法可行的另外一个要点就是系统对Loader的处理方式，每一个Activity/Fragment都有一个LoaderManager，而且只有这个LoaderManager可以管理与Activity/Fragment相关联的Loader，这就使得相同的Fragment与其Presenter可以同时存在多个实例。</p>
+<h2>Talk is Cheap, Show Me the Code 废话少说，放码过来</h2>
+<p>首先我们要写一个继承Loader类的子类。由于我们不想让代码在后台线程运行，所以在这里不继承CursorLoader或AsyncTaskLoader。代码大概就是这样：</p>
+<pre><code>public class PresenterLoader&lt;T extends Presenter&gt; extends Loader&lt;T&gt;{
+
+    private final PresenterFactory&lt;T&gt; factory;
+    private T presenter;
+
+    // 省略构造方法
+
+    @Override
+    protected void onStartLoading() {
+
+        // 如果已经有Presenter实例那就直接返回
+        if (presenter != null) {
+            deliverResult(presenter);
+            return;
+            }
+
+        // 如果没有
+        forceLoad();
+    }
+
+    @Override
+    protected void onForceLoad() {
+        // 通过工厂来实例化Presenter
+        presenter = factory.create();
+
+        // 返回Presenter
+        deliverResult(presenter);
+    }
+
+    @Override
+    protected void onReset() {
+        presenter.onDestroyed();
+        presenter = null;
+    }
+}
+</code></pre>
+<p>在这个例子中Presenter的接口如下:</p>
+<pre><code>public interface Presenter&lt;V&gt;{
+    void onViewAttached(V view);
+    void onViewDetached();
+    void onDestroyed();
+}
+</code></pre>
+<p>解释一下核心代码：</p>
+<ul>
+<li>
+<p>onStartLoading()：会在Activity的onStart()调用之后被系统调用来获取一个Loader实例。在这里先判断是否已经有Presenter对象了还是需要创建。</p>
+</li>
+<li>
+<p>onForceLoad()：在调用forceLoad()方法后自动调用，我们在这个方法中创建Presenter并返回它。</p>
+</li>
+<li>
+<p>deliverResult()：会将Presenter传递给Activity/Fragment。</p>
+</li>
+<li>
+<p>onReset()：会在Loader被销毁之前调用，我们可以在这里告知Presenter以终止某些操作或进行清理工作。</p>
+</li>
+<li>
+<p>presenterFactory：这个接口可以隐藏创建Presenter所需要的参数。通过这个接口我们可以调用各种构造器，这样可以避免写一堆PresenterLoader的子类来返回不同类型的Presenter。这个接口形式上大概就是这样：</p>
+<pre><code>  public interface PresenterFactory&lt;T extends Presenter&gt; {
+      T create();
+  }   
+</code></pre>
+</li>
+</ul>
+<h4>在Activity/Fragment中如何实现呢？</h4>
+<p>现在我们已经实现了Loader，下面要将Loader和Activity/Fragment连接起来，刚才说过，这个连接点就是LoaderManager。我们需要调用FragmentActivity的getSupportLoaderManager()或Fragment的getLoaderManager()方法来获得LoaderManager实例并调用其initLoader()方法。Google建议在Activity的onCreate()与Fragment的onActivityCreated()中调用此方法。</p>
+<p>当调用initLoader()方法时要传入一个id，只需要保证在一个Activity/Fragment内单一即可，不需要全局单一。这个id就是用来识别Loader的。还可以选择传入一个Bundle，但在这个例子中不需要。还要穿入一个LoaderCallbacks实例。</p>
+<p>刚才说过，不要再Fragment的onCreate()方法中调用initLoader()方法，要在onActivityCreated()中调用它，不然就会遇到不同Fragment共享一个Loader的问题。</p>
+<p>如果你发现在手机状态改变时onLoadFinished()会被调用两次，不妨参考stackoverflow下的<a href="https://stackoverflow.com/questions/15515799/should-we-really-call-getloadermanager-initloader-in-onactivitycreated-which#" target="_blank">这个问题</a>。Presenter在被传入Activity后的逻辑可能会使这个成为一个问题，此时可以尝试在Fragment的onResume()方法中调用initLoader()方法，或者在onActivityCreate()方法中存一个flag以防多次获取Presenter。</p>
+<p>当我们调用了initLoader()后Loader和Activity/Fragment的生命周期就绑定了：执行onStart()方法时会调用onStartLoading()，执行onStop()方法时会调用onStopLoading()。但onReset()方法只会在Activity/Fragment被销毁或主动调用destroyLoader()时被调用。</p>
+<p>LoaderManager有一个restartLoader()方法可以强制重新加载。不过除非我们需要重新创建Presenter，不然不需要调用这个方法。</p>
+<h4>通过LoaderCallbacks获取Presenter</h4>
+<p>LoaderCallbacks是Activity/Fragment和Loader之间的桥梁。共有三个回调方法：</p>
+<ul>
+<li>onCreateLoader()：在这里构造Loader实例。</li>
+<li>onLoadFinished()：Loader在这里传入数据，在这个例子中，也就是Presenter。</li>
+<li>onLoadReset()：在这里清除对于数据的引用。</li>
+</ul>
+<h4>下面是代码</h4>
+<pre><code>public class SampleActivity extends AppCompatActivity implements SomeView, LoaderManager.LoaderCallbacks&lt;Presenter&gt; {
+
+    private static final int LOADER_ID = 101;
+    private Presenter presenter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // 初始化代码
+        getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Presenter可以工作
+        presenter.onViewAttached(this);
+    }
+
+    @Override
+    protected void onStop() {
+        presenter.onViewDetached();
+        super.onStop();
+    }
+
+    // 其他Activity代码
+
+    @Override
+    public Loader&lt;Presenter&gt; onCreateLoader(int id, Bundle arg){
+        return new PresenterLoader&lt;&gt;(this, new SomeFactoryImpl());
+    }
+
+    @Override
+    public void onLoadFinished(Loader&lt;Presenter&gt; loader, Presenter presenter) {
+        this.presenter = presenter;
+    }
+
+    @Override
+    public void onLoaderReset(Loader&lt;Presenter&gt; loader) {
+        presenter = null;
+    }
+}
+</code></pre>
+<p>这段代码的要点有：</p>
+<ul>
+<li>
+<p>在Activity/Fragment实例中通过一个唯一的ID初始化Loader。</p>
+<pre><code>  getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+</code></pre>
+</li>
+<li>
+<p>onStart()方法执行时会创建Loader或重新连接到一个已经存在的Loader。在这里我们在onLoadFinished()里创建并传递Presenter对象。由于这些代码都是同步的，所以当onStart()方法执行完后Presenter也可以正常工作了。</p>
+</li>
+<li>
+<p>如果系统要创建Loader，就会主动去调用onCreateLoader()方法。我们在这个方法中传入正确的PresenterFactory对象并实例化Loader。</p>
+<pre><code>  @Override
+  public Loader&lt;Presenter&gt; onCreateLoader(int id, Bundle arg){
+      return new PresenterLoader&lt;&gt;(this, new SomeFactoryImpl());
+  }
+</code></pre>
+</li>
+</ul>
+<h2>大功告成！</h2>
+<p>照例在结尾要总结一下。我们已经看到安卓系统框架中提供的Loader类有如下特点：</p>
+<ul>
+<li>
+<p>在手机状态改变时不会被销毁</p>
+</li>
+<li>
+<p>会在Activity/Fragment不再被使用后由系统回收。</p>
+</li>
+<li>
+<p>与Activity/Fragment的生命周期绑定，所以事件会自己分发。</p>
+</li>
+<li>
+<p>每一个Activity/Fragment持有自己的Loader对象的引用，所以可以同时存在多个Presenter-Activity/Fragment组合，比如说在ViewPager中。</p>
+</li>
+<li>
+<p>可以同步运行，自己确定什么时候数据准备好了可以被传递。</p>
+</li>
+</ul>
+<p>当把这一切组合在一起并进行合理的抽象后，我们就有用来缓存Presenter的工具了，这样Presenter在手机旋转时就不会被销毁了，想活多长或多长。</p>
+<p>如果对实现方式还有自己的看法，欢迎留言，一起讨论。</p>
+<p>欢迎关注我的公众号，将零碎时间都用在刷干货上！</p>
+<p></p><div><img src="通过Loader延长Presenter生命周期 丨 程大治_files/qrcode_for_gh_f9319618373d_430-2.jpg" type="image/jpeg" data-filename="qrcode_for_gh_f9319618373d_430-2.jpg" alt="qr" height="430" width="430"/></div><p></p>
+					</div></div></div><br/></div></span>
+</div></body></html> 

@@ -1,0 +1,416 @@
+<html>
+<head>
+  <title>Android系统Root与静默安装 - 北漂周的专栏（微信：stchou_zst） - 博客频道 - CSDN.NET</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1467"/>
+<h1>Android系统Root与静默安装 - 北漂周的专栏（微信：stchou_zst） - 博客频道 - CSDN.NET</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>Android系统Root与静默安装</h1><div><div></div></div></div>
+
+<blockquote>
+  <p>静默安装，指的是安装时无需任何用户干预，直接按默认设置安装应用。因为，它的无需用户干预，很多情况下变成了用户压根不知道，应用不知不觉就安装上了。是在推广上极为流氓的手段，很类似PC上的捆绑安装。正因为静默安装时极为流氓的推广行为，所以，其推广价格也极其高。</p>
+</blockquote>
+
+<hr/>
+
+<p><strong><a href="http://lib.csdn.net/base/15" target="_blank" title="Android知识库">Android</a>应用安装有如下四种方式</strong></p>
+
+<table>
+<thead>
+<tr>
+  <th>安装形式</th>
+  <th>完成方式</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td>系统应用安装</td>
+  <td>开机时完成，需要加入开机执行的脚本，没有安装界面</td>
+</tr>
+<tr>
+  <td>网络下载应用安装</td>
+  <td>通过系统market应用完成，没有安装界面</td>
+</tr>
+<tr>
+  <td>ADB工具中进行安装</td>
+  <td>使用pm install命令，没有安装界面。</td>
+</tr>
+<tr>
+  <td>第三方应用安装</td>
+  <td>通过SD卡里的APK文件安装，有安装界面，由PackageInstaller.apk应用处理安装及卸载过程的界面。</td>
+</tr>
+</tbody></table>
+
+
+<hr/>
+
+<p><strong>应用安装的流程及路径</strong></p>
+
+<table>
+<thead>
+<tr>
+  <th>目录</th>
+  <th>主要功能</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td>/system/app</td>
+  <td>系统自带的应用程序存放，Root权限才可更改</td>
+</tr>
+<tr>
+  <td>/data/app</td>
+  <td>用户程序安装的目录，有删除权限。安装时把apk文件复制到此目录</td>
+</tr>
+<tr>
+  <td>/data/data</td>
+  <td>存放应用程序的数据</td>
+</tr>
+<tr>
+  <td>Data/dalvik-cache</td>
+  <td>将apk中的dex文件安装到dalvik-cache目录下</td>
+</tr>
+</tbody></table>
+
+
+<hr/>
+
+<p><strong>安装过程</strong> <br/>
+复制APK安装包到data/app目录下，解压并扫描安装包，把dex文件(Dalvik字节码)保存到dalvik-cache目录，并data/data目录下创建对应的应用数据目录。</p>
+
+<hr/>
+
+<p><strong>卸载过程</strong> <br/>
+删除安装过程中在上述三个目录下创建的文件及目录。</p>
+
+<hr/>
+
+
+
+
+
+<blockquote>
+  <p>Google的安全策略要求任何应用在安装确认的时候应该提示APK安装包的权限，即确认开发者在AndroidManafest.xml中声明的权限。当然，Google在Android上也做了一些操作，允许一些系统内部的应用不经过授权界面直接进行安装。而系统进入安装界面其实也是根据此intent跳转到了PackageInstaller应用来完成权限的提示与安装的。</p>
+</blockquote>
+
+<p>这里写代码片`我们在应用程序中控制安装应用APP，其实就是发送一个如下的intent。去调用packageinstaller进行安装，具体的操作代码如下：</p>
+
+
+
+<pre><code>/* 安装apk */
+Intent intent = new Intent()
+intent.setAction(Intent.ACTION_VIEW)
+intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+intent.setDataAndType(Uri.parse(&quot;file://&quot;+ fileName)，
+   &quot;application/vnd.android.package-archive&quot;)
+context.startActivity(intent)</code></pre>
+
+<p>对比应用正常安装的流程，静默安装的本质就是去掉如下图所示的用户授权同意安装的过程，直接进行应用安装。</p>
+
+<p></p><div><img src="Android系统Root与静默安装 - 北漂周的专栏（微信：stchou_zst） - _files/Center.png" type="image/png" data-filename="Center.png" alt="这里写图片描述" height="747" width="422"/></div><p></p>
+
+<hr/>
+
+<p><strong>源码分析</strong></p>
+
+<p>阅读过源码后我们知道，系统的安装过程其实是调用了系统中的PackageInstaller来完成的。希望做到静默安装，就是找到一个方法，绕过PackageInstaller中的权限授予提示，继续完成安装的步骤。 <br/>
+所以，思路很简单，我们可以从两方面去操作：</p>
+
+<ul>
+<li>找到PackageInstaller源码，跳过权限授予提醒，直接调用后面的安装API即可完成安装。（这样能够良好的兼容正常安装，不易出错）</li>
+<li>使用pm install 命令进行安装。</li>
+</ul>
+
+<hr/>
+
+<p><strong>调用PackageInstaller中隐藏的API</strong></p>
+
+<blockquote>
+  <p>查看PackageInstaller源码我们能够发现，其实PackageInstaller也是通过使用PackageManager进行安装的。调用的是其installPackage方法，但是此方法是一个abstract，且是对外不可见的（hide），</p>
+</blockquote>
+
+<p>定义如下所示：</p>
+
+
+
+<pre><code>public abstractclass PackageManager {
+………
+/**
+ * 安装应用APK文件
+ * @param packageURI 待安装的APK文件位置，可以是'file:'或'content:' URI.
+ * @param observer 一个APK文件安装状态的观察器
+ * @param flags 安装形式 INSTALL_FORWARD_LOCK， INSTALL_REPLACE_EXISTING， INSTALL_ALLOW_TEST.
+ * @paraminstallerPackageName APK安装包的PackageName
+ */
+// @SystemApi
+public abstract  installPackage(UripackageURI， PackageInstallObserverobserver， flags，
+        StringinstallerPackageName);
+}</code></pre>
+
+<p>且PackageManager与installPackage两者皆为abstract抽象的。其具体实现都在ApplicationPackageManager中，其installPackage中的实现为：</p>
+
+
+
+<pre><code>final classApplicationPackageManager extends PackageManager {
+   ......
+
+   ApplicationPackageManager(ContextImpl context， IPackageManager pm) {
+       mContext = context;
+        mPM = pm;
+   }
+
+   @Override
+   public  installPackage(Uri packageURI， IPackageInstallObserver observer，intflags， String installerPackageName){
+         {
+            mPM.installPackage(packageURI， observer， flags， installerPackageName);
+        } catch (RemoteException e) {
+            // Should never happen!
+        }
+   }
+}</code></pre>
+
+<p>可见调用的installPackage方法为IPackageManager中的installPackage方法。在ContextImpl中通过调用 <br/>
+ActivityThread.getPackageManager()获得IPackageManager实例对象。而在在ActivityThread.getPackageManager()方法中，是调用SystemService中的名为package的Service来实例化的。代码如下：</p>
+
+
+
+<pre><code>staticIPackageManager sPackageManager;
+
+public staticIPackageManager getPackageManager() {
+    (sPackageManager != ) {
+        return sPackageManager;
+   }
+   IBinder b = ServiceManager.getService(&quot;package&quot;);
+   sPackageManager = IPackageManager.Stub.asInterface(b);
+   return sPackageManager;
+}</code></pre>
+
+<p>因为，installPackage是系统的API，为了使用PackageManagerService.installPackage()，考虑通过反射机制可以调用installPackage()。</p>
+
+<p>但其中难以得到的是其参数中的IPackageInstallObserver类型，我们看来一下IPackageInstallObserver，发现IPackageInstallObserver是由aidl文件定义的。这个也难不倒我们，通过aidl文件的特性，将IPackageInstallObserver.aidl文件拷到本地程序中，可以得到类IPackageInstallObserver.calss，通过它反射出installPackage()方法。</p>
+
+<p>但在invoke调用该方法时，却无法得到IPackageInstallObserver的实例对象，IPackageInstallObserver的实例对象必须通过IPackageInstallObserver.Stub.asInterface(Binder binder)方式得到，无法得到与其绑定的Binder对象，因而无法执行反射出来的方法。</p>
+
+<p>其次，应为是系统API，需要声明安装应用的权限：android.permission.INSTALL_PACKAGES。当时这类比较敏感的权限不是说声明系统就会给予的，还需要我们的安装包APK文件拥有与系统相同的签名，才能完成静默安装操作。这个方式的静默安装，对于广泛的推广应用是不现实的。</p>
+
+<p><strong>使用pm命令安装</strong></p>
+
+<blockquote>
+  <p>pm 命令是Android里面PackageManage的命令行，用于安装包的操作。而系统也主要是提供我们在adb <br/>
+  shell中进行使用pm命令，因此pm命令也存在与“/system”目录下，当然，拥有了Root权限后的应用程序就能够使用它进行静默安装了。</p>
+</blockquote>
+
+<p>具体的操作代码如下所示：</p>
+
+
+
+<pre><code>// xxx.apk放置在内置储存的根目录下
+execCommand(&quot;system/bin/pminstall -r &quot; + &quot;sdcard/xxx.apk&quot;);
+// 执行command
+public booleanexecCommand(String cmd) {
+   Process process = ;
+    {
+        process = Runtime.getRuntime().exec(cmd);
+        process.waitFor();
+   } catch (Exception e) {
+        return false;
+   } finally {
+         {
+           process.destroy();
+        } catch (Exception e) {
+        }
+   }
+   return ;
+}</code></pre>
+
+<blockquote>
+  <p>pm命令源码目录： <br/>
+  /frameworks/base/cmds/pm/src/com/android/commands/pm/Pm.<a href="http://lib.csdn.net/base/17" target="_blank" title="Java EE知识库">Java</a>，</p>
+</blockquote>
+
+<p>我们查看其源码，如下：</p>
+
+
+
+<pre><code>public finalclass Pm {
+   IPackageManager mPm;
+   IUserManager mUm;
+
+   private WeakHashMap&lt;String， Resources&gt; mResourceCache
+            =  WeakHashMap&lt;String， Resources&gt;();
+
+   private String[] mArgs;
+   private  mNextArg;
+   private String mCurArgData;
+
+   private static final String PM_NOT_RUNNING_ERR =
+        &quot;Error: Could not access thePackage Manager.  Is the systemrunning?&quot;;
+
+   public static  (String[] args) {
+         Pm().run(args);
+   }
+
+   /**
+    * 解析命令参数
+    * @param args 参数
+    */
+   public  (String[] args) {
+        boolean validCommand = false;
+         (args.length &lt; ) {
+            showUsage();
+            return;
+        }
+
+        mUm =IUserManager.Stub.asInterface(ServiceManager.getService(&quot;user&quot;));
+        mPm =IPackageManager.Stub.asInterface(ServiceManager.getService(&quot;package&quot;));
+         (mPm == ) {
+           System.err.println(PM_NOT_RUNNING_ERR);
+            return;
+        }
+
+
+        ......
+
+        (&quot;install&quot;.equals(op)) {
+            runInstall();
+            return;
+        }
+
+        ......
+   }
+
+   /**
+    * 开始安装
+    */
+   private  runInstall() {
+        ......
+
+        // 安装逻辑的具体调用
+        PackageInstallObserver obs = newPackageInstallObserver();
+         {
+            VerificationParamsverificationParams =  VerificationParams(verificationURI，
+                    originatingURI， referrerURI， VerificationParams.NO_UID，);
+
+           mPm.installPackageWithVerificationAndEncryption(apkURI， obs， installFlags，
+                    installerPackageName， verificationParams， encryptionParams);
+
+            synchronized (obs) {
+                while (!obs.finished) {
+                     {
+                        obs.wait();
+                    } catch(InterruptedException e) {
+                    }
+                }
+                 (obs.result ==PackageManager.INSTALL_SUCCEEDED) {
+                   System.out.println(&quot;Success&quot;);
+                }  {
+                    System.err.println(&quot;Failure[&quot;
+                            +installFailureToString(obs.result)
+                            + );
+                }
+            }
+        } catch (RemoteException e) {
+            System.err.println(e.toString());
+           System.err.println(PM_NOT_RUNNING_ERR);
+        }
+   }
+
+   ......
+}</code></pre>
+
+<p>发现其实pm命令也是调用了PackageManager中的安装方法，只不过是一个验证和加密的方法installPackageWithVerificationAndEncryption进行安装的。即，它的安装过程与PackageInstaller是一样的。</p>
+
+<p>而我们安装应用APP的时候，可以是自己的APK安装包文件存储在两个地方“data/app”与“system/app”下，静默安装的时候一般情况都是选择将自己的APK文件push到“system/app”目录下， 因为此目录是系统应用的目录，在此目录下的恶意应用，进行偷发短信、窃取邮件等操作，用户是很难察觉的。</p>
+
+<hr/>
+
+
+
+
+
+<blockquote>
+  <p>大部分的普通用户Root手机的主要目的就是删除系统预先安装的应用程序，要删除它们，我们首先要知道什么是预装应用，它们存放在哪里。或者我们换一个思路来看看，系统制造商将应用程序的APK文件存放在哪里才能变为系统的应用。</p>
+</blockquote>
+
+<p><strong>1. 系统默认的常规应用存放处</strong></p>
+
+<p>Android系统的捆绑应用软件基本安装在“/system/app”文件夹下，删除下面的对应的了第三方软件APK文件即可完美卸载。我们知道“/system”是系统的目录，对此目录进行操作需要Root权限，所以我们删除预装应用需要Root手机。每个系统程序基本上都是成对的，对应的删除掉后缀分别是.apk 和.odex（优化过的dex文件）文件即可删除预装应用。</p>
+
+<p>如下图，使用了Root Explorer查看“/system/app”目录。则能够看到了系统中的所有的系统内置应用程序。 </p><div><img src="Android系统Root与静默安装 - 北漂周的专栏（微信：stchou_zst） - _files/20150515170448659.jpg" type="image/jpeg" data-filename="20150515170448659.jpg" alt="这里写图片描述" height="938" width="528"/></div><p></p>
+
+<p><strong>2. 修改系统引导的预装</strong></p>
+
+<blockquote>
+  <p>对于存放Apk文件到”/system/app“目录下已经是很普通的预装方式了，这就导致了，预装应用很容易就被卸载掉。恶意的手机ROM就会想着更加恶心的方法来留住预装应用，比如修改系统ROM的逻辑，让系统在开机的时候检测一下自己的预装是否完整然后重新安装。那么，当然系统预装应用的安装文件也会在另一个保存一份。</p>
+</blockquote>
+
+<p>这类的预装应用，又称为“开机静默安装”，常用的方式就是修改init.rc，添加一个开机执行的脚本，在脚本中调用一个Service使用pm install命令批量安装应用。 <br/>
+  如，自顶一个一个init.local.rc内容如下：</p>
+
+
+
+<pre><code>#Preinstall
+onproperty:dev.bootcomplete=
+         start loadpreinstalls
+
+serviceloadpreinstalls /system/bin/logwrapper /system/bin/loadpreinstalls
+         disabled
+         oneshot
+</code></pre>
+
+<p>在系统的init.rc脚本中调用init.local.rc如下：</p>
+
+
+
+<pre><code>#在sysinit前面加
+# Include extrainit file
+             import /system/etc/init.local.rc
+
+         而具体的预装脚本存在/system/bin/ loadpreinstalls.sh
+
+# do preinstall job
+ [ !  /data/.notfirstrun ]
+
+ &quot;dopreinstall sys&quot; &gt;&gt; /system/log.txt
+#安装/system/preinstall下的所有apk文件
+    APKLIST=`ls /system/preinstall/*.apk`
+    INFILES  $APKLIST
+   
+       setup package:$INFILES
+     pm install -r $INFILES
+   
+
+ &quot;dopreinstall sd&quot; &gt;&gt; /system/log.txt
+#安装/sdcard/preinstall下的所有apk文件
+   APKLIST=`ls /sdcard/preinstall/*.apk`
+    INFILES  $APKLIST
+   
+       setup package:$INFILES
+     pm install -r $INFILES
+   
+    &quot;do preinstall ok&quot; &gt;&gt; /system/log.txt
+   busybox touch /data/.notfirstrun   
+
+
+ &quot;============================================&quot;&gt;&gt; /system/log.txt
+</code></pre>
+
+<p>此方式做预装用户在使用Root后删除掉/system/app下的已安装应用后，系统重启后又会执行启动脚本自动重装预装应用回来，且预装apk文件的存放目录根据不同的系统ROM还不一样，是极为流氓的推广策略。当然，我们通过分析已经看到了，如果要删除此类的预装应用，只需要全盘的扫描apk文件再进行删除即可。</p>
+
+<p>/*  <br/>
+* @author zhoushengtao(周圣韬)  <br/>
+* @since 2015年1月27日 上午14:02:22  <br/>
+* @weixin stchou_zst  <br/>
+* @blog <a href="http://blog.csdn.net/yzzst" target="_blank">http://blog.csdn.net/yzzst</a>  <br/>
+* @交流学习QQ群：341989536  <br/>
+* @私人QQ：445914891  <br/>
+/  </p><div><img src="Android系统Root与静默安装 - 北漂周的专栏（微信：stchou_zst） - _files/Center.jpg" type="image/jpeg" data-filename="Center.jpg" alt="这里写图片描述" height="784" width="564"/></div><p></p></div></div></div><br/></div></span>
+</div></body></html> 

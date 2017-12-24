@@ -1,0 +1,238 @@
+<html>
+<head>
+  <title>使用Android Accessibility实现免Root自动批量安装功能</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1466"/>
+<h1>使用Android Accessibility实现免Root自动批量安装功能</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>使用Android Accessibility实现免Root自动批量安装功能</h1><div><div></div></div></div>
+	
+       
+   	
+
+
+
+
+
+
+
+
+
+
+			
+	
+
+	
+			
+	
+		
+			
+	       	<p>对于国内Android设备，应用的自动批量安装/更新一直是一个痛点，在之前，第三方应用商店通常要求设备Root，然后调用系统的PackageManagerService命令行来实现后台安装。最近，豌豆荚利用Android Accessibility（辅助功能）在业内率先实现了免Root自动批量安装功能。
+</p><p>这个功能实现的原理是，在后台批量下载应用后，调用系统的PackageInstaller，获取安装界面的按钮位置，然后通过Accessibility提供的模拟用户点击功能，代替用户自动点击下一步，直到安装结束。
+</p><p>虽然技术看起来不是特别困难，但在实现中还是有不少坑的，豌豆荚工程师向我们分享了该功能的一些技术细节和实践经验。
+</p><h2>Android Accessibility API介绍与调用方法</h2>
+<p>对于那些由于视力、听力或其它身体原因导致不能方便使用Android智能手机的用户，Android提供了Accessibility功能和服务帮助这些用户更加简单地操作设备，包括文字转语音、触觉反馈、手势操作、轨迹球和手柄操作。开发者可以搭建自己的Accessibility服务，这可以加强应用的可用性，例如声音提示，物理反馈，和其他可选的操作模式。
+</p><p>随着Android系统版本的迭代，Accessibility功能也越来越强大，它能实时地获取当前操作应用的窗口元素信息，并能够双向交互，既能获取用户的输入，也能对窗口元素进行操作，比如点击按钮。更多的介绍见Android开发者官网的<a href="https://developer.android.com/guide/topics/ui/accessibility/index.html" target="_blank">Accessibility页面</a>。
+</p><p>调用Android Accessibility API需要三个步骤：申请权限、注册 Service、配置 Accessibility Service Info。使用Accessibility API需要的权限如下：
+
+</p><pre>&lt;uses-permission android:name=&quot;android.permission.BIND_ACCESSIBILITY_SERVICE&quot;/&gt;</pre>
+<p>注册Service
+
+</p><pre>&lt;service android:name=&quot;com.your.AccessibilityImpl.className&quot;
+        android:label=&quot;@string/acc_auto_install_service_name&quot;
+        android:permission=&quot;android.permission.BIND_ACCESSIBILITY_SERVICE&quot;
+        android:enabled=&quot;@bool/enable_accessibility&quot;&gt;
+   &lt;intent-filter&gt;
+       &lt;action android:name=&quot;android.accessibilityservice.AccessibilityService&quot; /&gt;
+   &lt;/intent-filter&gt;
+   &lt;meta-data android:name=&quot;android.accessibilityservice&quot; android:resource=&quot;@xml/accessibility_config&quot; /&gt;
+&lt;/service&gt;</pre>
+
+<p>配置Accessibility Service Info
+
+</p><pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;accessibility-service
+   xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+   android:description=&quot;@string/acc_description&quot; android:accessibilityEventTypes=&quot;typeAllMask&quot;
+   android:accessibilityFlags=&quot;flagDefault&quot;
+   android:accessibilityFeedbackType=&quot;feedbackGeneric&quot;
+   android:notificationTimeout=&quot;100&quot;
+   android:canRetrieveWindowContent=&quot;true&quot;
+   android:settingsActivity=&quot;com.your.settingActivity&quot;
+   android:packageNames=&quot;packageName1,packageName2&quot;
+/&gt;</pre>
+<p>需要说明的一点是，在配置配置 Accessibility Service Info时，如果明确的知道目标APP的包名，那一定要使用packageNames属性进行设置。举一个例子:
+</p><p>在一些使用虚拟键盘的APP中，经常会出现这样的逻辑</p><pre>Button button = (Button) findViewById(R.id.button);
+String num = (String) button.getText();</pre>
+<p>在一般情况下，<code>getText</code>方法的返回值是<code>Java.lang.String</code>类的实例，上面这段代码可以正确运行。但是在开启Accessibility Service之后，如果没有指定packageNames，系统会对所有APP的UI都进行Accessible的处理。在这个例子中的表现就是<code>getText</code>方法的返回值变成了<code>android.text.SpannableString</code>类的实例（<code>Java.lang.String</code>和<code>android.text.SpannableString</code>都实现了<code>java.lang.CharSequence</code>接口），进而造成目标APP崩溃。
+</p><p>所以强烈建议在注册<code>Accessibility Service</code>时指定目标APP的packageName，以减少手机上其他应用的莫名崩溃（代码中有这样的逻辑的各位，也请默默的改为调用<code>toString()</code>方法吧）。
+</p><h3>实现AccessibilityService</h3>
+<p>继承<code>android.accessibilityservice.AccessibilityService</code>并重载<code>onAccessibilityEvent</code>及<code>onInterrupt</code>方法:
+</p><pre>public class AccessibilityImpl extends AccessibilityService {
+    @Override
+    public void onAccessibilityEvent(AccessibilityEvent event) {}
+    @Override
+    public void onInterrupt() {}
+}</pre>
+<p>以onAccessibilityEvent与onInterrupt为入口实现业务逻辑代码。
+</p><h3>如何获取UI元素</h3>
+<p>在<code>onAccessibilityEvent</code>中，使用参数event的<code>getSource</code>方法获取到的<code>AccessibilityNodeInfo</code>实例，即为触发这次事件的UI节点。
+</p><p>如果需要获取当前界面上的其它元素，需要获取到当前界面UI Tree的根节点后再使用<code>findAccessibilityNodeInfosByText</code>或者<code>findAccessibilityNodeInfosByViewId</code>方法进行获取。
+</p><p>需要注意的一点是，<code>findAccessibilityNodeInfosByText</code>在获取UI元素时的判断逻辑是contains而非equals，在使用时可能要根据具体业务逻辑做进一步的处理。
+</p><h3>模拟用户点击</h3>
+<p>实现AccessibilityService，并获取界面上UI元素之后，可以使用下面的代码来模拟用户点击：
+</p><pre>nodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);</pre>
+<p>需要注意的是，在触发事件之前需要确定该UI元素在界面上是否依旧存在。使用该方法还可以模拟用户的其它操作，甚至是复制粘贴这种行为，具体可以参考<a href="http://developer.android.com/reference/android/view/accessibility/AccessibilityNodeInfo.html" target="_blank">AccessibilityNodeInfo</a>。
+</p><p>豌豆荚负责“自动装”项目的产品经理程志达、研发工程师李晓鹏还接受了InfoQ记者的采访，谈到了该项目的初衷和一些开发细节。
+</p><p><strong>InfoQ：请介绍一下你们的团队在豌豆荚负责什么部分？</strong>
+</p><blockquote>
+<p><strong>程志达：</strong>我们属于豌豆荚的Apps团队，主要负责应用平台这部分的业务，还有应用相关的“浏览、发现和安装”，这些都是我们团队在做。豌豆荚移动开发团队组织结构并不是统一的，各个产品线都独立负责自己的模块。</p>
+			
+	        
+	            
+
+
+
+
+
+
+
+
+
+    
+
+	        
+	        </blockquote>
+<p><strong>InfoQ：你们开发这个自动装功能的初衷是什么？</strong>
+</p><blockquote>
+<p><strong>程志达：</strong>为了方便Android手机用户批量安装和升级全部应用。很多用户都有这样的体会，当手机上有十几或者几十个应用时，想全部升级它们就是一件非常麻烦的事情。不仅要等待下载完更新，还要一一确认安装，每次都要点击几十上百次“下一步”。而且这样的噩梦不到一两周就要重复一次，因为每周都总会有一些应用再次更新。天长日久，强迫症也被逼得没有脾气了。通过我们的走访，豌豆荚员工有很多人的应用更新提醒已经积累了几十个。即使是Google Play原生的解决方案也不能解决问题，尤其是它不能帮忙更新从网页等渠道下载的应用，但这种情况在国内市场反而是一种常态。
+</p><p>我们基于Android Accessibility机制，在获取目标APP的UI元素后模拟用户动作进行点击，让之前的“一键升级”做到真的只要一次点击，为用户提供更轻松的安装体验，就是“自动装”功能的初衷。</p></blockquote>
+	        
+	        
+	            
+	        
+	       	
+<p><strong>InfoQ：你们开发的这个功能和目前市面上的类似功能相比有什么优势？</strong>
+</p><blockquote>
+<p><strong>程志达：</strong>在豌豆荚“自动装”功能出来之前，用户只能通过root的方式才能自动批量安装应用。懂得永久root方法的用户只占用户数量很少的一部分，技术门槛太高，大多数用户无法体验；临时root通过系统漏洞进行提权操作，获取的并不仅仅是可以安装应用的权限，因此风险相对较高；随着Android系统日趋完善，通过系统漏洞进行临时root的可能性越来越小，难度也越来越高。因此，采取临时root方式进行应用的解决方案终究会无法使用（目前在v4.3及以上版本的Android系统上很多以前采用临时root方式的app已将该功能关闭）。而我们的这个功能无论用户是否root都可以使用。</p></blockquote>
+<p><strong>InfoQ：能介绍一下这个项目的立项情况吗？</strong>
+</p><blockquote>
+<p><strong>程志达：</strong>在以前，我们对Root用户提供了自动安装的功能，但是Android 4.3发布以后，修复了很多漏洞，Root门槛变高，去年年底我们通过调查发现，国内Android的Root用户其实已经不到14%，因此有必要为非Root用户也提供自动安装功能。
+</p><p>所以从去年开始我们就希望做这个功能，当时考虑过各种解决方案，Accessibility这个接口出现之后，我们评估了一下是不是可以用这个功能去实现，当时考虑到因为ROM不同，可能会出现适配问题，因此一度搁置下来。今年第一季度之后，我们又整体的衡量一下，还是希望用户在豌豆荚上无论是发现新应用还是查找应用、安装应用，都给他们一个最好的体验。从一开始我们就知道将会遇到一些困难，但还是下决心一定要把这个东西实现好，做下来。最后我们花了一个多月的时间把它完成了。</p></blockquote>
+<p><strong>InfoQ：你们在开发这个功能的过程中遇到了哪些困难？</strong>
+</p><blockquote>
+<p><strong>李晓鹏：</strong>最主要的困难有两个，第一是因为Accessibility这个东西以前很少有人研究过，有些人将它用来杀进程清内存，但从来没有人将它用在应用的安装上面，网络上的资料很少，这次做这个事情我们需要学习这个API，踩坑是第一个困难。第二，因为国内市场Android ROM和系统版本这么多，适配也是一件非常困难的事情。</p></blockquote>
+<p><strong>InfoQ：请介绍一下你们的开发过程。</strong>
+</p><blockquote>
+<p><strong>李晓鹏：</strong>决定用Accessibility之后，我们做了几件事情。第一是看Android源代码，因为国内ROM定制化很多，我们希望找到通用的解决方案来为用户提供这个功能。通过分析Android源代码，我们找到了一些共性。比如说多个版本的PackageInstaller，相同的按钮的ID是没有变化的，而且位置、功能也是没有变化的，我们最开始想从ID这个方向切入，通过这种手段找到我们需要点击的按钮来进行操作。但后来发现有一些厂商的按钮没有ID，我们根本没有办法取到，而且通过ID来取按钮是Android 4.3以上才支持的。我们平台上Android 4.3以上的用户占80%左右，还是有相当一部分人在使用较老的系统版本，我们觉得不能放弃这部分用户，希望他们也能用这样的功能，最后我们采取从界面上通过文字找按钮的方式来做这个事情，而这就涉及到非常复杂的适配问题了。
+</p><p>另外还有对不同ROM的安装器流程进行调研。不同的厂商的ROM的应用安装流程是大不一样的，有些ROM会帮你解包和分析安全性，有些会让用户选择是否提供某些权限，都需要我们去应对，这也给适配造成了困难。</p></blockquote>
+<p><strong>InfoQ：请介绍一下你们的适配情况。</strong>
+</p><blockquote>
+<p><strong>李晓鹏：</strong>我们一开始做的时候就靠自己，公司内部的同事贡献机器，做的比较稳定了之后，在论坛发动一部分用户帮我们做测试，帮我们测试一些市面上比较少的机器，我们目前已经适配了超过3000种机型，覆盖了市面上主流设备。
+</p><p>适配遇到的主要问题就是各种ROM对PackageInstaller的修改。我们发现小厂商一般只会把PackageInstaller改皮换颜色之类的，越是有技术实力的厂商，不光改皮，还会进行功能化定制，甚至换掉这个东西，比如联想自己做了一个安装器里替代系统自带的，适配起来非常困难。</p></blockquote>
+<p><strong>InfoQ：非Root自动安装功能和Root自动安装功能如何共存？未来如何进行取舍？</strong>
+</p><blockquote>
+<p><strong>李晓鹏：</strong>首先这两个功能还是会并存的，我们会根据用户的选择来使用，现在比如说你的机器是Root过的，第一次安装的时候，我们会询问是是否选择Root的安装模式，如果是这样的话，就是静默安装了，如果没有选择Root，那就是使用系统默认的安装器，我们会提示用户开启自动装功能。不过Root的用户是越来越少的，而且临时Root又不安全，所以我们判断未来非Root自动安装功能使用的会更多一些，所以我们的主要精力会放在非Root上。
+</p><p>程志达：Root的功能我们会一直保留的，相当于我们为用户设计了两套不同的方案，我们希望普通用户对手机尽量少的设置或者调整的情况下都能够使用自动安装。
+</p><p>自从“自动装”功能上线以来，我们统计的数字是平均为用户节省点击24次，随使用时间的增加，替用户点击的次数还会增加，相当于这部分本来需要用户手动点击的事情我们都可以让它自动完成，节省了更多的时间。</p></blockquote>
+	       	
+       	
+		
+		
+
+
+
+
+
+
+
+
+
+		<div><b>【ArchSummit深圳2016】15大精彩专题，50位大咖讲师，Cloudera、Hearsay Social、Uber、LinkedIn、Twitter等等，你将为哪家公司技术点赞？阿里巴巴、腾讯、百度、美团、饿了么、滴滴、新浪微博等等，核心业务技术较量谁又能触动你的神经...最精彩的技术切磋从这开始，ArchSummit九折门票倒计时，<a href="http://sz2016.archsummit.com/schedule?utm_source=wenzhang&amp;utm_medium=bottomnew&amp;utm_campaign=gary" target="_blank">详情请点击</a>。</b></div>
+      
+		
+		
+		
+			
+			
+			
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+		
+		
+
+		
+				
+		
+		
+			
+		
+
+
+
+
+
+
+
+
+
+
+
+
+    <div>
+        
+        
+        <h3>告诉我们您的想法</h3>
+        
+            
+
+            
+            
+            
+            当有人回复此评论时请E-mail通知我
+            
+            
+        
+        
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+	
+
+	</div></div></div><br/></div></span>
+</div></body></html> 
