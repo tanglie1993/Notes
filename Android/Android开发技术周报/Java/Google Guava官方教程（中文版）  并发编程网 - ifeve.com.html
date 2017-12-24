@@ -1,0 +1,72 @@
+<html>
+<head>
+  <title>Google Guava官方教程（中文版） | 并发编程网 - ifeve.com</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1194"/>
+<h1>Google Guava官方教程（中文版） | 并发编程网 - ifeve.com</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>Google Guava官方教程（中文版）</h1><div><div></div></div></div>
+     
+      <p><a href="http://code.google.com/p/guava-libraries/wiki/GuavaExplained" target="_blank">原文链接</a>  <a href="http://ifeve.com/?p=8776" target="_blank">译文链接</a> <strong>译者:</strong> 沈义扬，<strong>罗立树，何一昕，</strong><strong>武祖 </strong> <strong>校对</strong>：方腾飞</p>
+<p><strong>引言</strong></p>
+<p>Guava工程包含了若干被Google的 Java项目广泛依赖 的核心库，例如：集合 [collections] 、缓存 [caching] 、原生类型支持 [primitives support] 、并发库 [concurrency libraries] 、通用注解 [common annotations] 、字符串处理 [string processing] 、I/O 等等。 所有这些工具每天都在被Google的工程师应用在产品服务中。</p>
+<p>查阅Javadoc并不一定是学习这些库最有效的方式。在此，我们希望通过此文档为Guava中最流行和最强大的功能，提供更具可读性和解释性的说明。</p>
+<p><em><strong>译文格式说明</strong></em></p>
+<ul>
+<li>Guava中的类被首次引用时，都会链接到Guava的API文档。如：<a href="http://docs.guava-libraries.googlecode.com/git-history/release/javadoc/com/google/common/base/Optional.html" target="_blank">Optional&lt;T&gt;</a>。</li>
+<li>Guava和JDK中的方法被引用时，一般都会链接到Guava或JDK的API文档，一些人所共知的JDK方法除外。如：<tt><a href="http://docs.guava-libraries.googlecode.com/git-history/release/javadoc/com/google/common/base/Optional.html#of(T)" target="_blank">Optional.of(T)</a></tt>, Map.get(key)。</li>
+<li>译者对文档的额外说明以斜体显示，并且以“<em>译者注</em><i>：</i>”开始。</li>
+</ul>
+<p><strong>目录</strong></p>
+<h2>1. 基本工具 [Basic utilities]</h2>
+<p>让使用Java语言变得更舒适</p>
+<p>1.1 <a href="http://ifeve.com/using-and-avoiding-null/" target="_blank">使用和避免null</a>：null是模棱两可的，会引起令人困惑的错误，有些时候它让人很不舒服。很多Guava工具类用快速失败拒绝null值，而不是盲目地接受</p>
+<p>1.2 <a href="http://ifeve.com/google-guava-preconditions/" target="_blank" title="[Google Guava] 1.2-前置条件">前置条件</a>: 让方法中的条件检查更简单</p>
+<p>1.3 <a href="http://ifeve.com/google-guava-commonobjectutilities/" target="_blank" title="[Google Guava] 常见对象方法：简化Object方法实现，如hashCode()和toString()">常见Object方法</a>: 简化Object方法实现，如hashCode()和toString()</p>
+<p>1.4 <a href="http://ifeve.com/google-guava-ordering/" target="_blank" title="[Google Guava] 排序: Guava强大的”流畅风格比较器”">排序: Guava强大的”流畅风格比较器”</a></p>
+<p>1.5 <a href="http://ifeve.com/google-guava-throwables/" target="_blank" title="[Google Guava] Throwables：简化异常和错误的传播与检查">Throwables</a>：简化了异常和错误的传播与检查</p>
+<h2>2. 集合[Collections]</h2>
+<p>Guava对JDK集合的扩展，这是Guava最成熟和为人所知的部分</p>
+<p>2.1 <a href="http://ifeve.com/google-guava-immutablecollections/" target="_blank" title="[Google Guava] 不可变集合: 防御性编程、常量集合和性能提升">不可变集合</a>: 用不变的集合进行防御性编程和性能提升。</p>
+<p>2.2 <a href="http://ifeve.com/google-guava-newcollectiontypes/" target="_blank">新集合类型</a>: multisets, multimaps, tables, bidirectional maps等</p>
+<p>2.3 <a href="http://ifeve.com/google-guava-collectionutilities/" target="_blank" title="[Google Guava] 2.3-强大的集合工具类：java.util.Collections中未包含的集合工具">强大的集合工具类</a>: 提供java.util.Collections中没有的集合工具</p>
+<p>2.4 <a href="http://ifeve.com/google-guava-collectionhelpersexplained/" target="_blank" title="[Google Guava] 2.4-集合扩展工具类">扩展工具类</a>：让实现和扩展集合类变得更容易，比如创建<tt>Collection的装饰器，或实现迭代器</tt></p>
+<h2>3. <a href="http://ifeve.com/google-guava-cachesexplained" target="_blank">缓存</a>[Caches]</h2>
+<p>Guava Cache：本地缓存实现，支持多种缓存过期策略</p>
+<h2>4. <a href="http://ifeve.com/google-guava-functional/" target="_blank" title="[Google Guava] 4-函数式编程">函数式风格</a>[Functional idioms]</h2>
+<p>Guava的函数式支持可以显著简化代码，但请谨慎使用它</p>
+<h2>5. 并发[Concurrency]</h2>
+<p>强大而简单的抽象，让编写正确的并发代码更简单</p>
+<p>5.1 <a href="http://ifeve.com/google-guava-listenablefuture/" target="_blank" title="google Guava包的ListenableFuture解析">ListenableFuture</a>：完成后触发回调的Future</p>
+<p>5.2 <a href="http://ifeve.com/google-guava-serviceexplained/" target="_blank" title="Google-Guava Concurrent包里的Service框架浅析">Service框架</a>：抽象可开启和关闭的服务，帮助你维护服务的状态逻辑</p>
+<h2>6. <a href="http://ifeve.com/google-guava-strings/" target="_blank" title="[Google Guava] 6-字符串处理：分割，连接，填充">字符串处理</a>[Strings]</h2>
+<p>非常有用的字符串工具，包括分割、连接、填充等操作</p>
+<h2>7. <a href="http://ifeve.com/google-guava-primitives/" target="_blank" title="[Google Guava] 7-原生类型">原生类型</a>[Primitives]</h2>
+<p>扩展 JDK 未提供的原生类型（如int、char）操作， 包括某些类型的无符号形式</p>
+<h2>8. <a href="http://ifeve.com/google-guava-ranges/" target="_blank" title="[Google Guava] 8-区间">区间</a>[Ranges]</h2>
+<p>可比较类型的区间API，包括连续和离散类型</p>
+<h2>9. <a href="http://ifeve.com/google-guava-io/" target="_blank" title="[Google Guava] 9-I/O">I/O</a></h2>
+<p>简化I/O尤其是I/O流和文件的操作，针对Java5和6版本</p>
+<h2>10. <a href="http://ifeve.com/google-guava-hashing/" target="_blank" title="[Google Guava] 10-散列">散列</a>[Hash]</h2>
+<p>提供比<tt>Object.hashCode()</tt>更复杂的散列实现，并提供布鲁姆过滤器的实现</p>
+<h2>11. <a href="http://ifeve.com/google-guava-eventbus/" target="_blank" title="[Google Guava] 11-事件总线">事件总线</a>[EventBus]</h2>
+<p>发布-订阅模式的组件通信，但组件不需要显式地注册到其他组件中</p>
+<h2>12. <a href="http://ifeve.com/google-guava-math/" target="_blank" title="[Google Guava] 12-数学运算">数学运算</a>[Math]</h2>
+<p>优化的、充分测试的数学工具类</p>
+<h2>13. <a href="http://ifeve.com/guava-reflection/" target="_blank" title="google Guava包的reflection解析">反射</a>[Reflection]</h2>
+<p>Guava 的 Java 反射机制工具类
+</p>
+<hr/>
+<a href="https://www.jianxun.io/?utm_source=ifeve&amp;utm_medium=webad&amp;utm_campaign=regular&amp;utm_content=&amp;utm_term=bottombanner" target="_blank"><div><img src="Google Guava官方教程（中文版）  并发编程网 - ifeve.com_files/ifeve-bottombanner.jpg" type="image/jpeg" data-filename="ifeve-bottombanner.jpg" height="150" width="500"/></div></a><div><div><div><div><h3><a href="http://weibo.com/1847074805" target="_blank">沈义扬</a></h3><div>本站的翻译主编。关注并发编程，面向对象设计，分布式系统。</div></div> </div></div> </div><img src="Google Guava官方教程（中文版）  并发编程网 - ifeve.com_files/Image.png" type="image/png" data-filename="" alt="Favorite" height="16" title="Favorite" width="16"/><img src="Google Guava官方教程（中文版）  并发编程网 - ifeve.com_files/loading.gif" type="image/gif" data-filename="loading.gif" alt="Loading" height="16" title="Loading" width="16"/><a href="http://ifeve.com/google-guava/?wpfpaction=add&amp;postid=8776" target="_blank" title="添加本文到我的收藏">添加本文到我的收藏</a>
+           </div></div></div><br/></div></span>
+</div></body></html> 

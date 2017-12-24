@@ -1,0 +1,74 @@
+<html>
+<head>
+  <title>Java开发者易犯错误Top10-CSDN.NET</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1658"/>
+<h1>Java开发者易犯错误Top10-CSDN.NET</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>Java开发者易犯错误Top10</h1><div><div></div></div></div>
+				
+				
+				<div>
+					
+				<strong>摘要：</strong>在Java中，有些事物如果不了解的话，很容易就会用错，如数组转换为数组列表、元素删除、Hashtable和HashMap、ArrayList和LinkedList、Super和Sub构造函数等，如果这些对你来说是陌生的，你可以在本文中了解它们。				</div>
+				
+				<p>本文总结了Java开发者经常会犯的前十种错误列表。</p><p></p><div><img src="Java开发者易犯错误Top10-CSDN.NET_files/54dd917d1b5aa.jpg.png" type="image/png" data-filename="54dd917d1b5aa.jpg.png" height="384" width="576"/></div><p></p><p><b>Top1. 数组转换为数组列表</b></p><p>将数组转换为数组列表，开发者经常会这样做：</p><div><ol><li>List&lt;String&gt; list = Arrays.asList(arr);  </li></ol></div><pre>List&lt;String&gt; list = Arrays.asList(arr);</pre><p>Arrays.asList()将返回一个数组内部是私有静态类的ArrayList，这不是java.util.ArrayList类，java.util.Arrays.ArrayList类有set()、 get()、 contains()方法，但是没有任何加元素的方法，因此它的大小是固定的。你应该这么做来创建一个真正的数组：</p><div><ol><li>ArrayList&lt;String&gt; arrayList =  ArrayList&lt;String&gt;(Arrays.asList(arr));  </li></ol></div><pre>ArrayList&lt;String&gt; arrayList = new ArrayList&lt;String&gt;(Arrays.asList(arr));</pre><p>ArrayList的构造函数能够接受一个集合类型，这也是java.util.Arrays.ArrayList的超级类型。</p><p><b>Top2. 检查一个数组包含一个值</b></p><p>开发者经常这么做：</p><div><ol><li>Set&lt;String&gt; set =  HashSet&lt;String&gt;(Arrays.asList(arr));  </li><li>return set.contains(targetValue);  </li></ol></div><pre>Set&lt;String&gt; set = new HashSet&lt;String&gt;(Arrays.asList(arr));
+return set.contains(targetValue);</pre><p>代码可以工作，但是没有必要首先转换列表到Set，转换一个列表到一个Set需要额外的时间。因此你可以把它简化为：</p><div><ol><li>Arrays.asList(arr).contains(targetValue);  </li></ol></div><pre>Arrays.asList(arr).contains(targetValue);</pre><div><ol><li>(String s: arr){  </li><li>    (s.equals(targetValue))  </li><li>        return</li><li>returnfalse</li></ol></div><pre>for(String s: arr){
+	if(s.equals(targetValue))
+		return true;
+}
+return false;</pre><p>第一个比第二个更具可读性</p><p><b>Top3. 在一个循环中从一个列表里删除一个元素</b></p><p>考虑下面删除元素的代码在迭代中的结果：</p><div><ol><li>ArrayList&lt;String&gt; list =  ArrayList&lt;String&gt;(Arrays.asList(</li><li>; i &lt; list.size(); i++) {  </li><li>    list.remove(i);  </li><li>System.out.println(list);  </li></ol></div><pre>ArrayList&lt;String&gt; list = new ArrayList&lt;String&gt;(Arrays.asList(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;));
+for (int i = 0; i &lt; list.size(); i++) {
+	list.remove(i);
+}
+System.out.println(list);</pre><pre>[b, d]</pre><p>该方法有一个严重的问题，当一个元素被删除时，列表收缩的大小以及指针改变了。所以想要在循环内利用指针删除多个元素是无法正常进行的。</p><p>这种情况下使用迭代器才是正确的方法，foreach循环在Java中的工作像是一个迭代器，但实际上并不是，考虑下面的代码：</p><div><ol><li>ArrayList&lt;String&gt; list =  ArrayList&lt;String&gt;(Arrays.asList(</li><li> (String s : list) {  </li><li>     (s.equals(</li><li>        list.remove(s);  </li></ol></div><pre>ArrayList&lt;String&gt; list = new ArrayList&lt;String&gt;(Arrays.asList(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;));
+ 
+for (String s : list) {
+	if (s.equals(&quot;a&quot;))
+		list.remove(s);
+}</pre><p>它会报出<a href="http://www.programcreek.com/2014/01/java-util-concurrentmodificationexception/" target="_blank">ConcurrentModificationException</a>异常。</p><p>相反下面这个就可以正常工作。</p><div><ol><li>ArrayList&lt;String&gt; list =  ArrayList&lt;String&gt;(Arrays.asList(</li><li>Iterator&lt;String&gt; iter = list.iterator();  </li><li>while (iter.hasNext()) {  </li><li>    String s = iter.next();  </li><li>     (s.equals(</li><li>        iter.remove();  </li></ol></div><pre>ArrayList&lt;String&gt; list = new ArrayList&lt;String&gt;(Arrays.asList(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;));
+Iterator&lt;String&gt; iter = list.iterator();
+while (iter.hasNext()) {
+	String s = iter.next();
+ 
+	if (s.equals(&quot;a&quot;)) {
+		iter.remove();
+	}
+}</pre><p>.next()必须在.remove()之前被调用。在foreach循环中，编译器将在删除元素操作之后调用.next()，这也是导致ConcurrentModificationException异常的原因，你可以<a href="http://www.programcreek.com/2014/01/deep-understanding-of-arraylist-iterator/" target="_blank">点击此处</a>查看ArrayList.iterator()的源代码。</p><p><b>Top4. Hashtable vs HashMap</b></p><p>根据算法的常规，Hashtable是对数据结构的称呼。但是在Java中，数据结构的名称是HashMap。Hashtable和HashMap关键不同之一是Hashtable是同步的。</p><p>关于这一点可查看以下两个链接：</p><p><a href="http://www.programcreek.com/2013/03/hashmap-vs-treemap-vs-hashtable-vs-linkedhashmap/" target="_blank">HashMap vs. TreeMap vs. Hashtable vs. LinkedHashMap</a></p><p><a href="http://www.programcreek.com/2013/09/top-9-questions-for-java-map/" target="_blank">Map问题Top10</a></p><p><b>Top5. 使用集合的原始类型</b></p><p>在Java中，原始类型和无限制的通配符类型很容易被混淆。以Set为例，Set是原始类型，而Set(?)则是无限制的通配符类型。</p><p>考虑下面的代码，以一个原始类型List作为参数：</p><div><ol><li>publicstatic add(List list, Object o){  </li><li>    list.add(o);  </li><li>publicstatic main(String[] args){  </li><li>    List&lt;String&gt; list =  ArrayList&lt;String&gt;();  </li><li>    add(list, </li><li>    String s = list.get(</li></ol></div><pre>public static void add(List list, Object o){
+	list.add(o);
+}
+public static void main(String[] args){
+	List&lt;String&gt; list = new ArrayList&lt;String&gt;();
+	add(list, 10);
+	String s = list.get(0);
+}</pre><p>该代码会抛出一个异常：</p><div><ol><li>Exception in thread &quot;main&quot; java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String  </li><li>    at ...  </li></ol></div><pre>Exception in thread &quot;main&quot; java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at ...</pre><p>使用原始类型集合是危险的，因为原始类型集合跳过了泛型类型检查，也不安全。Set、Set&lt;?&gt;和Set&lt;Object&gt;之间有很大的不同。详细可查看</p><p><a href="http://www.programcreek.com/2013/12/raw-type-set-vs-unbounded-wildcard-set/" target="_blank">Raw type vs. Unbounded wildcard</a>和<a href="http://www.programcreek.com/2011/12/java-type-erasure-mechanism-example/" target="_blank">Type Erasure</a>。</p><p><b>Top6. 访问级别</b></p><p>开发者经常对类域使用public，这很容易通过直接引用获得域值，但这是一个非常糟糕的设计。根据经验来说是给予成员的访问级别越低越好。</p><p>详细情况可点击查看Java中成员访问级别：<a href="http://www.programcreek.com/2011/11/java-access-level-public-protected-private/" target="_blank">public、protected、private</a></p><p><b>Top7.ArrayList VS LinkedList</b></p><p>如果你不知道ArrayList和LinkedList之间的区别时，你可能会经常的选用ArrayList，因为它看起来看熟悉。然而它们之间有巨大的性能不同。简单的来说，如果有大量的添加/删除操作，并且没有很多的随机存取操作时，LinkedList应该是你的首选。如果您对此不是很了解的话，<a href="http://www.programcreek.com/2013/03/arraylist-vs-linkedlist-vs-vector/" target="_blank">点此此处</a>查看更多关于它们性能的信息。</p><p><b>Top8. Mutable VS Immutable</b></p><p>Immutable对象有很多优势，比如简单、安全等等。但它要求每一个不同的值都需要有一个不同的对象，而太多的对象可能会导致垃圾收集的高成本。所以对Mutable和Immutable的选择应该有一个平衡点。</p><p>一般来说，Mutable对象用于避免产生过多的中间对象，经典的例子是连接大量的字符串数。如果你使用Immutable字符串，那么会产生很多符合垃圾收集条件的对象。这对CPU是浪费时间和精力的，当其可以使用Mutable对象作为正确的解决方案。（如StringBuilder）</p><div><ol><li>String result=</li><li>(String s: arr){  </li><li>    result = result + s;  </li></ol></div><pre>String result=&quot;&quot;;
+for(String s: arr){
+	result = result + s;
+}</pre><p>这里还有一些其他Mutable对象可取的情况。例如mutable对象传递到方法中允许你在不跳过太多语法的情况下收集多个结果。另一个例子是排序和过滤，你可以构建一个带有原有集合的方法，并返回一个已排序的，不过这对大的集合来说会造成更大的浪费。</p><p>推荐阅读：<a href="http://www.programcreek.com/2013/04/why-string-is-immutable-in-java/" target="_blank">为什么字符串是Immutable？</a></p><p><b>Top9. Super和Sub构造函数</b></p><p><b></b></p><div><b><img src="Java开发者易犯错误Top10-CSDN.NET_files/54dd937bd39d5.jpg.png" type="image/png" data-filename="54dd937bd39d5.jpg.png" height="383" width="387"/></b></div><p></p><p>这个编译错误是因为默认的Super构造函数是未定义的。在Java中，如果一个类没有定义一个构造函数，编译器会默认的为类插入一个无参数构造函数。如果一个构造函数是在Super类中定义的，这种情况下Super(String s)，编译器不会插入默认的无参数构造函数。</p><p>另一方面，Sub类的构造函数，无论带不带有参数，都会调用无参数的Super构造函数。</p><p>编译器在Sub类中试图将Super()插入到两个构造函数中，但是Super默认的构造函数是没有定义的，编译器才会报错。如何解决这一问题？你只需在Super类中添加一个Super()构造函数，如下所示：</p><div><ol><li>public Super(){  </li><li>    System.out.println(&quot;Super&quot;</li></ol></div><pre>public Super(){
+    System.out.println(&quot;Super&quot;);
+}</pre><p>或移除自定义的Super构造函数，又或者在Sub函数中添加super(value)。</p><p>这方面想了解更多的可以<a href="http://www.programcreek.com/2013/04/what-are-the-frequently-asked-questions-about-constructors-in-java/" target="_blank">点击此处</a>查看。</p><p><b>Top10. &quot;&quot;或构造函数？</b></p><p>字符串可以通过两种方式创建：</p><div><ol><li>//1. use double quotes</li><li>String x = &quot;abc&quot;</li><li>//2. use constructor</li><li>String y =  String(&quot;abc&quot;</li></ol></div><pre>//1. use double quotes
+String x = &quot;abc&quot;;
+//2. use constructor
+String y = new String(&quot;abc&quot;);</pre><p>它们之间有何不同？下面的例子可以给出答案：</p><div><ol><li>String a = &quot;abcd&quot;</li><li>String b = &quot;abcd&quot;</li><li>System.out.println(a == b);  // True</li><li>System.out.println(a.equals(b)); // True</li><li>String c =  String(&quot;abcd&quot;</li><li>String d =  String(&quot;abcd&quot;</li><li>System.out.println(c == d);  // False</li><li>System.out.println(c.equals(d)); // True</li></ol></div><pre>String a = &quot;abcd&quot;;
+String b = &quot;abcd&quot;;
+System.out.println(a == b);  // True
+System.out.println(a.equals(b)); // True
+ 
+String c = new String(&quot;abcd&quot;);
+String d = new String(&quot;abcd&quot;);
+System.out.println(c == d);  // False
+System.out.println(c.equals(d)); // True</pre><p>关于它们如何在内存中分布的更多细节可以查看《<a href="http://www.programcreek.com/2014/03/create-java-string-by-double-quotes-vs-by-constructor/" target="_blank">使用&quot;&quot;或构造函数创建Java字符串</a>》。</p><p><b>推荐阅读：</b></p><p><a href="http://www.programcreek.com/2013/04/what-are-the-frequently-asked-questions-about-constructors-in-java/" target="_blank">Constructors of Sub and Super Classes in Java?</a></p><p><a href="http://www.programcreek.com/2014/03/how-developers-sort-in-java/" target="_blank">How Developers Sort in Java?</a></p><p><a href="http://www.programcreek.com/2013/04/how-to-convert-array-to-arraylist-in-java/" target="_blank">How to Convert Array to ArrayList in Java?</a></p><p><a href="http://www.programcreek.com/2011/12/java-type-erasure-mechanism-example/" target="_blank">Java Type Erasure Mechanism</a></p><p><b>原文来自：<a href="http://www.programcreek.com/2014/05/top-10-mistakes-java-developers-make/" target="_blank">programcreek</a></b></p>				
+				<p>本文为CSDN编译整理，未经允许不得转载，如需转载请联系market#csdn.net(#换成@)</p>
+				</div></div></div><br/></div></span>
+</div></body></html> 

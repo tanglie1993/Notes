@@ -1,0 +1,618 @@
+<html>
+<head>
+  <title>从源码角度认识ArrayList，LinkedList与HashMap</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="4058"/>
+<h1>从源码角度认识ArrayList，LinkedList与HashMap</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:10px;-webkit-tap-highlight-color:transparent;"><div style="box-sizing:border-box;font-size:17px;line-height:1.42857;color:rgb(51, 51, 51);background-color:rgb(255, 255, 255);min-width:768px;font-family:-apple-system, &quot;SF UI Text&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;color:rgb(47, 47, 47);font-size:16px;font-weight:400;line-height:1.7;word-break:break-word;">
+          <p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">本文会从源码（JDK 1.8）的角度来分析以下几个Java中常用的数据结构，主要会分析原理与实现，以及每个数据结构所支持的常用操作的复杂度。</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">ArrayList</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">LinkedList</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">HashMap</li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">在对以上数据结构进行具体分析时，我们主要会从以下三个角度来切入：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">Why：为什么要使用这个数据结构？这个数据结构是为解决什么问题而出现的？</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">What：这个数据结构的原理与实现是什么？所支持的各项操作的复杂度如何？</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">How：如何使用这个数据结构？</li>
+</ul>
+<h1 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-size:26px;margin:0px 0px 15px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);text-rendering:optimizeLegibility;">ArrayList</h1>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">定义</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">快速了解ArrayList究竟是什么的一个好方法就是看JDK源码中对ArrayList类的注释，大致翻译如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** 
+  * 实现了List的接口的可调整大小的数组。实现了所有可选列表操作，并且允许所有类型的元素，
+  * 包括null。除了实现了List接口，这个类还提供了去动态改变内部用于存储集合元素的数组尺寸
+  * 的方法。（这个类与Vector类大致相同，除了ArrayList是非线程安全外。）size，isEmpty，
+  * get，set，iterator，和listIterator方法均为常数时间复杂度。add方法的摊还时间复杂度为
+  * 常数级别，这意味着，添加n个元素需要的时间为O(n)。所有其他方法的时间复杂度都是线性级别的。
+  * 常数因子要比LinkedList低。
+  * 每个ArrayList实例都有一个capacity。capacity是用于存储ArrayList的元素的内部数组的大小。
+  * 它通常至少和ArrayList的大小一样大。当元素被添加到ArrayList时，它的capacity会自动增长。
+  * 在向一个ArrayList中添加大量元素前，可以使用ensureCapacity方法来增加ArrayList的容量。
+  * 使用这个方法来一次性地使ArrayList内部数组的尺寸增长到我们需要的大小提升性能。需要注意的
+  * 是，这个ArrayList实现是未经同步的。若在多线程环境下并发访问一个ArrayList实例，并且至少
+  * 一个线程对其作了结构型修改，那么必须在外部做同步。（结构性修改指的是任何添加或删除了一个或
+  * 多个元素的操作，以及显式改变内部数组尺寸的操作。set操作不是结构性修改）在外部做同步通常通
+  * 过在一些自然地封装了ArrayList的对象上做同步来实现。如果不存在这样的对象，ArrayList应
+  * 使用Collections.synchronizedList方法来包装。最好在创建时就这么做，以防止对ArrayList
+  * 无意的未同步访问。（List list = Collections.synchronizedList(new ArrayList(...));）
+  * ArrayList类的iterator()方法以及listIterator()方法返回的迭代器是fail-fast的：
+  * 在iterator被创建后的任何时候，若对list进行了结构性修改（以任何除了通过迭代器自己的
+  * remove方法或add方法的方式），迭代器会抛出一个ConcurrentModificationException异常。
+   * 因此，在遇到并发修改时，迭代器马上抛出异常，而不是冒着以后可能在不确定的时间发生不确定行为
+  * 的风险继续。需要注意的是，迭代器的fail-fast行为是不能得到保证的，因为通常来说在未同步并发
+  * 修改面前无法做任何保证。fail-fast迭代器会尽力抛出ConcurrentModificationException异常。
+  * 因此，编写正确性依赖于这个异常的程序是不对的：fail-fast行为应该仅仅在检测bugs时被使用。
+  * ArrayList类是Java集合框架中的一员。
+*/
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">根据源码中的注释，我们了解了ArrayList用来组织一系列同类型的数据对象，支持对数据对象的顺序迭代与随机访问。我们还了解了ArrayList所支持的操作以及各项操作的时间复杂度。接下来我们来看看这个类实现了哪些接口。</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">public class ArrayList&lt;E&gt; extends AbstractList&lt;E&gt;       
+    implements List&lt;E&gt;, RandomAccess, Cloneable, java.io.Serializable
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以看到，它实现了4个接口：List、RandomAccess、Cloneable、Serializable。<br style="box-sizing:border-box;"/>
+官方文档对List接口的说明如下：List是一个有序的集合类型（也被称作序列）。使用List接口可以精确控制每个元素被插入的位置，并且可以通过元素在列表中的索引来访问它。列表允许重复的元素，并且在允许null元素的情况下也允许多个null元素。<br style="box-sizing:border-box;"/>
+List接口定义了以下方法：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">ListIterator&lt;E&gt; listIterator();
+void add(int i, E element);
+E remove(int i);
+E get(int i);
+E set(int i, E element);
+int indexOf(Object element);
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以看到，add、get等方法都是我们在使用ArrayList时经常用到的。<br style="box-sizing:border-box;"/>
+在ArrayList的源码注释中提到了，ArrayList使用Object数组来存储集合元素。我们来一起看下它的源码中定义的如下几个字段：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * 默认初始capacity. */
+private static final int DEFAULT_CAPACITY = 10;
+/** * 供空的ArrayList实例使用的空的数组实例 */
+private static final Object[] EMPTY_ELEMENTDATA = {};
+/** * 供默认大小的空的ArrayList实例使用的空的数组实例。
+     * 我们把它和EMPTY_ELEMENTDATA区分开来，一边指导当地一个元素被添加时把内部数组尺寸设为
+     * 多少
+*/
+private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+/** * 存放ArrayList中的元素的内部数组。
+     * ArrayList的capacity就是这个内部数组的大小。
+     * 任何elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA的空ArrayList在第一个元素
+     * 被添加进来时，其capacity都会被扩大至DEFAULT_CAPACITYhe 
+*/
+transient Object[] elementData; // non-private to simplify nested class access
+/** *ArrayList所包含的元素数 */
+private int size;
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">通过以上字段，我们验证了ArrayList内部确实使用一个Object数组来存储集合元素。<br style="box-sizing:border-box;"/>
+那么接下来我们看一下ArrayList都有哪些构造器，从而了解ArrayList的构造过程。</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">ArrayList的构造器</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">首先我们来看一下我们平时经常使用的ArrayList的无参构造器的源码：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Constructs an empty list with an initial capacity of ten. */
+public ArrayList() {    
+  this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以看到，无参构造器仅仅是把ArrayList实例的elementData字段赋值为DEFAULTCAPACITY_EMPTY_ELEMENTDATA。<br style="box-sizing:border-box;"/>
+接下来，我们再来看一下ArrayList的其他构造器：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Constructs an empty list with the specified initial capacity. 
+     * * @param  initialCapacity  the initial capacity of the list 
+     * @throws IllegalArgumentException if the specified initial capacity 
+     *         is negative 
+*/
+public ArrayList(int initialCapacity) {    
+  if (initialCapacity &gt; 0) {        
+    this.elementData = new Object[initialCapacity];    
+  } else if (initialCapacity == 0) {        
+    this.elementData = EMPTY_ELEMENTDATA;    
+  } else {        
+    throw new IllegalArgumentException(&quot;Illegal Capacity: &quot;+                                           
+        initialCapacity);    
+  }
+}
+
+/** * Constructs a list containing the elements of the specified 
+     * collection, in the order they are returned by the collection's * iterator. 
+     * * @param c the collection whose elements are to be placed into this list 
+     * @throws NullPointerException if the specified collection is null 
+*/
+public ArrayList(Collection&lt;? extends E&gt; c) {    
+  elementData = c.toArray();    
+  if ((size = elementData.length) != 0) {        
+    // c.toArray might (incorrectly) not return Object[] (see 6260652)        
+    if (elementData.getClass() != Object[].class)            
+      elementData = Arrays.copyOf(elementData, size, Object[].class);      
+  } else {        
+    // replace with empty array.        
+    this.elementData = EMPTY_ELEMENTDATA;    
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">通过源码我们可以看到，第一个构造器指定了ArrayList的初始capacity，然后根据这个初始capacity创建一个相应大小的Object数组。若initialCapacity为0，则将elementData赋值为EMPTY_ELEMENTDATA；若initialCapacity为负数，则抛出一个IllegalArgumentException异常。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">第二个构造器则指定一个Collection对象作为参数，从而构造一个含有指定集合对象元素的ArrayList对象。这个构造器首先把elementData实例域赋值为集合对象转为的数组，而后再判断传入的集合对象是否不含有任何元素，若是的话，则将elementData赋值为EMPTY_ELEMENTDATA；若传入的集合对象至少包含一个元素，则进一步判断c.toArray方法是否正确返回了Object数组，若不是的话，则需要用Arrays.copyOf方法把elementData的元素类型改变为Object。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">现在，我们又了解了ArrayList实例的构建过程，那么接下来我们来通过ArrayList的get、set等方法的源码来进一步了解它的实现原理。</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">add方法源码分析</h3>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Appends the specified element to the end of this list. 
+     * * @param e element to be appended to this list 
+     * @return &lt;tt&gt;true&lt;/tt&gt; (as specified by {@link Collection#add}) 
+*/
+public boolean add(E e) {    
+  ensureCapacityInternal(size + 1);  // Increments modCount!!    
+  elementData[size++] = e;    
+  return true;
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以看到，在add方法内部，首先调用了ensureCapacityInternal(size+1)，这句的作用有两个：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">保证当前ArrayList实例的capacity足够大；</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">增加modCount，modCount的作用是判断在迭代时是否对ArrayList进行了结构性修改。</li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">然后通过将内部数组下一个索引处的元素设置为给定参数来完成了向ArrayList中添加元素，返回true表示添加成功。</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">get方法源码分析</h3>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Returns the element at the specified position in this list. 
+     * * @param  index index of the element to return 
+     * @return the element at the specified position in this list 
+     * @throws IndexOutOfBoundsException {@inheritDoc} 
+*/
+public E get(int index) {    
+  rangeCheck(index);    
+  return elementData(index);
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">首先调用了rangeCheck方法来检查我们传入的index是否在合法范围内，然后调用了elementData方法，这个方法的源码如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">E elementData(int index) {    
+  return (E) elementData[index];
+}
+</code></pre>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">set方法源码分析</h3>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Replaces the element at the specified position in this list with 
+     * the specified element. 
+     * * @param index index of the element to replace 
+     * @param element element to be stored at the specified position 
+    * @return the element previously at the specified position 
+    * @throws IndexOutOfBoundsException {@inheritDoc} 
+*/
+public E set(int index, E element) {    
+  rangeCheck(index);    
+  E oldValue = elementData(index);    
+  elementData[index] = element;    
+  return oldValue;
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以看到，set方法的实现也很简单，首先检查给定的索引是否在合法范围内，若在，则先把该索引处原来的元素存储在oldValue中，然后把新元素放到该索引处并返回oldValue即可。</p>
+<h1 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-size:26px;margin:0px 0px 15px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);text-rendering:optimizeLegibility;">LinkedList</h1>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">定义</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">LinkedList类源码中的注释如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * 实现了List接口的双向链表。实现了所有可选列表操作，并且可以存储所有类型的元素，包括null。
+  * 对LinkedList指定索引处的访问需要顺序遍历整个链表，直到到达指定元素。
+  * 注意LinkedList是非同步的。若多线程并发访问LinkedList对象，并且至少一个线程对其做
+  * 结构性修改，则必须在外部对它进行同步。这通常通过在一些自然封装了LinkedList的对象上
+  * 同步来实现。若不存在这样的对象，这个list应使用Collections.synchronizedList来包装。     
+  * 这最好在创建时完成，以避免意外的非同步访问。
+  * LinkedList类的iterator()方法以及listIterator()方法返回的迭代器是fail-fast的：
+  * 在iterator被创建后的任何时候，若对list进行了结构性修改（以任何除了通过迭代器自己的
+  * remove方法或add方法的方式），迭代器会抛出一个ConcurrentModificationException异常。
+  * 因此，在遇到并发修改时，迭代器马上抛出异常，而不是冒着以后可能在不确定的时间发生不确定行为
+  * 的风险继续。需要注意的是，迭代器的fail-fast行为是不能得到保证的，因为通常来说在未同步并发
+  * 修改面前无法做任何保证。fail-fast迭代器会尽力抛出ConcurrentModificationException异常。
+  * 因此，编写正确性依赖于这个异常的程序是不对的：fail-fast行为应该仅仅在检测bugs时被使用。
+  * LinkedList类是Java集合框架中的一员。 
+*/
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">LinkedList是对链表这种数据结构的实现（对链表还不太熟悉的小伙伴可以参考<a href="https://www.jianshu.com/p/aae1ddcfb94a" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">深入理解数据结构之链表</a>），当我们需要一种支持高效删除/添加元素的数据结构时，可以考虑使用链表。<br style="box-sizing:border-box;"/>
+总的来说，链表具有以下两个优点：</p>
+<ul style="box-sizing:border-box;margin-top:0px;padding-left:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">插入及删除操作的时间复杂度为O(1)</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">可以动态改变大小</li>
+</ul>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">链表主要的缺点是：由于其链式存储的特性，链表不具备良好的空间局部性，也就是说，链表是一种缓存不友好的数据结构。</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">支持的操作</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">LinkedList主要支持以下操作：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">void addFirst(E element);
+void addLast(E element);
+E getFirst();
+E getLast();
+E removeFirst();
+E removeLast();
+boolean add(E e) //把元素e添加到链表末尾
+void add(int index, E element) //在指定索引处添加元素
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">以上操作除了add(int index, E element)外，时间复杂度均为O(1)，而add(int index, E element)的时间复杂度为O(N)。</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">Node类</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">在LinkedList类中我们能看到以下几个字段：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">transient int size = 0;
+/** * 指向头结点  */
+transient Node&lt;E&gt; first;
+/** * 指向尾结点 */
+transient Node&lt;E&gt; last;
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们看到，LinkedList只保存了头尾节点的引用作为其实例域，接下来我们看一下LinkedList的内部类Node的源码如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">private static class Node&lt;E&gt; {    
+  E item;    
+  Node&lt;E&gt; next;    
+  Node&lt;E&gt; prev;    
+  Node(Node&lt;E&gt; prev, E element, Node&lt;E&gt; next) {        
+    this.item = element;        
+    this.next = next;        
+    this.prev = prev;    
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">每个Node对象的next域指向它的下一个结点，prev域指向它的上一个结点，item为本结点所存储的数据对象。</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">addFirst源码分析</h3>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Inserts the specified element at the beginning of this list. 
+      * * @param e the element to add 
+*/
+public void addFirst(E e) {    
+  linkFirst(e);
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">实际干活的是linkFirst，它的源码如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Links e as first element. */
+private void linkFirst(E e) {    
+  final Node&lt;E&gt; f = first;    
+  final Node&lt;E&gt; newNode = new Node&lt;&gt;(null, e, f);    
+  first = newNode;    
+  if (f == null)        
+    last = newNode;    
+  else        
+    f.prev = newNode;    
+  size++;    
+  modCount++;
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">首先把头结点引用存于变量f中，而后创建一个新结点，这个新结点的数据为我们传入的参数e，prev指针为null，next指针为f。然后把头结点指针指向新创建的结点newNode。而后判断f是否为null，若为null，说明之前链表中没有结点，所以last也指向newNode；若f不为null，则把f的prev指针设为newNode。最后还需要把size和modCount都加一，modCount的作用与在ArrayList中的相同。</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">getFirst方法源码分析</h3>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Returns the first element in this list. 
+     * * @return the first element in this list 
+     * @throws NoSuchElementException if this list is empty 
+*/
+public E getFirst() {    
+  final Node&lt;E&gt; f = first;    
+  if (f == null)        
+    throw new NoSuchElementException();    
+  return f.item;
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">这个方法的实现很简单，主需要直接返回first的item域（当first不为null时），若first为null，则抛出NoSuchElementException异常。</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">removeFirst方法源码分析</h3>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Removes and returns the first element from this list. 
+     * * @return the first element from this list 
+     * @throws NoSuchElementException if this list is empty 
+*/
+public E removeFirst() {    
+  final Node&lt;E&gt; f = first;    
+  if (f == null)        
+    throw new NoSuchElementException();    
+  return unlinkFirst(f);
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">unlinkFirst方法的源码如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Unlinks non-null first node f. */
+private E unlinkFirst(Node&lt;E&gt; f) {    
+  // assert f == first &amp;&amp; f != null;    
+  final E element = f.item;    
+  final Node&lt;E&gt; next = f.next;    
+  f.item = null;    
+  f.next = null; // help GC    
+  first = next;    
+  if (next == null)        
+    last = null;    
+  else        
+    next.prev = null;    
+  size--;    
+  modCount++;    
+  return element;
+}
+</code></pre>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">add(int index, E e)方法源码分析</h3>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Inserts the specified element at the specified position in this list. 
+     * Shifts the element currently at that position (if any) and any 
+     * subsequent elements to the right (adds one to their indices). 
+     * * @param index index at which the specified element is to be inserted 
+     * @param element element to be inserted 
+     * @throws IndexOutOfBoundsException {@inheritDoc} 
+*/
+public void add(int index, E element) {    
+  checkPositionIndex(index);    
+  if (index == size)        
+    linkLast(element);    
+  else        
+    linkBefore(element, node(index));
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">这个方法中，首先调用checkPositionIndex方法检查给定index是否在合法范围内。然后若index等于size，这说明要在链表尾插入元素，直接调用linkLast方法，这个方法的实现与之前介绍的linkFirst类似；若index小于size，则调用linkBefore方法，在index处的Node前插入一个新Node（node(index)会返回index处的Node）。linkBefore方法的源码如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Inserts element e before non-null Node succ. */
+void linkBefore(E e, Node&lt;E&gt; succ) {    
+  // assert succ != null;    
+  final Node&lt;E&gt; pred = succ.prev;    
+  final Node&lt;E&gt; newNode = new Node&lt;&gt;(pred, e, succ);    
+  succ.prev = newNode;    
+  if (pred == null)        
+    first = newNode;    
+  else        
+    pred.next = newNode;    
+  size++;    
+  modCount++;
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以看到，在知道要在哪个结点前插入一个新结点时，插入操作是很容易的，时间复杂度也只有O(1)。下面我们来看一下node方法是如何获取指定索引处的Node的：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Returns the (non-null) Node at the specified element index. */
+Node&lt;E&gt; node(int index) {    
+  // assert isElementIndex(index);    
+  if (index &lt; (size &gt;&gt; 1)) {        
+    Node&lt;E&gt; x = first;        
+    for (int i = 0; i &lt; index; i++)            
+      x = x.next;        
+    return x;    
+  } else {        
+    Node&lt;E&gt; x = last;        
+    for (int i = size - 1; i &gt; index; i--)            
+      x = x.prev;        
+    return x;    
+  }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">首先判断index位于链表的前半部分还是后半部分，若是前半部分，则从头结点开始遍历，否则从尾结点开始遍历，这样可以提升效率。我们可以看到，这个方法的时间复杂度为O(N)。</p>
+<h1 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-size:26px;margin:0px 0px 15px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);text-rendering:optimizeLegibility;">HashMap</h1>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">Map接口</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们先来看下它的定义：</p>
+<blockquote style="box-sizing:border-box;margin:0px 0px 20px;padding:20px;font-size:16px;border-left:6px solid rgb(180, 180, 180);margin-bottom:25px;background-color:rgb(247, 247, 247);font-weight:400;line-height:30px;word-break:break-word;">
+<p style="box-sizing:border-box;margin:0px 0px 25px;font-size:16px;font-weight:400;line-height:1.7;margin-bottom:0px;word-break:break-word;">一个把键映射到值的对象被称作一个映射表对象。映射表不能包含重复的键，每个键至多可以与一个值关联。Map接口提供了三个<strong style="box-sizing:border-box;font-weight:700;">集合视图</strong>：键的集合视图、值的集合视图以及键值对的集合视图。一个映射表的顺序取决于它的集合视图的迭代器返回元素的顺序。一些Map接口的具体实现（比如TreeMap）保证元素有一定的顺序，其它一些实现（比如HashMap）则不保证元素在其内部有序。</p>
+</blockquote>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">也就是说，Map接口定义了一个类似于“字典”的规范，让我们能够根据键快速检索到它所关联的值。我们先来看看Map接口定义了哪些方法：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">void clear()
+boolean containsKey(Object key) //判断是否包含指定键
+boolean containsValue(Object value) //判断是否包含指定值
+boolean isEmpty()
+V get(Object key) //返回指定键映射的值
+V put(K key, V value) //放入指定的键值对
+V remove(Object key)
+int size()
+Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet() 
+Set&lt;K&gt; keySet()
+Collection&lt;V&gt; values()
+</code></pre>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">HashMap的定义</h3>
+<blockquote style="box-sizing:border-box;margin:0px 0px 20px;padding:20px;font-size:16px;border-left:6px solid rgb(180, 180, 180);margin-bottom:25px;background-color:rgb(247, 247, 247);font-weight:400;line-height:30px;word-break:break-word;">
+<p style="box-sizing:border-box;margin:0px 0px 25px;font-size:16px;font-weight:400;line-height:1.7;margin-bottom:0px;word-break:break-word;">HashMap&lt;K, V&gt;是基于哈希表这个数据结构的Map接口具体实现，允许null键和null值（最多只允许一个key为null，但允许多个value为null）。这个类与HashTable近似等价，区别在于HashMap不是线程安全的并且允许null键和null值。由于基于哈希表实现，所以HashMap内部的元素是无序的。HashMap对与get与put操作的时间复杂度是常数级别的（在散列均匀的前提下）。对HashMap的集合视图进行迭代所需时间与HashMap的capacity（bucket的数量）加上HashMap的尺寸（键值对的数量）成正比。因此，若迭代操作的性能很重要，不要把初始capacity设的过高（不要把load factor设的过低）。</p>
+</blockquote>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">（对散列表（哈希表）这种数据结构还不太熟悉的小伙伴请戳这里<a href="https://www.jianshu.com/p/01028590ada2" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">散列表的原理与实现</a>）<br style="box-sizing:border-box;"/>
+有两个因素会影响一个HashMap的性能：intial capacity（初始容量）和load factor（负载因子）。intial capacity就是HashMap对象刚创建时其内部的哈希表的“桶”的数量。load factor等于maxSize / capacity，也就是HashMap所允许的最大键值对数与桶数的比值。增大load factor可以节省空间但查找一个元素的时间会增加，减小load factor会占用更多的存储空间，但是get与put的操作会更快。当HashMap中的键值对数量超过了maxSize（即load factor与capacity的乘积），它会再散列，再散列会重建内部数据结构，桶数（capacity）大约会增加到原来的两<br style="box-sizing:border-box;"/>
+倍。<br style="box-sizing:border-box;"/>
+HashMap默认的load factor大小为0.75，这个数值在时间与空间上做了很好的权衡。当我们清楚自己将要大概存放多少数据时，也可以自定义load factor的大小。<br style="box-sizing:border-box;"/>
+HashMap的常用方法如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">void clear()
+boolean containsKey(Object key)
+boolean containsValue(Object value)
+V get(Object key)
+V put(K key, V value)
+boolean isEmpty()
+V remove(Object key)
+int size()
+Collection&lt;V&gt; values()
+Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet()
+Set&lt;K&gt; keySet()
+</code></pre>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">HashMap的构造器</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">HashMap有以下几个构造器：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">HashMap()
+HashMap(int initialCapacity)
+HashMap(int initialCapacity, float loadFactor)
+HashMap(Map&lt;? extends K,? extends V&gt; m) //创建一个新的HashMap，用m的数据填充
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">无参构造器的源码如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Constructs an empty &lt;tt&gt;HashMap&lt;/tt&gt; with the default initial capacity * (16) and the default load factor (0.75). */
+public HashMap() {    
+this.loadFactor = DEFAULT_LOAD_FACTOR; // all other fields defaulted
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">这个构造器把loadFactor域设为DEFAULT_LOAD_FACTOR（0.75），其他域都保持默认值。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们再来看下第三个构造器的源码：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * Constructs an empty &lt;tt&gt;HashMap&lt;/tt&gt; with the specified initial 
+     * capacity and load factor. 
+     * * @param  initialCapacity the initial capacity 
+     * @param  loadFactor      the load factor 
+     * @throws IllegalArgumentException if the initial capacity is negative 
+     *         or the load factor is nonpositive 
+*/
+public HashMap(int initialCapacity, float loadFactor) {    
+  if (initialCapacity &lt; 0)        
+    throw new IllegalArgumentException(&quot;Illegal initial capacity: &quot; +                                           initialCapacity);    
+  if (initialCapacity &gt; MAXIMUM_CAPACITY)        
+    initialCapacity = MAXIMUM_CAPACITY;    
+  if (loadFactor &lt;= 0 || Float.isNaN(loadFactor))        
+    throw new IllegalArgumentException(&quot;Illegal load factor: &quot; +                                           loadFactor);    
+  this.loadFactor = loadFactor;    
+  this.threshold = tableSizeFor(initialCapacity);
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">以上源码中的threshold即为上面提到的maxSize（loadFactor与capacity的乘积）。tableSizeFor方法会根据给定的initialCapacity返回一个值作为maxSize。</p>
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">基本实现原理</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">HashMap是基于拉链法处理碰撞的散列表的实现，一个存储整型元素的HashMap的内部存储结构如下图所示：</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:rgb(238, 238, 238);transition:background-color 0.1s linear;margin:0px auto;max-width:541px;max-height:456px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:84.28999999999999%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img height="0" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(4px);opacity:0.3;cursor:zoom-in;" width="0"></img></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">linked.jpg</div>
+</div><br style="box-sizing:border-box;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以看到，HashMap是采用数组+链表实现的，在JDK 1.8中，对HashMap做了进一步优化，引入了红黑树。当链表的长度大于8时，就会使用红黑树来代替链表。</p>
+
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">put方法源码分析</h3>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">在分析put方法前，我们先来看下HashMap的如下字段：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">/** * The table, initialized on first use, and resized as 
+     * necessary. When allocated, length is always a power of two. 
+     * (We also tolerate length zero in some operations to allow 
+     * bootstrapping mechanics that are currently not needed.) 
+*/
+transient Node&lt;K,V&gt;[] table;
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">table字段是一个Node&lt;K, V&gt;数组，这个数组由链表的头结点组成。我们再来看一下Node&lt;K, V&gt;的定义：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">static class Node&lt;K,V&gt; implements Map.Entry&lt;K,V&gt; {    
+  final int hash;    
+  final K key;    
+  V value;    
+  Node&lt;K,V&gt; next;    
+  Node(int hash, K key, V value, Node&lt;K,V&gt; next) {        
+    this.hash = hash; //&quot;桶号&quot;，即该Node在数组的索引       
+    this.key = key;        
+    this.value = value;        
+    this.next = next;    
+  }    
+  public final K getKey() { 
+    return key; 
+  }    
+  public final V getValue() {   
+    return value; 
+  }    
+  public final String toString() { 
+    return key + &quot;=&quot; + value; 
+  }    
+  public final int hashCode() {        
+    return Objects.hashCode(key) ^ Objects.hashCode(value);    
+  }    
+  public final V setValue(V newValue) {        
+    V oldValue = value;        
+    value = newValue;        
+    return oldValue;    
+  }    
+  . . . 
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">Node类的hash域为它在Node数组中的索引，next域为它的下一个Node，key、value分别为保存在Node中的键和值。<br style="box-sizing:border-box;"/>
+接下来我们看看put方法的源码：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">public V put(K key, V value) {    
+  return putVal(hash(key), key, value, false, true);
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">这个方法内部实际上调用了putVal方法来干活，hash方法会返回给定key在HashMap中的桶号（即key所在Node在Node数组中的索引），实际上hash方法的作用是在key的hashCode方法的基础上进一步增加哈希值的随机度。putVal方法的源码如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {    
+  Node&lt;K,V&gt;[] tab; 
+  Node&lt;K,V&gt; p; 
+  int n, i;    
+  //若table为空或table的length为0则需要通过resize方法扩容
+  if ((tab = table) == null || (n = tab.length) == 0)        
+    n = (tab = resize()).length; 
+  //让传入的hash与n-1做与运算从而得到目标Node的索引
+  //若该索引处为null，则直接插入包含了key-value pair的new Node   
+  if ((p = tab[i = (n - 1) &amp; hash]) == null)        
+    tab[i] = newNode(hash, key, value, null);    
+  else {        
+    //若索引处不为null，则判断key是否存在
+    Node&lt;K,V&gt; e; 
+    K k;        
+    //若key存在，则直接覆盖value
+    if (p.hash == hash &amp;&amp; ((k = p.key) == key || (key != null &amp;&amp; key.equals(k))))
+      e = p; 
+    //若key不存在，则判断table[i]是否为TreeNode       
+    else if (p instanceof TreeNode)            
+      //若是的话，说明此处为红黑树，直接插入key-value pair
+      e = ((TreeNode&lt;K,V&gt;)p).putTreeVal(this, tab, hash, key, value);
+      //否则遍历链表        
+      else {            
+        for (int binCount = 0; ; ++binCount) {                
+          if ((e = p.next) == null) {                    
+            p.next = newNode(hash, key, value, null);      
+            //链表长度大于8则转为红黑树              
+            if (binCount &gt;= TREEIFY_THRESHOLD - 1) // -1 for 1st                        
+              treeifyBin(tab, hash);                    
+            break;                
+          }
+          //若key已经存在则直接覆盖value                
+          if (e.hash == hash &amp;&amp; ((k = e.key) == key || (key != null &amp;&amp; key.equals(k))))                    
+            break;                
+          p = e;            
+       }        
+     }        
+     if (e != null) { // existing mapping for key            
+       V oldValue = e.value;            
+       if (!onlyIfAbsent || oldValue == null)                
+         e.value = value;            
+       afterNodeAccess(e);            
+       return oldValue;        
+    }    
+  }    
+  ++modCount;    
+  //若超过maxSize，则扩容
+  if (++size &gt; threshold)        
+    resize();    
+  afterNodeInsertion(evict);    
+  return null;
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">以上代码的工作过程可以总结为下图：</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:rgb(238, 238, 238);transition:background-color 0.1s linear;margin:0px auto;max-width:600px;max-height:475px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:79.17%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img height="0" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(4px);opacity:0.3;cursor:zoom-in;" width="0"></img></div>
+</div>
+<div style="padding:10px;box-sizing:border-box;max-width:80%;min-height:22px;display:inline-block;min-width:20%;margin:0px auto;border-bottom:1px solid rgb(217, 217, 217);font-size:14px;color:rgb(150, 150, 150);line-height:1.7;">put.png</div>
+</div><br style="box-sizing:border-box;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">关于HashMap我们还需要知道它的扩容方法resize的时间消耗比较大，因此我们在能够估计到大致需要存储的数据量时，应该为其指定一个合适的初始容量。</p>
+
+<h3 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:22px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">get方法源码分析</h3>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">public V get(Object key) {    
+  Node&lt;K,V&gt; e;    
+  return (e = getNode(hash(key), key)) == null ? null : e.value;
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以看到这个方法内部调用了getNode方法以获取key所在的Node，若成功获取到了，则返回key对应的value，否则返回null。getNode方法的源码如下：</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">final Node&lt;K,V&gt; getNode(int hash, Object key) {    
+  Node&lt;K,V&gt;[] tab; 
+  Node&lt;K,V&gt; first, e; 
+  int n; 
+  K k;    
+  //若table不为空且长度大于0且指定索引处Node不为空
+  //则进一步进行其他判断，否则直接返回null
+  if ((tab = table) != null &amp;&amp; (n = tab.length) &gt; 0 
+    &amp;&amp; (first = tab[(n - 1) &amp; hash]) != null) {
+      //指定索引处的Node即为我们要找的Node，直接返回即可        
+      if (first.hash == hash &amp;&amp; // always check first node            
+          ((k = first.key) == key || (key != null &amp;&amp; key.equals(k))))            
+        return first;
+      //我们的目标Node和first处于同一红黑树或同一链表中，
+      //位于first之后        
+      if ((e = first.next) != null) {            
+        //first为红黑树
+        if (first instanceof TreeNode)                
+          return ((TreeNode&lt;K,V&gt;)first).getTreeNode(hash, key);              
+        //first为链表
+        do {                
+          if (e.hash == hash &amp;&amp;                    
+             ((k = e.key) == key || (key != null &amp;&amp; key.equals(k))))                    
+            return e;            
+        } while ((e = e.next) != null);        
+      }    
+    }    
+    return null;
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">理解了putVal方法，getNode方法的逻辑便很容易理解了。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">以上是我从源码角度对ArrayList，LinkedList，HashMap这三种常用数据结构所做的分析，若有不准确或是不清晰的地方，希望大家指出，谢谢大家：）</p>
+<h1 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-size:26px;margin:0px 0px 15px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);text-rendering:optimizeLegibility;">参考资料</h1>
+<ol style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">Java Docs</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;"><a href="https://link.jianshu.com/?t=https://zhuanlan.zhihu.com/p/21673805" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">Java 8之重新认识HashMap</a></li>
+</ol>
+<hr style="border-left-color:initial;box-sizing:content-box;border-width:1px 0px 0px;border-right-style:initial;border-bottom-style:initial;border-left-style:initial;border-right-color:initial;border-bottom-color:initial;height:0px;border-image:initial;border-top-style:solid;margin-bottom:20px;margin-top:20px;border-top-color:rgb(238, 238, 238);border-top:1px solid rgb(221, 221, 221);margin:0px 0px 20px;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">**长按或扫描二维码关注我们，让您利用每天等地铁的时间就能学会怎样写出优质app。 **</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:rgb(238, 238, 238);transition:background-color 0.1s linear;margin:0px auto;max-width:430px;max-height:430px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:100.0%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img height="0" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(4px);opacity:0.3;cursor:zoom-in;" width="0"></img></div>
+</div>
+
+</div>
+
+        </div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

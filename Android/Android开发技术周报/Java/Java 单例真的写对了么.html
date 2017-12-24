@@ -1,0 +1,196 @@
+<html>
+<head>
+  <title>Java 单例真的写对了么?</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3681"/>
+<h1>Java 单例真的写对了么?</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="font-family:sans-serif;text-size-adjust:100%;font-size:62.5%;-webkit-tap-highlight-color:rgba(0, 0, 0, 0);"><div style="font-family:Merriweather, serif;letter-spacing:0.01rem;font-size:1.8rem;line-height:1.75em;color:rgb(58, 65, 69);font-feature-settings:'kern' 1;text-rendering:geometricPrecision;"><div style="background:rgb(255, 255, 255);transition:transform 0.5s ease;"><span style="overflow:hidden;"><div style="word-wrap:break-word;">
+
+        <div style="display:block;margin-bottom:3.4rem;">
+            <h1 style="font-size:5rem;margin:0px 0px 0.4em;font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;letter-spacing:-2px;text-indent:-3px;margin-bottom:0px;">Java 单例真的写对了么?</h1>
+            <div style="display:block;font-family:&quot;Open Sans&quot;, sans-serif;font-size:1.5rem;line-height:2.2rem;color:rgb(158, 171, 179);margin:0px;">
+                <span style="display:inline-block;border-left:1px solid rgb(213, 219, 222);text-transform:uppercase;font-size:1.3rem;white-space:nowrap;padding:0px;margin:0px;border:none;">22 March 2016</span>  on <a href="https://race604.com/tag/android/" style="background:transparent;transition:color 0.3s ease;color:rgb(158, 171, 179);text-decoration:none;">Android</a>
+            </div>
+        </div>
+
+        <div style="display:block;">
+            <p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">单例模式是最简单的设计模式，实现也非常“简单”。一直以为我写没有问题，直到被 Coverity 打脸。</p>
+
+<h2 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;margin:0px 0px 0.4em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;font-size:3.6rem;letter-spacing:-1px;">1. 暴露问题</h2>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">前段时间，有段代码被 Coverity 警告了，简化一下代码如下，为了方便后面分析，我在这里标上了一些序号：</p>
+
+<pre style="border-radius:0.3em;word-wrap:normal;font-size:0.9em;box-sizing:border-box;width:100%;border:1px solid rgb(227, 237, 243);direction:ltr;margin:0.5em 0px;overflow:auto;background:rgb(39, 40, 34);white-space:pre;color:rgb(248, 248, 242);text-shadow:rgba(0, 0, 0, 0.3) 0px 1px;padding:1em;text-align:left;word-spacing:normal;word-break:normal;line-height:1.5;tab-size:4;hyphens:none;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, monospace;"><code style="text-shadow:rgba(0, 0, 0, 0.3) 0px 1px;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, monospace;padding:0px;white-space:pre;border:none;background:transparent;border-radius:2px;color:rgb(248, 248, 242);font-size:inherit;direction:ltr;text-align:left;word-spacing:normal;word-break:normal;line-height:1.5;tab-size:4;hyphens:none;"><span style="color:rgb(102, 217, 239);">private</span> <span style="color:rgb(102, 217, 239);">static</span> SettingsDbHelper sInst <span style="color:rgb(248, 248, 242);">=</span> null<span style="color:rgb(248, 248, 242);">;</span>  
+<span style="color:rgb(102, 217, 239);">public</span> <span style="color:rgb(102, 217, 239);">static</span> SettingsDbHelper <span>getInstance<span style="color:rgb(248, 248, 242);">(</span></span>Context context<span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>  
+    <span style="color:rgb(102, 217, 239);">if</span> <span style="color:rgb(248, 248, 242);">(</span>sInst <span style="color:rgb(248, 248, 242);">==</span> null<span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>                              <span style="color:slategray;">// 1
+</span>        <span style="color:rgb(102, 217, 239);">synchronized</span> <span style="color:rgb(248, 248, 242);">(</span>SettingsDbHelper<span style="color:rgb(248, 248, 242);">.</span><span style="color:rgb(102, 217, 239);">class</span><span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>       <span style="color:slategray;">// 2
+</span>            SettingsDbHelper inst <span style="color:rgb(248, 248, 242);">=</span> sInst<span style="color:rgb(248, 248, 242);">;</span>            <span style="color:slategray;">// 3
+</span>            <span style="color:rgb(102, 217, 239);">if</span> <span style="color:rgb(248, 248, 242);">(</span>inst <span style="color:rgb(248, 248, 242);">==</span> null<span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>                       <span style="color:slategray;">// 4
+</span>                inst <span style="color:rgb(248, 248, 242);">=</span> <span style="color:rgb(102, 217, 239);">new</span> <span>SettingsDbHelper</span><span style="color:rgb(248, 248, 242);">(</span>context<span style="color:rgb(248, 248, 242);">)</span><span style="color:rgb(248, 248, 242);">;</span> <span style="color:slategray;">// 5
+</span>                sInst <span style="color:rgb(248, 248, 242);">=</span> inst<span style="color:rgb(248, 248, 242);">;</span>                         <span style="color:slategray;">// 6
+</span>            <span style="color:rgb(248, 248, 242);">}</span>
+        <span style="color:rgb(248, 248, 242);">}</span>
+    <span style="color:rgb(248, 248, 242);">}</span>
+    <span style="color:rgb(102, 217, 239);">return</span> sInst<span style="color:rgb(248, 248, 242);">;</span>                                     <span style="color:slategray;">// 7
+</span><span style="color:rgb(248, 248, 242);">}</span>
+</code></pre>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">大家知道，这可是高大上的 <em>Double Checked locking</em> 模式，保证多线程安全，而且高性能的单例实现，比下面的单例实现，“逼格”不知道高到哪里去了：</p>
+
+<pre style="border-radius:0.3em;word-wrap:normal;font-size:0.9em;box-sizing:border-box;width:100%;border:1px solid rgb(227, 237, 243);direction:ltr;margin:0.5em 0px;overflow:auto;background:rgb(39, 40, 34);white-space:pre;color:rgb(248, 248, 242);text-shadow:rgba(0, 0, 0, 0.3) 0px 1px;padding:1em;text-align:left;word-spacing:normal;word-break:normal;line-height:1.5;tab-size:4;hyphens:none;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, monospace;"><code style="text-shadow:rgba(0, 0, 0, 0.3) 0px 1px;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, monospace;padding:0px;white-space:pre;border:none;background:transparent;border-radius:2px;color:rgb(248, 248, 242);font-size:inherit;direction:ltr;text-align:left;word-spacing:normal;word-break:normal;line-height:1.5;tab-size:4;hyphens:none;"><span style="color:rgb(102, 217, 239);">private</span> <span style="color:rgb(102, 217, 239);">static</span> SettingsDbHelper sInst <span style="color:rgb(248, 248, 242);">=</span> null<span style="color:rgb(248, 248, 242);">;</span>  
+<span style="color:rgb(102, 217, 239);">public</span> <span style="color:rgb(102, 217, 239);">static</span> <span style="color:rgb(102, 217, 239);">synchronized</span> SettingsDbHelper <span>getInstance<span style="color:rgb(248, 248, 242);">(</span></span>Context context<span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>  
+    <span style="color:rgb(102, 217, 239);">if</span> <span style="color:rgb(248, 248, 242);">(</span>sInst <span style="color:rgb(248, 248, 242);">==</span> null<span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>
+        sInst <span style="color:rgb(248, 248, 242);">=</span> <span style="color:rgb(102, 217, 239);">new</span> <span>SettingsDbHelper</span><span style="color:rgb(248, 248, 242);">(</span>context<span style="color:rgb(248, 248, 242);">)</span><span style="color:rgb(248, 248, 242);">;</span>
+    <span style="color:rgb(248, 248, 242);">}</span>
+    <span style="color:rgb(102, 217, 239);">return</span> sInst<span style="color:rgb(248, 248, 242);">;</span>
+<span style="color:rgb(248, 248, 242);">}</span>
+</code></pre>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">你一个机器人竟敢警告我代码写的不对，我一度怀疑它不认识这种写法（后面将证明我是多么幼稚，啪。。。）。然后，它认真的给我分析这段代码为什么有问题，如下图所示：</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;"><img src="Java 单例真的写对了么_files/coverity-report.jpg" type="image/jpeg" data-filename="coverity-report.jpg" alt="coverity-report" height="435" style="border:0px;display:block;max-width:126%;height:auto;padding:0.6em 0px;position:relative;left:50%;transform:translateX(-50%);" width="894"/></p>
+
+<h2 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;margin:0px 0px 0.4em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;font-size:3.6rem;letter-spacing:-1px;">2. 原因分析</h2>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">Coverity 是静态代码分析工具，它会模拟其实际运行情况。例如这里，假设有两个线程进入到这段代码，其中红色的部分是运行的步骤解析，开头的标号表示其运行顺序。关于 Coverity 的详细文档可以参考<a href="https://ondemand.coverity.com/reference/" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">这里</a>，这里简单解析一下其运行情况如下：</p>
+
+<ol style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;padding-left:3rem;">
+<li style="margin:0.4em 0px;">线程 1 运行到 1 处，第一次进入，这里肯定是为 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">true</code> 的；  </li>
+<li style="margin:0.4em 0px;">线程 1 运行到 2 处，获得锁 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">SettingsDbHelper.class</code>；  </li>
+<li style="margin:0.4em 0px;">线程 1 运行到 3 和 4 处，赋值 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">inst = sInst</code>，这时 sInst 还是 null，所以继续往下运行，创建一个新的实例；  </li>
+<li style="margin:0.4em 0px;">线程 1 运行到 6 处，修改 sInst 的值。这一步非常关键，这里的解析是，因为这些修改可能因为和其他赋值操作运行被重新排序（Re-order），这就可能导致先修改了 sInst 的值，而 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">new SettingsDbHelper(context)</code> 这个构造函数并没有执行完。而在这个时候，程序切换到线程 2；  </li>
+<li style="margin:0.4em 0px;">线程 2 运行到 1 处，因为第 4 步的时候，线程 1 已经给 sInst 赋值了，所以 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">sInst == null</code> 的判断为 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">false</code>，线程 2 就直接返回 sInst 了，但是这个时候 sInst 并没有被初始化完成，直接使用它可能会导致程序崩溃。</li>
+</ol>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">上面解析得好像很清楚，但是关键在第 4 步，为什么会出现 Re-Order？赋值了，但没有初始化又是怎么回事？这是由于 Java 的内存模型决定的。问题主要出现在这 5 和 6 两行，这里的构造函数可能会被编译成内联的（inline），在 Java 虚拟机中运行的时候编译成执行指令以后，可以用如下的伪代码来表示：</p>
+
+<pre style="width:100%;font-family:Inconsolata, monospace, sans-serif;white-space:pre;box-sizing:border-box;margin:0px 0px 1.75em;border:1px solid rgb(227, 237, 243);font-size:0.9em;padding:10px;overflow:auto;background:rgb(247, 250, 251);border-radius:3px;word-wrap:normal;hyphens:none;"><code style="font-family:Inconsolata, monospace, sans-serif;border-radius:2px;font-size:inherit;padding:0px;white-space:pre;border:none;background:transparent;">inst = allocat()； // 分配内存  
+sInst = inst;  
+constructor(inst); // 真正执行构造函数  
+</code></pre>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">说到内存模型，这里就不小心触及了 Java 中比较复杂的内容——多线程编程和 Java 内存模型。在这里，我们可以简单的理解就是，构造函数可能会被分为两块：先分配内存并赋值，再初始化。关于 Java 内存模型（JMM）的详解，可以参考这个系列文章 <a href="http://www.infoq.com/cn/articles/java-memory-model-1" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">《深入理解Java内存模型》</a>，一共有 7 篇（<a href="http://www.infoq.com/cn/articles/java-memory-model-1" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">一</a>，<a href="http://www.infoq.com/cn/articles/java-memory-model-2" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">二</a>，<a href="http://www.infoq.com/cn/articles/java-memory-model-3" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">三</a>，<a href="http://www.infoq.com/cn/articles/java-memory-model-4" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">四</a>，<a href="http://www.infoq.com/cn/articles/java-memory-model-5" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">五</a>，<a href="http://www.infoq.com/cn/articles/java-memory-model-6" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">六</a>，<a href="http://www.infoq.com/cn/articles/java-memory-model-7" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">七</a>）。</p>
+
+<h2 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;margin:0px 0px 0.4em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;font-size:3.6rem;letter-spacing:-1px;">3. 解决方案</h2>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">上面的问题的解决方法是，在 Java 5 之后，引入扩展关键字 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">volatile</code> 的功能，它能保证：</p>
+
+<blockquote style="box-sizing:border-box;margin:1.75em 0px 1.75em -2.2em;padding:0px 0px 0px 1.75em;border-left:0.4em solid rgb(74, 74, 74);">
+  <p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;text-rendering:geometricPrecision;margin:0.8em 0px;font-style:italic;">对 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">volatile</code> 变量的写操作，不允许和它之前的读写操作打乱顺序；对 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">volatile</code> 变量的读操作，不允许和它之后的读写乱序。</p>
+</blockquote>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">关于 <strong style="font-weight:700;">volatile</strong> 关键字原理详解请参考上面的 <a href="http://www.infoq.com/cn/articles/java-memory-model-4" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;"><em>深入理解内存模型（四）</em></a>。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">所以，上面的操作，只需要对 sInst 变量添加 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">volatile</code> 关键字修饰即可。但是，我们知道，对 volatile 变量的读写操作是一个比较重的操作，所以上面的代码还可以优化一下，如下：</p>
+
+<pre style="border-radius:0.3em;word-wrap:normal;font-size:0.9em;box-sizing:border-box;width:100%;border:1px solid rgb(227, 237, 243);direction:ltr;margin:0.5em 0px;overflow:auto;background:rgb(39, 40, 34);white-space:pre;color:rgb(248, 248, 242);text-shadow:rgba(0, 0, 0, 0.3) 0px 1px;padding:1em;text-align:left;word-spacing:normal;word-break:normal;line-height:1.5;tab-size:4;hyphens:none;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, monospace;"><code style="text-shadow:rgba(0, 0, 0, 0.3) 0px 1px;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, monospace;padding:0px;white-space:pre;border:none;background:transparent;border-radius:2px;color:rgb(248, 248, 242);font-size:inherit;direction:ltr;text-align:left;word-spacing:normal;word-break:normal;line-height:1.5;tab-size:4;hyphens:none;"><span style="color:rgb(102, 217, 239);">private</span> <span style="color:rgb(102, 217, 239);">static</span> <span style="color:rgb(102, 217, 239);">volatile</span> SettingsDbHelper sInst <span style="color:rgb(248, 248, 242);">=</span> null<span style="color:rgb(248, 248, 242);">;</span>  <span style="color:slategray;">// &lt;&lt;&lt; 这里添加了 volatile  
+</span><span style="color:rgb(102, 217, 239);">public</span> <span style="color:rgb(102, 217, 239);">static</span> SettingsDbHelper <span>getInstance<span style="color:rgb(248, 248, 242);">(</span></span>Context context<span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>  
+    SettingsDbHelper inst <span style="color:rgb(248, 248, 242);">=</span> sInst<span style="color:rgb(248, 248, 242);">;</span>  <span style="color:slategray;">// &lt;&lt;&lt; 在这里创建临时变量
+</span>    <span style="color:rgb(102, 217, 239);">if</span> <span style="color:rgb(248, 248, 242);">(</span>inst <span style="color:rgb(248, 248, 242);">==</span> null<span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>
+        <span style="color:rgb(102, 217, 239);">synchronized</span> <span style="color:rgb(248, 248, 242);">(</span>SettingsDbHelper<span style="color:rgb(248, 248, 242);">.</span><span style="color:rgb(102, 217, 239);">class</span><span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>
+            inst <span style="color:rgb(248, 248, 242);">=</span> sInst<span style="color:rgb(248, 248, 242);">;</span>
+            <span style="color:rgb(102, 217, 239);">if</span> <span style="color:rgb(248, 248, 242);">(</span>inst <span style="color:rgb(248, 248, 242);">==</span> null<span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>
+                inst <span style="color:rgb(248, 248, 242);">=</span> <span style="color:rgb(102, 217, 239);">new</span> <span>SettingsDbHelper</span><span style="color:rgb(248, 248, 242);">(</span>context<span style="color:rgb(248, 248, 242);">)</span><span style="color:rgb(248, 248, 242);">;</span>
+                sInst <span style="color:rgb(248, 248, 242);">=</span> inst<span style="color:rgb(248, 248, 242);">;</span>
+            <span style="color:rgb(248, 248, 242);">}</span>
+        <span style="color:rgb(248, 248, 242);">}</span>
+    <span style="color:rgb(248, 248, 242);">}</span>
+    <span style="color:rgb(102, 217, 239);">return</span> inst<span style="color:rgb(248, 248, 242);">;</span>  <span style="color:slategray;">// &lt;&lt;&lt; 注意这里返回的是临时变量
+</span><span style="color:rgb(248, 248, 242);">}</span>
+</code></pre>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">通过这样修改以后，在运行过程中，除了第一次以外，其他的调用只要访问 volatile 变量 sInst 一次，这样能提高 25% 的性能（<a href="https://en.wikipedia.org/wiki/Double-checked_locking#Usage_in_Java" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">Wikipedia</a>）。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">有读者提到，这里为什么需要再定义一个临时变量 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">inst</code>？通过前面的对 <em>volatile</em> 关键字作用解释可知，访问 volatile 变量，需要保证一些执行顺序，所以的开销比较大。这里定义一个临时变量，在 <code style="font-family:Inconsolata, monospace, sans-serif;font-size:0.85em;padding:1px 3px;white-space:pre-wrap;border:1px solid rgb(227, 237, 243);background:rgb(247, 250, 251);border-radius:2px;">sInst</code> 不为空的时候（这是绝大部分的情况），只要在开始访问一次 volatile 变量，返回的是临时变量。如果没有此临时变量，则需要访问两次，而降低了效率。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">最后，关于单例模式，还有一个更有趣的实现，它能够延迟初始化（lazy initialization），并且多线程安全，还能保证高性能，如下：</p>
+
+<pre style="border-radius:0.3em;word-wrap:normal;font-size:0.9em;box-sizing:border-box;width:100%;border:1px solid rgb(227, 237, 243);direction:ltr;margin:0.5em 0px;overflow:auto;background:rgb(39, 40, 34);white-space:pre;color:rgb(248, 248, 242);text-shadow:rgba(0, 0, 0, 0.3) 0px 1px;padding:1em;text-align:left;word-spacing:normal;word-break:normal;line-height:1.5;tab-size:4;hyphens:none;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, monospace;"><code style="text-shadow:rgba(0, 0, 0, 0.3) 0px 1px;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, monospace;padding:0px;white-space:pre;border:none;background:transparent;border-radius:2px;color:rgb(248, 248, 242);font-size:inherit;direction:ltr;text-align:left;word-spacing:normal;word-break:normal;line-height:1.5;tab-size:4;hyphens:none;"><span style="color:rgb(102, 217, 239);">class</span> <span>Foo</span> <span style="color:rgb(248, 248, 242);">{</span>  
+    <span style="color:rgb(102, 217, 239);">private</span> <span style="color:rgb(102, 217, 239);">static</span> <span style="color:rgb(102, 217, 239);">class</span> <span>HelperHolder</span> <span style="color:rgb(248, 248, 242);">{</span>
+       <span style="color:rgb(102, 217, 239);">public</span> <span style="color:rgb(102, 217, 239);">static</span> <span style="color:rgb(102, 217, 239);">final</span> Helper helper <span style="color:rgb(248, 248, 242);">=</span> <span style="color:rgb(102, 217, 239);">new</span> <span>Helper</span><span style="color:rgb(248, 248, 242);">(</span><span style="color:rgb(248, 248, 242);">)</span><span style="color:rgb(248, 248, 242);">;</span>
+    <span style="color:rgb(248, 248, 242);">}</span>
+
+    <span style="color:rgb(102, 217, 239);">public</span> <span style="color:rgb(102, 217, 239);">static</span> Helper <span>getHelper<span style="color:rgb(248, 248, 242);">(</span></span><span style="color:rgb(248, 248, 242);">)</span> <span style="color:rgb(248, 248, 242);">{</span>
+        <span style="color:rgb(102, 217, 239);">return</span> HelperHolder<span style="color:rgb(248, 248, 242);">.</span>helper<span style="color:rgb(248, 248, 242);">;</span>
+    <span style="color:rgb(248, 248, 242);">}</span>
+<span style="color:rgb(248, 248, 242);">}</span>
+</code></pre>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">延迟初始化，这里是利用了 Java 的语言特性，内部类只有在使用的时候，才回去加载，从而初始化内部静态变量。关于线程安全，这是 Java 运行环境自动给你保证的，在加载的时候，会自动隐形的同步。在访问对象的时候，不需要同步 Java 虚拟机又会自动给你取消同步，所以效率非常高。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">另外，关于 <strong style="font-weight:700;">final</strong> 关键字的原理，请参考 <a href="http://www.infoq.com/cn/articles/java-memory-model-6" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;"><em>深入理解Java内存模型（六）</em></a>。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">补充一下，有同学提醒有一种更加 Hack 的实现方式--单个成员的<strong style="font-weight:700;">枚举</strong>，据称是最佳的单例实现方法，如下：</p>
+
+<pre style="border-radius:0.3em;word-wrap:normal;font-size:0.9em;box-sizing:border-box;width:100%;border:1px solid rgb(227, 237, 243);direction:ltr;margin:0.5em 0px;overflow:auto;background:rgb(39, 40, 34);white-space:pre;color:rgb(248, 248, 242);text-shadow:rgba(0, 0, 0, 0.3) 0px 1px;padding:1em;text-align:left;word-spacing:normal;word-break:normal;line-height:1.5;tab-size:4;hyphens:none;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, monospace;"><code style="text-shadow:rgba(0, 0, 0, 0.3) 0px 1px;font-family:Consolas, Monaco, &quot;Andale Mono&quot;, monospace;padding:0px;white-space:pre;border:none;background:transparent;border-radius:2px;color:rgb(248, 248, 242);font-size:inherit;direction:ltr;text-align:left;word-spacing:normal;word-break:normal;line-height:1.5;tab-size:4;hyphens:none;"><span style="color:rgb(102, 217, 239);">public</span> <span style="color:rgb(102, 217, 239);">enum</span> Foo <span style="color:rgb(248, 248, 242);">{</span>  
+    INSTANCE<span style="color:rgb(248, 248, 242);">;</span>
+<span style="color:rgb(248, 248, 242);">}</span>
+</code></pre>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">详情可以参考 <a href="http://stackoverflow.com/questions/70689/what-is-an-efficient-way-to-implement-a-singleton-pattern-in-java" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">这里</a>。</p>
+
+<h3 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;margin:0px 0px 0.4em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;font-size:3rem;">4. 总结</h3>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">在 Java 中，涉及到多线程编程，问题就会复杂很多，有些 Bug 甚至会超出你的想象。通过上面的介绍，开始对自己的代码运行情况都不那么自信了。其实大可不必这样担心，这种仅仅发生在多线程编程中，遇到有临界值访问的时候，直接使用 <strong style="font-weight:700;">synchronized</strong> 关键字能够解决绝大部分的问题。</p>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">对于 Coverity，开始抱着敬畏知心，它是由一流的计算机科学家创建的。Coverity 作为一个程序，本身知道的东西比我们多得多，而且还比我认真，它指出的问题必须认真对待和分析。</p>
+
+<hr style="border-right-color:initial;box-sizing:content-box;display:block;border-width:1px 0px 0px;border-right-style:initial;border-bottom-style:initial;border-left-style:initial;height:1px;border-bottom-color:initial;border-left-color:initial;border-image:initial;border-top-style:solid;border-top-color:rgb(239, 239, 239);margin:3.2em 0px;padding:0px;"/>
+
+<p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;">参考文章：</p>
+
+<ol style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;margin:0px 0px 1.75em;text-rendering:geometricPrecision;padding-left:3rem;">
+<li style="margin:0.4em 0px;"><a href="https://en.wikipedia.org/wiki/Double-checked_locking" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">https://en.wikipedia.org/wiki/Double-checked_locking</a>  </li>
+<li style="margin:0.4em 0px;"><a href="http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html</a>  </li>
+<li style="margin:0.4em 0px;"><a href="http://www.oracle.com/technetwork/articles/javase/bloch-effective-08-qa-140880.html" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">http://www.oracle.com/technetwork/articles/javase/bloch-effective-08-qa-140880.html</a>  </li>
+<li style="margin:0.4em 0px;"><a href="http://www.ibm.com/developerworks/java/library/j-dcl/index.html" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">http://www.ibm.com/developerworks/java/library/j-dcl/index.html</a>  </li>
+<li style="margin:0.4em 0px;"><a href="http://www.infoq.com/cn/articles/java-memory-model-1" style="background:transparent;color:rgb(74, 74, 74);transition:color 0.3s ease;">http://www.infoq.com/cn/articles/java-memory-model-1</a></li>
+</ol>
+<div></div>
+
+
+        </div>
+
+        <div style="display:block;position:relative;margin:6rem 0px 0px;padding:6rem 0px 0px;border-top:1px solid rgb(235, 242, 246);">
+
+
+
+            <div style="display:block;margin-right:180px;">
+                <h4 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;margin:0px;font-size:1.8rem;"><a href="https://race604.com/author/race604/" style="background:transparent;transition:color 0.3s ease;color:rgb(46, 46, 46);text-decoration:none;">Race604</a></h4>
+
+                    <p style="font-feature-settings:'liga' 1, 'onum' 1, 'kern' 1;text-rendering:geometricPrecision;margin:1rem 0px;font-size:1.4rem;line-height:1.75em;">Android developer, Blogger. @Android笔记</p>
+                <div style="padding:0px;margin:1.6rem 0px;list-style:none;font-size:1.4rem;line-height:1;font-style:italic;color:rgb(158, 171, 179);">
+                    
+                    <span style="display:inline-block;margin:0px 2rem 1rem 0px;word-wrap:break-word;"><span style="font-family:casper-icons, &quot;Open Sans&quot;, sans-serif;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none !important;"></span><a href="http://www.weibo.com/devandroid" style="background:transparent;transition:color 0.3s ease;color:rgb(158, 171, 179);text-decoration:none;">http://www.weibo.com/devandroid</a></span>
+                </div>
+            </div>
+
+
+            <div style="display:block;position:absolute;top:6rem;right:0px;width:140px;">
+                <h4 style="font-feature-settings:'dlig' 1, 'liga' 1, 'lnum' 1, 'kern' 1;color:rgb(46, 46, 46);line-height:1.15em;font-family:&quot;Open Sans&quot;, sans-serif;text-rendering:geometricPrecision;margin:0px;font-size:1.8rem;">Share this post</h4>
+		<a href="https://twitter.com/intent/tweet?text=Java%20%E5%8D%95%E4%BE%8B%E7%9C%9F%E7%9A%84%E5%86%99%E5%AF%B9%E4%BA%86%E4%B9%88%3F&amp;url=http://www.race604.com/java-double-checked-singleton/" style="background:transparent;transition:color 0.3s ease;color:rgb(187, 199, 204);font-size:1.8rem;display:inline-block;margin:1rem 1.6rem 1.6rem 0px;text-decoration:none;"><span style="color:rgb(187, 199, 204);font-size:1.1em;font-family:casper-icons, &quot;Open Sans&quot;, sans-serif;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none !important;"></span>
+                    
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=http://www.race604.com/java-double-checked-singleton/" style="background:transparent;transition:color 0.3s ease;color:rgb(187, 199, 204);font-size:1.8rem;display:inline-block;margin:1rem 1.6rem 1.6rem 0px;text-decoration:none;"><span style="color:rgb(187, 199, 204);font-size:1.8rem;font-family:casper-icons, &quot;Open Sans&quot;, sans-serif;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none !important;"></span>
+                    
+                </a>
+                <a href="https://plus.google.com/share?url=http://www.race604.com/java-double-checked-singleton/" style="background:transparent;transition:color 0.3s ease;color:rgb(187, 199, 204);font-size:1.8rem;display:inline-block;margin:1rem 1.6rem 1.6rem 0px;text-decoration:none;"><span style="color:rgb(187, 199, 204);font-size:1.8rem;font-family:casper-icons, &quot;Open Sans&quot;, sans-serif;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none !important;"></span>
+                    
+                </a>
+            </div>
+
+        </div>
+
+    <span style="display:none;width:7px;height:7px;border:1px solid rgb(231, 238, 242);position:absolute;bottom:-5px;left:50%;margin-left:-5px;background:rgb(255, 255, 255);border-radius:100%;box-shadow:rgb(255, 255, 255) 0px 0px 0px 5px;"></span></div></span></div></div></div></div><br/></div></span>
+</div></body></html> 
