@@ -1,0 +1,391 @@
+<html>
+<head>
+  <title>Android ViewGroup事件分发机制 - Hongyang - 博客频道 - CSDN.NET</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1406"/>
+<h1>Android ViewGroup事件分发机制 - Hongyang - 博客频道 - CSDN.NET</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1> Android ViewGroup事件分发机制 </h1><div><div></div></div></div>
+
+   
+
+        <div>
+        
+        <div>
+            
+            <span>33515人阅读</span>
+            
+            <span> <a href="#" target="_blank" title="收藏">收藏</a></span>
+             
+
+        </div>
+    </div>
+    
+    
+    
+      <div>
+        
+        <div>
+                    <span>
+                        <span>【android 进阶之路】<em>（64）</em></span>
+                      
+                      
+                        
+                    </span>                    
+                    <span>
+                        
+                      
+                      
+                        
+                    </span>                    
+        </div>
+    </div>
+      
+        <div>         
+            <p>版权声明：本文为博主原创文章，未经博主允许不得转载。</p>
+        </div>
+
+  
+
+  
+  
+     
+
+
+<p>转载请标明出处：<a href="http://blog.csdn.net/lmj623565791/article/details/39102591" target="_blank">http://blog.csdn.net/lmj623565791/article/details/39102591</a>，本文出自<a href="http://blog.csdn.net/lmj623565791/article/details/39102591" target="_blank">【张鸿洋的博客】</a></p><p>上一篇已经完整的解析了<a href="http://blog.csdn.net/lmj623565791/article/details/38960443" target="_blank">Android View的事件分发机制</a>，今天给大家代码ViewGroup事件分发的源码解析~~凡是自定义ViewGroup实现各种滑动效果的，不可避免的会出现很多事件的冲突，对ViewGroup事件分发机制的了解，也有益于大家了解冲突产生的原因，以及对冲突进行处理~</p><p>首先我们接着上一篇的代码，在代码中添加一个自定义的LinearLayout：</p><div><ol><li>package com.example.zhy_event03;  </li><li>import android.content.Context;  </li><li>import android.util.AttributeSet;  </li><li>import android.util.Log;  </li><li>import android.view.MotionEvent;  </li><li>import android.widget.LinearLayout;  </li><li>publicclass MyLinearLayout extends LinearLayout  </li><li>    privatestaticfinal String TAG = MyLinearLayout.class.getSimpleName();  </li><li>    public MyLinearLayout(Context context, AttributeSet attrs)  </li><li>        super(context, attrs);  </li><li>    @Override</li><li>    publicboolean dispatchTouchEvent(MotionEvent ev)  </li><li>         action = ev.getAction();  </li><li>        switch (action)  </li><li>         MotionEvent.ACTION_DOWN:  </li><li>            Log.e(TAG, &quot;dispatchTouchEvent ACTION_DOWN&quot;</li><li>            break</li><li>         MotionEvent.ACTION_MOVE:  </li><li>            Log.e(TAG, &quot;dispatchTouchEvent ACTION_MOVE&quot;</li><li>            break</li><li>         MotionEvent.ACTION_UP:  </li><li>            Log.e(TAG, &quot;dispatchTouchEvent ACTION_UP&quot;</li><li>            break</li><li>        default</li><li>            break</li><li>        returnsuper.dispatchTouchEvent(ev);  </li><li>    @Override</li><li>    publicboolean onTouchEvent(MotionEvent event)  </li><li>         action = event.getAction();  </li><li>        switch (action)  </li><li>         MotionEvent.ACTION_DOWN:  </li><li>            Log.e(TAG, &quot;onTouchEvent ACTION_DOWN&quot;</li><li>            break</li><li>         MotionEvent.ACTION_MOVE:  </li><li>            Log.e(TAG, &quot;onTouchEvent ACTION_MOVE&quot;</li><li>            break</li><li>         MotionEvent.ACTION_UP:  </li><li>            Log.e(TAG, &quot;onTouchEvent ACTION_UP&quot;</li><li>            break</li><li>        default</li><li>            break</li><li>        returnsuper.onTouchEvent(event);  </li><li>    @Override</li><li>    publicboolean onInterceptTouchEvent(MotionEvent ev)  </li><li>         action = ev.getAction();  </li><li>        switch (action)  </li><li>         MotionEvent.ACTION_DOWN:  </li><li>            Log.e(TAG, &quot;onInterceptTouchEvent ACTION_DOWN&quot;</li><li>            break</li><li>         MotionEvent.ACTION_MOVE:  </li><li>            Log.e(TAG, &quot;onInterceptTouchEvent ACTION_MOVE&quot;</li><li>            break</li><li>         MotionEvent.ACTION_UP:  </li><li>            Log.e(TAG, &quot;onInterceptTouchEvent ACTION_UP&quot;</li><li>            break</li><li>        default</li><li>            break</li><li>        returnsuper.onInterceptTouchEvent(ev);  </li><li>    @Override</li><li>    public requestDisallowInterceptTouchEvent(boolean disallowIntercept)  </li><li>        Log.e(TAG, &quot;requestDisallowInterceptTouchEvent &quot;</li><li>        super.requestDisallowInterceptTouchEvent(disallowIntercept);  </li></ol></div><pre>package com.example.zhy_event03;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.widget.LinearLayout;
+
+public class MyLinearLayout extends LinearLayout
+{
+	private static final String TAG = MyLinearLayout.class.getSimpleName();
+
+	public MyLinearLayout(Context context, AttributeSet attrs)
+	{
+		super(context, attrs);
+	}
+
+	@Override
+	public boolean dispatchTouchEvent(MotionEvent ev)
+	{
+		int action = ev.getAction();
+		switch (action)
+		{
+		case MotionEvent.ACTION_DOWN:
+			Log.e(TAG, &quot;dispatchTouchEvent ACTION_DOWN&quot;);
+			break;
+		case MotionEvent.ACTION_MOVE:
+			Log.e(TAG, &quot;dispatchTouchEvent ACTION_MOVE&quot;);
+			break;
+		case MotionEvent.ACTION_UP:
+			Log.e(TAG, &quot;dispatchTouchEvent ACTION_UP&quot;);
+			break;
+
+		default:
+			break;
+		}
+		return super.dispatchTouchEvent(ev);
+	}
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event)
+	{
+
+		int action = event.getAction();
+
+		switch (action)
+		{
+		case MotionEvent.ACTION_DOWN:
+			Log.e(TAG, &quot;onTouchEvent ACTION_DOWN&quot;);
+			break;
+		case MotionEvent.ACTION_MOVE:
+			Log.e(TAG, &quot;onTouchEvent ACTION_MOVE&quot;);
+			break;
+		case MotionEvent.ACTION_UP:
+			Log.e(TAG, &quot;onTouchEvent ACTION_UP&quot;);
+			break;
+
+		default:
+			break;
+		}
+
+		return super.onTouchEvent(event);
+	}
+
+	@Override
+	public boolean onInterceptTouchEvent(MotionEvent ev)
+	{
+		
+		int action = ev.getAction();
+		switch (action)
+		{
+		case MotionEvent.ACTION_DOWN:
+			Log.e(TAG, &quot;onInterceptTouchEvent ACTION_DOWN&quot;);
+			break;
+		case MotionEvent.ACTION_MOVE:
+			Log.e(TAG, &quot;onInterceptTouchEvent ACTION_MOVE&quot;);
+			break;
+		case MotionEvent.ACTION_UP:
+			Log.e(TAG, &quot;onInterceptTouchEvent ACTION_UP&quot;);
+			break;
+
+		default:
+			break;
+		}
+		
+		return super.onInterceptTouchEvent(ev);
+	}
+
+	@Override
+	public void requestDisallowInterceptTouchEvent(boolean disallowIntercept)
+	{
+		Log.e(TAG, &quot;requestDisallowInterceptTouchEvent &quot;);
+		super.requestDisallowInterceptTouchEvent(disallowIntercept);
+	}
+
+}
+</pre><br/>继承LinearLayout，然后复写了与事件分发机制有关的代码，添加上了日志的打印~<p>然后看我们的布局文件：</p><div><ol><li>com.example.zhy_event03.MyLinearLayoutxmlns:android&quot;http://schemas.android.com/apk/res/android&quot;</li><li>    xmlns:tools&quot;http://schemas.android.com/tools&quot;</li><li>    android:layout_width&quot;match_parent&quot;</li><li>    android:layout_height&quot;match_parent&quot;</li><li>    tools:context&quot;.MainActivity&quot;</li><li>    com.example.zhy_event03.MyButton</li><li>        android:id&quot;@+id/id_btn&quot;</li><li>        android:layout_width&quot;wrap_content&quot;</li><li>        android:layout_height&quot;wrap_content&quot;</li><li>        android:text&quot;click me&quot;/&gt;</li><li>&lt;/com.example.zhy_event03.MyLinearLayout</li></ol></div><pre>&lt;com.example.zhy_event03.MyLinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+    xmlns:tools=&quot;http://schemas.android.com/tools&quot;
+    android:layout_width=&quot;match_parent&quot;
+    android:layout_height=&quot;match_parent&quot;
+    tools:context=&quot;.MainActivity&quot; &gt;
+
+    &lt;com.example.zhy_event03.MyButton
+        android:id=&quot;@+id/id_btn&quot;
+        android:layout_width=&quot;wrap_content&quot;
+        android:layout_height=&quot;wrap_content&quot;
+        android:text=&quot;click me&quot; /&gt;
+
+&lt;/com.example.zhy_event03.MyLinearLayout&gt;
+</pre><br/>MyLinearLayout中包含一个MyButton，MyButton都上篇博客中已经出现过，这里就不再贴代码了，不清楚可以去查看~<p>然后MainActivity就是直接加载布局，没有任何代码~~~</p><p>直接运行我们的代码，然后点击我们的Button，依然是有意的MOVE一下，不然不会触发MOVE事件，看一下日志的输出：</p><div><ol><li>09-06 09:57:27.287: E/MyLinearLayout(959): dispatchTouchEvent ACTION_DOWN  </li><li>09-06 09:57:27.287: E/MyLinearLayout(959): onInterceptTouchEvent ACTION_DOWN  </li><li>09-06 09:57:27.287: E/MyButton(959): dispatchTouchEvent ACTION_DOWN  </li><li>09-06 09:57:27.297: E/MyButton(959): onTouchEvent ACTION_DOWN  </li><li>09-06 09:57:27.297: E/MyButton(959): onTouchEvent ACTION_MOVE  </li><li>09-06 09:57:27.327: E/MyLinearLayout(959): dispatchTouchEvent ACTION_MOVE  </li><li>09-06 09:57:27.327: E/MyLinearLayout(959): onInterceptTouchEvent ACTION_MOVE  </li><li>09-06 09:57:27.337: E/MyButton(959): dispatchTouchEvent ACTION_MOVE  </li><li>09-06 09:57:27.337: E/MyButton(959): onTouchEvent ACTION_MOVE  </li><li>09-06 09:57:27.457: E/MyLinearLayout(959): dispatchTouchEvent ACTION_UP  </li><li>09-06 09:57:27.457: E/MyLinearLayout(959): onInterceptTouchEvent ACTION_UP  </li><li>09-06 09:57:27.457: E/MyButton(959): dispatchTouchEvent ACTION_UP  </li><li>09-06 09:57:27.457: E/MyButton(959): onTouchEvent ACTION_UP  </li></ol></div><pre>09-06 09:57:27.287: E/MyLinearLayout(959): dispatchTouchEvent ACTION_DOWN
+09-06 09:57:27.287: E/MyLinearLayout(959): onInterceptTouchEvent ACTION_DOWN
+09-06 09:57:27.287: E/MyButton(959): dispatchTouchEvent ACTION_DOWN
+09-06 09:57:27.297: E/MyButton(959): onTouchEvent ACTION_DOWN
+09-06 09:57:27.297: E/MyButton(959): onTouchEvent ACTION_MOVE
+09-06 09:57:27.327: E/MyLinearLayout(959): dispatchTouchEvent ACTION_MOVE
+09-06 09:57:27.327: E/MyLinearLayout(959): onInterceptTouchEvent ACTION_MOVE
+09-06 09:57:27.337: E/MyButton(959): dispatchTouchEvent ACTION_MOVE
+09-06 09:57:27.337: E/MyButton(959): onTouchEvent ACTION_MOVE
+09-06 09:57:27.457: E/MyLinearLayout(959): dispatchTouchEvent ACTION_UP
+09-06 09:57:27.457: E/MyLinearLayout(959): onInterceptTouchEvent ACTION_UP
+09-06 09:57:27.457: E/MyButton(959): dispatchTouchEvent ACTION_UP
+09-06 09:57:27.457: E/MyButton(959): onTouchEvent ACTION_UP
+</pre><br/>可以看到大体的事件流程为：<p>MyLinearLayout的dispatchTouchEvent -&gt; MyLinearLayout的onInterceptTouchEvent -&gt; MyButton的dispatchTouchEvent -&gt;Mybutton的onTouchEvent </p><p>可以看出，在View上触发事件，最先捕获到事件的为View所在的ViewGroup，然后才会到View自身~</p><p>下面我们按照日志的输出，进入源码~</p><h1>2、源码分析</h1><p>ViewGroup - dispatchTouchEvent</p><h2>1、ViewGroup - dispatchTouchEvent - ACTION_DOWN</h2><p>首先是ViewGroup的dispatchTouchEvent方法：</p><div><ol><li>@Override</li><li>   publicboolean dispatchTouchEvent(MotionEvent ev) {  </li><li>        (!onFilterTouchEventForSecurity(ev)) {  </li><li>           returnfalse</li><li>       final action = ev.getAction();  </li><li>       finalfloat xf = ev.getX();  </li><li>       finalfloat yf = ev.getY();  </li><li>       finalfloat scrolledXFloat = xf + mScrollX;  </li><li>       finalfloat scrolledYFloat = yf + mScrollY;  </li><li>       final Rect frame = mTempRect;  </li><li>       boolean disallowIntercept = (mGroupFlags &amp; FLAG_DISALLOW_INTERCEPT) != </li><li>        (action == MotionEvent.ACTION_DOWN) {  </li><li>            (mMotionTarget != </li><li>               // this is weird, we got a pen down, but we thought it was</li><li>               // already down!</li><li>               // XXX: We should probably send an ACTION_UP to the current</li><li>               // target.</li><li>               mMotionTarget = </li><li>           // If we're disallowing intercept or if we're allowing and we didn't</li><li>           // intercept</li><li>            (disallowIntercept || !onInterceptTouchEvent(ev)) {  </li><li>               // reset this event's action (just to protect ourselves)</li><li>               ev.setAction(MotionEvent.ACTION_DOWN);  </li><li>               // We know we want to dispatch the event down, find a child</li><li>               // who can handle it, start with the front-most child.</li><li>               final scrolledXInt = () scrolledXFloat;  </li><li>               final scrolledYInt = () scrolledYFloat;  </li><li>               final View[] children = mChildren;  </li><li>               final count = mChildrenCount;  </li><li>                i = count - ; i &gt;= ; i--) {  </li><li>                   final View child = children[i];  </li><li>                    ((child.mViewFlags &amp; VISIBILITY_MASK) == VISIBLE  </li><li>                           || child.getAnimation() != </li><li>                       child.getHitRect(frame);  </li><li>                        (frame.contains(scrolledXInt, scrolledYInt)) {  </li><li>                           // offset the event to the view's coordinate system</li><li>                           finalfloat xc = scrolledXFloat - child.mLeft;  </li><li>                           finalfloat yc = scrolledYFloat - child.mTop;  </li><li>                           ev.setLocation(xc, yc);  </li><li>                           child.mPrivateFlags &amp;= ~CANCEL_NEXT_UP_EVENT;  </li><li>                            (child.dispatchTouchEvent(ev))  {  </li><li>                               // Event handled, we have a target now.</li><li>                               mMotionTarget = child;  </li><li>                               return</li><li>                           // The event didn't get handled, try the next view.</li><li>                           // Don't reset the event's location, it's not</li><li>                           // necessary here.</li><li>       }                                                                                                                                                  ....//other code omitted</li></ol></div><pre> @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (!onFilterTouchEventForSecurity(ev)) {
+            return false;
+        }
+
+        final int action = ev.getAction();
+        final float xf = ev.getX();
+        final float yf = ev.getY();
+        final float scrolledXFloat = xf + mScrollX;
+        final float scrolledYFloat = yf + mScrollY;
+        final Rect frame = mTempRect;
+
+        boolean disallowIntercept = (mGroupFlags &amp; FLAG_DISALLOW_INTERCEPT) != 0;
+
+        if (action == MotionEvent.ACTION_DOWN) {
+            if (mMotionTarget != null) {
+                // this is weird, we got a pen down, but we thought it was
+                // already down!
+                // XXX: We should probably send an ACTION_UP to the current
+                // target.
+                mMotionTarget = null;
+            }
+            // If we're disallowing intercept or if we're allowing and we didn't
+            // intercept
+            if (disallowIntercept || !onInterceptTouchEvent(ev)) {
+                // reset this event's action (just to protect ourselves)
+                ev.setAction(MotionEvent.ACTION_DOWN);
+                // We know we want to dispatch the event down, find a child
+                // who can handle it, start with the front-most child.
+                final int scrolledXInt = (int) scrolledXFloat;
+                final int scrolledYInt = (int) scrolledYFloat;
+                final View[] children = mChildren;
+                final int count = mChildrenCount;
+
+                for (int i = count - 1; i &gt;= 0; i--) {
+                    final View child = children[i];
+                    if ((child.mViewFlags &amp; VISIBILITY_MASK) == VISIBLE
+                            || child.getAnimation() != null) {
+                        child.getHitRect(frame);
+                        if (frame.contains(scrolledXInt, scrolledYInt)) {
+                            // offset the event to the view's coordinate system
+                            final float xc = scrolledXFloat - child.mLeft;
+                            final float yc = scrolledYFloat - child.mTop;
+                            ev.setLocation(xc, yc);
+                            child.mPrivateFlags &amp;= ~CANCEL_NEXT_UP_EVENT;
+                            if (child.dispatchTouchEvent(ev))  {
+                                // Event handled, we have a target now.
+                                mMotionTarget = child;
+                                return true;
+                            }
+                            // The event didn't get handled, try the next view.
+                            // Don't reset the event's location, it's not
+                            // necessary here.
+                        }
+                    }
+                }
+            }
+        }                                                                                                                                                  ....//other code omitted</pre>代码比较长，决定分段贴出，首先贴出的是ACTION_DOWN事件相关的代码。<p>16行：进入ACTION_DOWN的处理</p><p>17-23行：将mMotionTarget置为null</p><p>26行：进行判断：if(disallowIntercept || !onInterceptTouchEvent(ev))</p><p>两种可能会进入IF代码段</p><p>1、当前不允许拦截，即disallowIntercept =true，</p><p>2、当前允许拦截但是不拦截，即disallowIntercept =false,但是onInterceptTouchEvent(ev)返回false ;</p><p>注：disallowIntercept 可以通过viewGroup.requestDisallowInterceptTouchEvent(boolean);进行设置，后面会详细说；而onInterceptTouchEvent(ev)可以进行复写。</p><p>36-57行：开始遍历所有的子View</p><p>41行：进行判断当前的x,y坐标是否落在子View身上，如果在，47行，执行child.dispatchTouchEvent(ev)，就进入了View的dispatchTouchEvent代码中了，如果不了解请参考：<a href="http://blog.csdn.net/lmj623565791/article/details/38960443" target="_blank">Android View的事件分发机制</a>，当child.dispatchTouchEvent(ev)返回true，则为mMotionTarget=child;然后return true;</p><p>ViewGroup的ACTION_DOWN分析结束，总结一下：</p><p>ViewGroup实现捕获到DOWN事件，如果代码中不做TOUCH事件拦截，则开始查找当前x,y是否在某个子View的区域内，如果在，则把事件分发下去。</p><p>按照日志，接下来到达ACTION_MOVE</p><h2>2、ViewGroup - dispatchTouchEvent - ACTION_MOVE</h2><p>首先我们源码进行删减，只留下MOVE相关的代码：</p><div><ol><li>@Override</li><li>   publicboolean dispatchTouchEvent(MotionEvent ev) {  </li><li>       final action = ev.getAction();  </li><li>       finalfloat xf = ev.getX();  </li><li>       finalfloat yf = ev.getY();  </li><li>       finalfloat scrolledXFloat = xf + mScrollX;  </li><li>       finalfloat scrolledYFloat = yf + mScrollY;  </li><li>       final Rect frame = mTempRect;  </li><li>       boolean disallowIntercept = (mGroupFlags &amp; FLAG_DISALLOW_INTERCEPT) != </li><li>      //...ACTION_DOWN</li><li>      //...ACTIN_UP or ACTION_CANCEL</li><li>       // The event wasn't an ACTION_DOWN, dispatch it to our target if</li><li>       // we have one.</li><li>final View target = mMotionTarget;  </li><li>       // if have a target, see if we're allowed to and want to intercept its</li><li>       // events</li><li>        (!disallowIntercept &amp;&amp; onInterceptTouchEvent(ev)) {  </li><li>           //....</li><li>       // finally offset the event to the target's coordinate system and</li><li>       // dispatch the event.</li><li>       finalfloat xc = scrolledXFloat - (float) target.mLeft;  </li><li>       finalfloat yc = scrolledYFloat - (float) target.mTop;  </li><li>       ev.setLocation(xc, yc);  </li><li>       return target.dispatchTouchEvent(ev);  </li></ol></div><pre> @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        final int action = ev.getAction();
+        final float xf = ev.getX();
+        final float yf = ev.getY();
+        final float scrolledXFloat = xf + mScrollX;
+        final float scrolledYFloat = yf + mScrollY;
+        final Rect frame = mTempRect;
+
+        boolean disallowIntercept = (mGroupFlags &amp; FLAG_DISALLOW_INTERCEPT) != 0;
+
+       //...ACTION_DOWN
+
+       //...ACTIN_UP or ACTION_CANCEL
+
+        // The event wasn't an ACTION_DOWN, dispatch it to our target if
+        // we have one.
+	final View target = mMotionTarget;
+      
+
+        // if have a target, see if we're allowed to and want to intercept its
+        // events
+        if (!disallowIntercept &amp;&amp; onInterceptTouchEvent(ev)) {
+            //....
+        }
+        // finally offset the event to the target's coordinate system and
+        // dispatch the event.
+        final float xc = scrolledXFloat - (float) target.mLeft;
+        final float yc = scrolledYFloat - (float) target.mTop;
+        ev.setLocation(xc, yc);
+
+        return target.dispatchTouchEvent(ev);
+    }</pre><p>18行：把ACTION_DOWN时赋值的mMotionTarget，付给target ; </p><p>23行：if (!disallowIntercept &amp;&amp; onInterceptTouchEvent(ev)) 当前允许拦截且拦截了，才进入IF体，当然了默认是不会拦截的~这里执行了onInterceptTouchEvent(ev)</p><p>28-30行：把坐标系统转化为子View的坐标系统</p><p>32行：直接return target.dispatchTouchEvent(ev); </p><p>可以看到，正常流程下，ACTION_MOVE在检测完是否拦截以后，直接调用了子View.dispatchTouchEvent，事件分发下去；</p><p>最后就是ACTION_UP了</p><h2>3、ViewGroup - dispatchTouchEvent - ACTION_UP</h2><div><ol><li>publicboolean dispatchTouchEvent(MotionEvent ev) {  </li><li>        (!onFilterTouchEventForSecurity(ev)) {  </li><li>           returnfalse</li><li>       final action = ev.getAction();  </li><li>       finalfloat xf = ev.getX();  </li><li>       finalfloat yf = ev.getY();  </li><li>       finalfloat scrolledXFloat = xf + mScrollX;  </li><li>       finalfloat scrolledYFloat = yf + mScrollY;  </li><li>       final Rect frame = mTempRect;  </li><li>       boolean disallowIntercept = (mGroupFlags &amp; FLAG_DISALLOW_INTERCEPT) != </li><li>        (action == MotionEvent.ACTION_DOWN) {...}  </li><li>boolean isUpOrCancel = (action == MotionEvent.ACTION_UP) ||  </li><li>               (action == MotionEvent.ACTION_CANCEL);  </li><li> (isUpOrCancel) {  </li><li>           mGroupFlags &amp;= ~FLAG_DISALLOW_INTERCEPT;  </li><li>final View target = mMotionTarget;  </li><li>(target == ){...}  </li><li> (!disallowIntercept &amp;&amp; onInterceptTouchEvent(ev)) {...}  </li><li>        (isUpOrCancel) {  </li><li>           mMotionTarget = </li><li>       // finally offset the event to the target's coordinate system and</li><li>       // dispatch the event.</li><li>       finalfloat xc = scrolledXFloat - (float) target.mLeft;  </li><li>       finalfloat yc = scrolledYFloat - (float) target.mTop;  </li><li>       ev.setLocation(xc, yc);  </li><li>       return target.dispatchTouchEvent(ev);  </li></ol></div><pre> public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (!onFilterTouchEventForSecurity(ev)) {
+            return false;
+        }
+
+        final int action = ev.getAction();
+        final float xf = ev.getX();
+        final float yf = ev.getY();
+        final float scrolledXFloat = xf + mScrollX;
+        final float scrolledYFloat = yf + mScrollY;
+        final Rect frame = mTempRect;
+
+        boolean disallowIntercept = (mGroupFlags &amp; FLAG_DISALLOW_INTERCEPT) != 0;
+
+        if (action == MotionEvent.ACTION_DOWN) {...}
+	
+	boolean isUpOrCancel = (action == MotionEvent.ACTION_UP) ||
+                (action == MotionEvent.ACTION_CANCEL);
+
+	if (isUpOrCancel) {
+            mGroupFlags &amp;= ~FLAG_DISALLOW_INTERCEPT;
+        }
+	final View target = mMotionTarget;
+	if(target ==null ){...}
+	if (!disallowIntercept &amp;&amp; onInterceptTouchEvent(ev)) {...}
+
+        if (isUpOrCancel) {
+            mMotionTarget = null;
+        }
+
+        // finally offset the event to the target's coordinate system and
+        // dispatch the event.
+        final float xc = scrolledXFloat - (float) target.mLeft;
+        final float yc = scrolledYFloat - (float) target.mTop;
+        ev.setLocation(xc, yc);
+
+        return target.dispatchTouchEvent(ev);
+    }</pre><p>17行：判断当前是否是ACTION_UP</p><p>21，28行：分别重置拦截标志位以及将DOWN赋值的mMotionTarget置为null，都UP了，当然置为null，下一次DOWN还会再赋值的~</p><p>最后，修改坐标系统，然后调用target.dispatchTouchEvent(ev);</p><p>正常情况下，即我们上例整个代码的流程我们已经走完了：</p><p>1、ACTION_DOWN中，ViewGroup捕获到事件，然后判断是否拦截，如果没有拦截，则找到包含当前x,y坐标的子View，赋值给mMotionTarget，然后调用mMotionTarget.dispatchTouchEvent</p><p>2、ACTION_MOVE中，ViewGroup捕获到事件，然后判断是否拦截，如果没有拦截，则直接调用mMotionTarget.dispatchTouchEvent(ev)</p><p>3、ACTION_UP中，ViewGroup捕获到事件，然后判断是否拦截，如果没有拦截，则直接调用mMotionTarget.dispatchTouchEvent(ev)</p><p>当然了在分发之前都会修改下坐标系统，把当前的x，y分别减去child.left 和 child.top ，然后传给child;</p><h1>3、关于拦截</h1><h2>1、如何拦截</h2><p>上面的总结都是基于：如果没有拦截；那么如何拦截呢？</p><p>复写ViewGroup的onInterceptTouchEvent方法：</p><div><ol><li>@Override</li><li>    publicboolean onInterceptTouchEvent(MotionEvent ev)  </li><li>         action = ev.getAction();  </li><li>        switch (action)  </li><li>         MotionEvent.ACTION_DOWN:  </li><li>            //如果你觉得需要拦截</li><li>            return</li><li>         MotionEvent.ACTION_MOVE:  </li><li>            //如果你觉得需要拦截</li><li>            return</li><li>         MotionEvent.ACTION_UP:  </li><li>            //如果你觉得需要拦截</li><li>            return</li><li>        returnfalse</li></ol></div><pre>@Override
+	public boolean onInterceptTouchEvent(MotionEvent ev)
+	{
+		int action = ev.getAction();
+		switch (action)
+		{
+		case MotionEvent.ACTION_DOWN:
+			//如果你觉得需要拦截
+			return true ; 
+		case MotionEvent.ACTION_MOVE:
+			//如果你觉得需要拦截
+			return true ; 
+		case MotionEvent.ACTION_UP:
+			//如果你觉得需要拦截
+			return true ; 
+		}
+		
+		return false;
+	}</pre><br/>默认是不拦截的，即返回false；如果你需要拦截，只要return true就行了，这要该事件就不会往子View传递了，并且如果你在DOWN retrun true ，则DOWN,MOVE,UP子View都不会捕获事件；如果你在MOVE return true , 则子View在MOVE和UP都不会捕获事件。<p>原因很简单，当onInterceptTouchEvent(ev) return true的时候，会把mMotionTarget 置为null ; </p><h2>2、如何不被拦截</h2><p>如果ViewGroup的onInterceptTouchEvent(ev) 当ACTION_MOVE时return true ，即拦截了子View的MOVE以及UP事件；</p><p>此时子View希望依然能够响应MOVE和UP时该咋办呢？</p><p><a href="http://lib.csdn.net/base/15" target="_blank" title="Android知识库">Android</a>给我们提供了一个方法：requestDisallowInterceptTouchEvent(boolean) 用于设置是否允许拦截，我们在子View的dispatchTouchEvent中直接这么写：</p><div><ol><li>@Override</li><li>    publicboolean dispatchTouchEvent(MotionEvent event)  </li><li>        getParent().requestDisallowInterceptTouchEvent(</li><li>         action = event.getAction();  </li><li>        switch (action)  </li><li>         MotionEvent.ACTION_DOWN:  </li><li>            Log.e(TAG, &quot;dispatchTouchEvent ACTION_DOWN&quot;</li><li>            break</li><li>         MotionEvent.ACTION_MOVE:  </li><li>            Log.e(TAG, &quot;dispatchTouchEvent ACTION_MOVE&quot;</li><li>            break</li><li>         MotionEvent.ACTION_UP:  </li><li>            Log.e(TAG, &quot;dispatchTouchEvent ACTION_UP&quot;</li><li>            break</li><li>        default</li><li>            break</li><li>        returnsuper.dispatchTouchEvent(event);  </li></ol></div><pre>@Override
+	public boolean dispatchTouchEvent(MotionEvent event)
+	{
+		getParent().requestDisallowInterceptTouchEvent(true);  
+		int action = event.getAction();
+
+		switch (action)
+		{
+		case MotionEvent.ACTION_DOWN:
+			Log.e(TAG, &quot;dispatchTouchEvent ACTION_DOWN&quot;);
+			break;
+		case MotionEvent.ACTION_MOVE:
+			Log.e(TAG, &quot;dispatchTouchEvent ACTION_MOVE&quot;);
+			break;
+		case MotionEvent.ACTION_UP:
+			Log.e(TAG, &quot;dispatchTouchEvent ACTION_UP&quot;);
+			break;
+
+		default:
+			break;
+		}
+		return super.dispatchTouchEvent(event);
+	}</pre><br/>getParent().requestDisallowInterceptTouchEvent(true);  这样即使ViewGroup在MOVE的时候return true，子View依然可以捕获到MOVE以及UP事件。<p>从源码也可以解释：</p><p>ViewGroup MOVE和UP拦截的源码是这样的：</p><div><ol><li> (!disallowIntercept &amp;&amp; onInterceptTouchEvent(ev)) {  </li><li>            finalfloat xc = scrolledXFloat - (float) target.mLeft;  </li><li>            finalfloat yc = scrolledYFloat - (float) target.mTop;  </li><li>            mPrivateFlags &amp;= ~CANCEL_NEXT_UP_EVENT;  </li><li>            ev.setAction(MotionEvent.ACTION_CANCEL);  </li><li>            ev.setLocation(xc, yc);  </li><li>             (!target.dispatchTouchEvent(ev)) {  </li><li>                // target didn't handle ACTION_CANCEL. not much we can do</li><li>                // but they should have.</li><li>            // clear the target</li><li>            mMotionTarget = </li><li>            // Don't dispatch this event to our own view, because we already</li><li>            // saw it when intercepting; we just want to give the following</li><li>            // event to the normal onTouchEvent().</li><li>            return</li></ol></div><pre>if (!disallowIntercept &amp;&amp; onInterceptTouchEvent(ev)) {
+            final float xc = scrolledXFloat - (float) target.mLeft;
+            final float yc = scrolledYFloat - (float) target.mTop;
+            mPrivateFlags &amp;= ~CANCEL_NEXT_UP_EVENT;
+            ev.setAction(MotionEvent.ACTION_CANCEL);
+            ev.setLocation(xc, yc);
+            if (!target.dispatchTouchEvent(ev)) {
+                // target didn't handle ACTION_CANCEL. not much we can do
+                // but they should have.
+            }
+            // clear the target
+            mMotionTarget = null;
+            // Don't dispatch this event to our own view, because we already
+            // saw it when intercepting; we just want to give the following
+            // event to the normal onTouchEvent().
+            return true;
+        }</pre><br/>当我们把disallowIntercept设置为true时，!disallowIntercept直接为false，于是拦截的方法体就被跳过了~<p>注：如果ViewGroup在onInterceptTouchEvent(ev)  ACTION_DOWN里面直接return true了，那么子View是木有办法的捕获事件的~~~</p><h1>4、如果没有找到合适的子View</h1><p>我们的实例，直接点击ViewGroup内的按钮，当然直接很顺利的走完整个流程；</p><p>但是有两种特殊情况</p><p><strong>1、ACTION_DOWN的时候，子View.dispatchTouchEvent(ev)返回的为false ; </strong></p><p>如果你仔细看了，你会注意到ViewGroup的dispatchTouchEvent(ev)的ACTION_DOWN代码是这样的</p><div><ol><li> (child.dispatchTouchEvent(ev))  {  </li><li>                              // Event handled, we have a target now.</li><li>                              mMotionTarget = child;  </li><li>                              return</li></ol></div><pre>  if (child.dispatchTouchEvent(ev))  {
+                                // Event handled, we have a target now.
+                                mMotionTarget = child;
+                                return true;
+                            }</pre><br/>只有在child.dispatchTouchEvent(ev)返回true了，才会认为找到了能够处理当前事件的View，即mMotionTarget = child;<p>但是如果返回false,那么mMotionTarget 依然是null</p><p>mMotionTarget 为null会咋样呢？</p><p>其实ViewGroup也是View的子类，如果没有找到能够处理该事件的子View，或者干脆就没有子View；</p><p>那么，它作为一个View，就相当于View的事件转发了~~直接super.dispatchTouchEvent(ev);</p><p>源码是这样的：</p><div><ol><li>final View target = mMotionTarget;  </li><li>        (target == </li><li>           // We don't have a target, this means we're handling the</li><li>           // event as a regular view.</li><li>           ev.setLocation(xf, yf);  </li><li>            ((mPrivateFlags &amp; CANCEL_NEXT_UP_EVENT) != </li><li>               ev.setAction(MotionEvent.ACTION_CANCEL);  </li><li>               mPrivateFlags &amp;= ~CANCEL_NEXT_UP_EVENT;  </li><li>           returnsuper.dispatchTouchEvent(ev);  </li></ol></div><pre> final View target = mMotionTarget;
+        if (target == null) {
+            // We don't have a target, this means we're handling the
+            // event as a regular view.
+            ev.setLocation(xf, yf);
+            if ((mPrivateFlags &amp; CANCEL_NEXT_UP_EVENT) != 0) {
+                ev.setAction(MotionEvent.ACTION_CANCEL);
+                mPrivateFlags &amp;= ~CANCEL_NEXT_UP_EVENT;
+            }
+            return super.dispatchTouchEvent(ev);
+        }</pre><br/>我们没有一个能够处理该事件的目标元素，意味着我们需要自己处理~~~就相当于传统的View~<p><strong>2、那么什么时候子View.dispatchTouchEvent(ev)返回的为true</strong></p><p>如果你仔细看了上篇博客，你会发现只要子View支持点击或者长按事件一定返回true~~</p><p>源码是这样的：</p><div><ol><li> (((viewFlags &amp; CLICKABLE) == CLICKABLE ||  </li><li>                (viewFlags &amp; LONG_CLICKABLE) == LONG_CLICKABLE)) {     </li><li>             return</li></ol></div><pre> 
+if (((viewFlags &amp; CLICKABLE) == CLICKABLE ||
+                (viewFlags &amp; LONG_CLICKABLE) == LONG_CLICKABLE)) {   
+             return true ;                                                                                                                                                                                                                                                                                                   }
+
+</pre><p>关于代码流程上面已经总结过了~</p><p>1、如果ViewGroup找到了能够处理该事件的View，则直接交给子View处理，自己的onTouchEvent不会被触发；</p><p>2、可以通过复写onInterceptTouchEvent(ev)方法，拦截子View的事件（即return true），把事件交给自己处理，则会执行自己对应的onTouchEvent方法</p><p>3、子View可以通过调用getParent().requestDisallowInterceptTouchEvent(true);  阻止ViewGroup对其MOVE或者UP事件进行拦截；</p><p>好了，那么实际应用中能解决哪些问题呢？</p><p>比如你需要写一个类似slidingmenu的左侧隐藏menu，主Activity上有个Button、ListView或者任何可以响应点击的View，你在当前View上死命的滑动，菜单栏也出不来；因为MOVE事件被子View处理了~ 你需要这么做：在ViewGroup的dispatchTouchEvent中判断用户是不是想显示菜单，如果是，则在onInterceptTouchEvent(ev)拦截子View的事件；自己进行处理，这样自己的onTouchEvent就可以顺利展现出菜单栏了~~</p>   
+</div></div></div><br/></div></span>
+</div></body></html> 

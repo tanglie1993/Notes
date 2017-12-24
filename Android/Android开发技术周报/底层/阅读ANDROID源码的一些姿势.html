@@ -1,0 +1,232 @@
+<html>
+<head>
+  <title>阅读ANDROID源码的一些姿势</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3061"/>
+<h1>阅读ANDROID源码的一些姿势</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="font-family:sans-serif;text-size-adjust:100%;"><div style="font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:14px;line-height:2;color:rgb(85, 85, 85);background:rgb(255, 255, 255);"><div><span><div><div><div><div><div style="opacity:1;transform:translateY(0px);">
+  
+
+  
+
+  
+
+    
+      <div style="display:block;">
+
+        
+        
+          <h1 style="margin:0px;padding:0px;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:26px;font-weight:400;text-align:center;word-break:break-word;">
+            
+            
+              
+                阅读ANDROID源码的一些姿势
+              
+            
+          </h1>
+        
+
+        <div style="margin:3px 0px 60px;color:rgb(153, 153, 153);font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:12px;text-align:center;">
+          <span>
+            
+            <span>Posted on</span>
+            <span title="Post created">
+              2016-02-09
+            </span>
+
+             | 
+
+            
+            <span title="Post modified">
+              2017-09-12
+            </span>
+            
+          </span>
+
+          
+            <span>
+                |  
+              
+              <span>In</span>
+              
+                <span>
+                  <a href="http://kaedea.com/categories/Android/" rel="index" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;">
+                    <span>Android</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span>
+                  |  
+                <a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#comments" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;">
+                  <span></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span>
+                 |  
+               
+               <span>Visitors </span>
+               <span>7687</span>
+              </span>
+          
+
+          
+          
+          
+
+        </div>
+      </div>
+    
+
+
+    <div style="font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;">
+
+      
+      
+
+      
+        <p style="margin:0px 0px 25px;"><a href="http://7xih5c.com1.z0.glb.clouddn.com/16-2-9/47582414.jpg?imageView2/2/w/600/interlace/1" rel="group" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"><img src="阅读ANDROID源码的一些姿势_files/1.png" type="image/png" data-filename="1.png" alt="" height="411" style="max-width:100%;height:auto;border:1px solid rgb(221, 221, 221);margin:0px auto;cursor:-webkit-zoom-in;box-sizing:border-box;padding:3px;display:block;" width="600"/></a></p>
+<p style="margin:0px 0px 25px;">前面吐槽了 <a href="http://kaedea.com/2016/02/08/android-about-source-code/" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;">有没有必要阅读Android源码</a>，后面觉得只吐槽不太好，还是应该多少弄点干货。需要说明的是，Android每个系统版本的源码都会有变动，而且代码中时不时Java和Native互相穿插，追求完全看透源码意义不大，把目的定在“理解代码设计的思路，弄清各个生命周期方法调用的顺序”比较实际。<br/><a style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"></a></p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E6%97%A5%E5%B8%B8%E5%BC%80%E5%8F%91%E4%B8%AD%E6%80%8E%E4%B9%88%E9%98%85%E8%AF%BB%E6%BA%90%E7%A0%81" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="日常开发中怎么阅读源码"></a>日常开发中怎么阅读源码</h2><h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E6%89%BE%E5%88%B0%E6%AD%A3%E7%A1%AE%E7%9A%84%E6%BA%90%E7%A0%81" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="找到正确的源码"></a>找到正确的源码</h3><p style="margin:0px 0px 25px;">IDE是日常经常用的东西，Eclipse就不说了，直接从Android Studio（基于IntelliJ Community版本改造）开始。</p>
+<p style="margin:0px 0px 25px;">我们平时的Android项目，都是要依赖Android SDK里对应API Level的android.jar包（而且是以Provided的形式依赖），这样才能使用Android提供的API。在IntelliJ中，当想要看具体类的源码的时候，如果Android SDK里对应API Level的Source包有下载的话，IDE会打开对应的Source包；如果还没有下载，IDE会把对应API Level的android.jar包反编译成Java代码，这个规则对于一些第三方的开源项目也一样。推荐下载Source源码，毕竟反编译的Java代码不可能完全和源码的时候一样，有时候反编译出来的代码的执行逻辑可能完全等价，但是可阅读性下降了不好，而且也少了一些重要的注释。</p>
+<p style="margin:0px 0px 25px;">定位具体源码的时候，可以通过“Ctrl+鼠标左键”来查看，也可以通过“双击Shift”，在查找框里输入目标类的名字来定位。</p>
+<p style="margin:0px 0px 25px;"><a href="http://7xih5c.com1.z0.glb.clouddn.com/16-2-9/89744598.jpg" rel="group" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"><img src="阅读ANDROID源码的一些姿势_files/89744598.jpg.png" type="image/png" data-filename="89744598.jpg.png" alt="" height="255" style="max-width:100%;height:auto;border:1px solid rgb(221, 221, 221);margin:0px auto;cursor:-webkit-zoom-in;box-sizing:border-box;padding:3px;display:block;" width="664"/></a></p>
+<p style="margin:0px 0px 25px;">如上图，第一个类就是API23的NinePatchDrawable的源码，第二个就是通过android.jar反编译而来的，这里记得把“Include non-project items”勾上。</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E5%85%B3%E4%BA%8ESDK%E8%87%AA%E5%B8%A6%E7%9A%84%E6%BA%90%E7%A0%81%E5%92%8C%E9%9A%90%E8%97%8FAPI" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="关于SDK自带的源码和隐藏API"></a>关于SDK自带的源码和隐藏API</h3><p style="margin:0px 0px 25px;">Android SDK自带的Source源码包很小，并没有包括所有的Android Framework的源码，仅仅提供给应用开发参考用，一些比较少用的系统类的源码并没有给出，所以有时候你会看到如下。</p>
+<div style="display:block;margin:20px 0px;overflow:auto;padding:0px;font-size:13px;color:rgb(204, 204, 204);background:rgb(45, 45, 45);line-height:1.6;border-radius:1px;"><table style="font-weight:inherit;font-style:inherit;font-variant:inherit;font-size:14px;border-collapse:collapse;border-spacing:0px;table-layout:fixed;margin:0px;width:auto;border:none;"><tbody><tr style="background-color:rgb(249, 249, 249);"><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);user-select:none;padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;padding:10px 0px;margin:0px;border:none;color:rgb(153, 153, 153);padding-left:10px;padding-right:10px;text-align:right;background-color:rgb(27, 27, 27);"><div style="height:20px;">1</div><div style="height:20px;">2</div><div style="height:20px;">3</div><div style="height:20px;">4</div><div style="height:20px;">5</div><div style="height:20px;">6</div><div style="height:20px;">7</div><div style="height:20px;">8</div><div style="height:20px;">9</div><div style="height:20px;">10</div><div style="height:20px;">11</div><div style="height:20px;">12</div><div style="height:20px;">13</div><div style="height:20px;">14</div></pre></td><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;color:rgb(204, 204, 204);padding:10px 0px;margin:0px;border:none;padding-left:10px;padding-right:10px;background-color:rgb(45, 45, 45);"><div style="height:20px;"><span style="color:rgb(204, 153, 204);">public</span> <span><span style="color:rgb(204, 153, 204);">class</span> <span style="color:rgb(102, 204, 204);">BaseDexClassLoader</span> <span style="color:rgb(204, 153, 204);">extends</span> <span style="color:rgb(102, 204, 204);">ClassLoader</span> </span>{</div><div style="height:20px;">    <span style="color:rgb(102, 153, 204);"><span style="color:rgb(204, 153, 204);">public</span> <span style="color:rgb(102, 204, 204);">BaseDexClassLoader</span><span style="color:rgb(249, 145, 87);">(String dexPath, File optimizedDirectory, String libraryPath, ClassLoader parent)</span> </span>{</div><div style="height:20px;">        <span style="color:rgb(204, 153, 204);">throw</span> <span style="color:rgb(204, 153, 204);">new</span> RuntimeException(<span style="color:rgb(153, 204, 153);">&quot;Stub!&quot;</span>);</div><div style="height:20px;">    }</div><div style="height:20px;"></div><div style="height:20px;">    <span style="color:rgb(204, 153, 204);">protected</span> Class&lt;?&gt; findClass(String name) <span style="color:rgb(204, 153, 204);">throws</span> ClassNotFoundException {</div><div style="height:20px;">        <span style="color:rgb(204, 153, 204);">throw</span> <span style="color:rgb(204, 153, 204);">new</span> RuntimeException(<span style="color:rgb(153, 204, 153);">&quot;Stub!&quot;</span>);</div><div style="height:20px;">    }</div><div style="height:20px;"></div><div style="height:20px;">    <span style="color:rgb(102, 153, 204);"><span style="color:rgb(204, 153, 204);">protected</span> URL <span style="color:rgb(102, 204, 204);">findResource</span><span style="color:rgb(249, 145, 87);">(String name)</span> </span>{</div><div style="height:20px;">        <span style="color:rgb(204, 153, 204);">throw</span> <span style="color:rgb(204, 153, 204);">new</span> RuntimeException(<span style="color:rgb(153, 204, 153);">&quot;Stub!&quot;</span>);</div><div style="height:20px;">    }</div><div style="height:20px;">    ...</div><div style="height:20px;">}</div></pre></td></tr></tbody></table></div>
+<p style="margin:0px 0px 25px;">“RuntimeException(“Stub!”)”表示实际运行时的逻辑会由Android ROM里面相同的类代替执行。</p>
+<p style="margin:0px 0px 25px;">此外，在IDE里看源码的时候，有时候一些方法或者类会出现报红（找不到）的情况，如下。</p>
+<p style="margin:0px 0px 25px;"><a href="http://7xih5c.com1.z0.glb.clouddn.com/16-2-9/89825596.jpg" rel="group" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"><img src="阅读ANDROID源码的一些姿势_files/89825596.jpg.png" type="image/png" data-filename="89825596.jpg.png" alt="" height="331" style="max-width:100%;height:auto;border:1px solid rgb(221, 221, 221);margin:0px auto;cursor:-webkit-zoom-in;box-sizing:border-box;padding:3px;display:block;" width="673"/></a></p>
+<p style="margin:0px 0px 25px;">这是因为这些方法或者类是被Android SDK隐藏的，出于安全或者某些原因，这些API不能暴露给应用层的开发者，所以编译完成的android.jar包里会把这些API隐藏掉，而我们的Android项目是依赖android.jar的，查看源码的时候，IDE会自动去android.jar找对应的API，自然会找不到。当然，这些API在ROM中是实际存在的，有些开发者发现了一些可以修改系统行为的隐藏API，在应用层通过反射的方式强行调用这些API执行系统功能，这种手段也是一种HACK。</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#Google%E7%9A%84AOSP%E9%A1%B9%E7%9B%AE" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="Google的AOSP项目"></a>Google的AOSP项目</h3><p style="margin:0px 0px 25px;">当你需要的源码在Android SDK Source中找不到的时候，就有必要去<a href="https://android.googlesource.com/?format=HTML" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">AOSP</a>（Android Open Source Project）项目里面找了。</p>
+<p style="margin:0px 0px 25px;">不过AOSP项目包括整个Android所有开源的东西，实在是太庞大了，对于一般开发者来说，我们只需要接触Framework层次的东西就够了，这里包括了base、build-tools、support包甚至Volley项目的源码。</p>
+<p style="margin:0px 0px 25px;"><a href="http://7xih5c.com1.z0.glb.clouddn.com/16-2-9/53056079.jpg" rel="group" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"><img src="阅读ANDROID源码的一些姿势_files/53056079.jpg.png" type="image/png" data-filename="53056079.jpg.png" alt="" height="331" style="max-width:100%;height:auto;border:1px solid rgb(221, 221, 221);margin:0px auto;cursor:-webkit-zoom-in;box-sizing:border-box;padding:3px;display:block;" width="584"/></a></p>
+<p style="margin:0px 0px 25px;">以base为例，进入base目录，能看到base项目的git仓库，左边是其所有的分支。</p>
+<p style="margin:0px 0px 25px;"><a href="http://7xih5c.com1.z0.glb.clouddn.com/16-2-9/70376864.jpg" rel="group" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"><img src="阅读ANDROID源码的一些姿势_files/70376864.jpg.png" type="image/png" data-filename="70376864.jpg.png" alt="" height="355" style="max-width:100%;height:auto;border:1px solid rgb(221, 221, 221);margin:0px auto;cursor:-webkit-zoom-in;box-sizing:border-box;padding:3px;display:block;" width="232"/></a></p>
+<p style="margin:0px 0px 25px;">进入“master/core/java/android/”路径就能看到熟悉的Package目录了，其他分支以及项目都类似。有必要的时候可以把整个AOSP项目Clone下来，大概20G左右，可以把项目导入到IDE里面，这样就更方便查看源码了，另外可以可是试着编译自己的Android ROM，只需要部署能够跑MakeFile命令的环境就好。</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E4%B8%80%E4%BA%9B%E8%BE%85%E5%8A%A9%E9%98%85%E8%AF%BB%E7%9A%84%E5%B7%A5%E5%85%B7" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="一些辅助阅读的工具"></a>一些辅助阅读的工具</h3><h4 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:16px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#Chrome%E6%89%A9%E5%B1%95" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="Chrome扩展"></a>Chrome扩展</h4><p style="margin:0px 0px 25px;">Android SDK Search<br/><a href="http://7xih5c.com1.z0.glb.clouddn.com/16-2-9/73121661.jpg" rel="group" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"><img src="阅读ANDROID源码的一些姿势_files/73121661.jpg.png" type="image/png" data-filename="73121661.jpg.png" alt="" height="186" style="max-width:100%;height:auto;border:1px solid rgb(221, 221, 221);margin:0px auto;cursor:-webkit-zoom-in;box-sizing:border-box;padding:3px;display:block;" width="571"/></a></p>
+<p style="margin:0px 0px 25px;">相信平时到 <a href="http://developer.android.com/reference/classes.html" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">Android开发者官网</a> 查看API说明的人不少，这个扩展可以在API类名旁边显示一个跳转链接，用于跳转到AOSP中对应的类的源码，方便查看源码。</p>
+<h4 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:16px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#Source-Insight" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="Source Insight"></a>Source Insight</h4><p style="margin:0px 0px 25px;">在这个工具帮助下，你才可以驾驭巨大数量的Android 源码，你可以从容在Java，C++,C代码间遨游，你可以很快找到你需要的继承和调用关系。</p>
+<h4 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:16px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#VPN%E6%A2%AF%E5%AD%90" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="VPN梯子"></a>VPN梯子</h4><p style="margin:0px 0px 25px;">善用梯子是开发者基本的自我修养之一，如果你不想做“面向百度编程”的话。</p>
+<p style="margin:0px 0px 25px;">我在一开始是使用免费的GoAgent和WallProxy，但是经常要更新，而且最近还要经常替换IP才能工作，所以后来我换成了收费的ShadowSocks，各个平台都有客户端，非常方便，我也在手机上常态用起了Google的全家桶，只不过最近老是更换服务器地址，而且部分服务器不稳定，非常担心商家是否准备捞一笔然后跑路，23333。</p>
+<p style="margin:0px 0px 25px;">我觉得比起折腾找免费的低速、不稳定的梯子，还是用一些稳定的收费的的梯子比较划算。至于具体的用梯子的姿势，请诸位自行搜索，这里随便贴个介绍 <a href="http://weibo.com/2491729875/CcNaY2Rbt?from=page_1005052491729875_profile&amp;wvr=6&amp;mod=weibotime&amp;type=comment#_rnd1431747713302" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">梯子使用总结</a>。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E6%8E%A8%E8%8D%90%E9%98%85%E8%AF%BB%E7%9A%84%E6%BA%90%E7%A0%81" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="推荐阅读的源码"></a>推荐阅读的源码</h2><p style="margin:0px 0px 25px;">AOSP项目这么庞大，就算是Framework部分也有够看上一阵子的，所以推荐从常用的看起，由浅及深，同时向横向和纵向深入阅读。</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E5%BC%80%E5%A7%8B" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="开始"></a>开始</h3><p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">Handler-Message-Looper</strong><br/>Handler被称为“异步提交器”，是Android开发入门教程必定谈及的东西，这也是Activity等组件的工作机制需要用到的东西，是“数据驱动”框架的重要组成，作为阅读源码的入门最适合不过。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">Activity和Service</strong><br/>作为经常使用到的组件，阅读其源码的花费和带来的技术提高的性价比肯定是最高的，Service可以不看，但是Activity总不能少吧。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">Fragment</strong><br/>还在认为Fragment是一个视图吗，还在认为FragmentActivity的界面有多个Fragment组成吗，看看Fragment和FragmentManager吧，了解下生命周期的本质到底是什么。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">View</strong><br/>想自定义高级的View类吗，那总得知道onMeasure/onLayout/onDraw这些方法是怎么被调用的，了解LayoutParams是怎么工作的，知道调用requestLayout和Invalidate的时候有什么区别。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">MotionEvent</strong><br/>在懂的怎么自定义高级的View后，只能向用户显示界面，还得知道怎么与用户交互才能做出华丽的UI。所以必须知道TouchEvent的分发和拦截的工作机制，起码也得知道其特点，才不会一直在困扰“为什么无法监听用户的触摸事件”、“View之间的触摸事件冲突了”或者“View的滑动与点击事件冲突了”之类的问题。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">LayoutInflator</strong><br/>布局渲染器也是开发Android UI的时候经常用到的，不过LayoutInflator实例的创建方式有好几种，你至少得知道其之间的区别。还有，LayoutInflator在渲染指定布局的时候，有container和attachToRoot等参数，阅读源码后很快能了解其区别。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">SurfaceView和TextureView</strong><br/>阅读完View的工作机制后，就能理解为什么View在绘制复杂的UI效果时效率这么低，这时候就需要SurfaceView和TextureView了。理解双缓冲对UI更新效率的帮助，了解SurfaceView在视图叠加的时候的缺陷，了解TextureView在Android Lollipop之前的内容窜台BUG，才能用正确姿势使用这俩。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">AsyncTask</strong><br/>异步任务也是Android开发经常遇到的问题，相比自己从Thread和Handler写起，被称为“异步任务大师”的AsyncTask类自然更受到许多小伙伴的喜欢。不过AsyncTask在早期的Android版本中差别甚大，需要做大量的适配工作，而且特别容易引起异步任务引用着组件的实例导致内存泄露从而引发OOM问题，所以不推荐直接使用AsyncTask类，不过强烈推荐阅读AsyncTask的源码学习Google优秀的异步任务设计理念。此外，如果真的要使用AsyncTask，不要直接使用系统提供的AsyncTask类，AsyncTask本身就是一个单一的Java类，没有耦合其他系统类，推荐自己从最新的Android版本中复制一份AsyncTask类的代码，自己维护，在项目中当做Support包一样使用，以规避其兼容性问题。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">Volley</strong><br/>这个强烈推荐，是Google官方的异步任务框架，没有随Android发布，需要自己在Framework里下载代码。Volley的中文意思就是“并发”，阅读其源码能让你见识到原来异步任务框架也能写得这么低耦合和高扩扩展，其用“生产者-消费者”模式来处理异步请求的框架会让人拍案叫绝。此外，Volley框架是用于处理Http任务和Image加载任务，但是其优秀的异步控制思想也能运用与File、Sqlite等耗时任务的处理，当你能够自己写出类似Volley框架的代码时，说明你的Android技术已经有所突破。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">android.util.*</strong><br/>“android.util.*” 包名下有许多优秀的实用类，大多是作为Java自带类的补充，比如数据结构类的SparseArray、ArrayMap、ArraySet，用于加密的Base64，用于处理屏幕分辨率自适应的DisplayMetrics和TypedValue，用于时间换算的TimeUtils，以及用于内存缓存的LruCache，熟悉这些类对Android开发非常有帮助，也会让代码显得成熟。</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E8%BF%9B%E9%98%B6" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="进阶"></a>进阶</h3><p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">Context</strong><br/>阅读Context源码能帮助我们了解其工作机制，了解Google是怎么在Java代码上添加Android特性的，了解Android是怎么保存和获取res资源的，了解ContextWrapper和Activity这些Context有什么区别，了解Context设计的装饰者模式（Description Pattern）。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">ClassLoader</strong><br/>类加载器ClassLoader是Android虚拟机工作的基础，了解其“双亲代理模式”能让你更好的了解系统的类和你写的类是怎么工作的。Multi-Dex和ART模式也和ClassLoader的工作机制息息相关。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">Binder</strong><br/>Binder是Android上RPC（Remote Procedure Call Protocol）的实现，Android系统许多功能就是居于Binder实现的，平时应用层对Binder的使用大多是在于和Service通讯的时候，不过，当我们需要使用AIDL功能的时候，就需要接触到Binder了。（推荐阅读原理即可，反正C++驱动层我是看不下去了）</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">WMS，AMS，PMS，NMS，IMS等系统Service</strong><br/>SystemServer是Android的Framework层工作的核心，Android系统启动过程包含从Linux内核加载到Home应用程序启动的整个过程。SystemServer是Zygnote孵化的第一个进程，这个进程会启动许多Framework层功能需要用到的线程，比如用于管理窗口的WindowManagerService，用于管理Activity的ActivityManagerService，用于管理APK包信息的PackageManagerService，用于管理网络的NetworkManager，用于处理用户触摸的InputManagerService等，这些系统Service提供了APP运行时需要的大多系统功能，大多使用“stub-server”的模式进行交互，而且有大量的JNI的调用。这部分的源码比较适合从事ROM开发的人阅读，应用层的开发基本不会用到，但是这方面的只是能让我们对Android Framework层的工作机制有个大抵的认识。（非常惭愧，这部分我自己看了几次，还是没能产生融会贯通的感觉，整体的认识还是比较模糊，希望继续跟着老罗的博客，捡捡肉吃）</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="第三方开源项目"></a>第三方开源项目</h3><p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">EventBus</strong><br/>Android上的一个“订阅者-发布者”模式的实现框架，非常适合业务多而且经常变动的项目，能够有效预防“接口爆炸”，现在基本上中型以上的项目都会采用类似的框架。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">OTTO</strong><br/>同上，只不过实现的具体方案不一样，而且OTTO相比EventBus来，比较小巧，代码也比较简练，非常适合处女座的开发者食用。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">RxJava</strong><br/>相比起上面两个，RxJava可以说是把异步的思想发挥到了极致，RxJava的兴起代表了Android开发中响应式编程的崛起，同样非常适合业务多而且经常变动的项目，只不过相比传统的基于接口的开发方式，RxJava框架的开发方式会有点难以适应，特别是团队开发的时候。</p>
+<p style="margin:0px 0px 25px;"><strong style="font-weight:bold;">Guava</strong><br/>这个其实也是Google自己开源的，提供了许多优秀的Java工具类，比如“one to one mapping”的Bimap，有时候一些工具类Android或Java自带的库没有提供，或许我们可以先参考Guava的。</p>
+<p style="margin:0px 0px 25px;">以上是我自己个人推荐阅读的源码，不过每个开发者自身的兴趣和侧重点都不一样，有兴趣的参考着看就是。同时，如果有一些有趣的系统类，随时欢迎推荐给我。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E7%AB%99%E5%9C%A8%E5%B7%A8%E4%BA%BA%E7%9A%84%E8%82%A9%E8%86%80%E4%B8%8A%E9%98%85%E8%AF%BB" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="站在巨人的肩膀上阅读"></a>站在巨人的肩膀上阅读</h2><p style="margin:0px 0px 25px;">学习一个系统最好的方法就是“Read The Fucking Source Code”，坏消息是AOSP项目是在太庞大太难消化了，好消息就是现在已经有不少先驱，我们或许可以站在他们的肩膀上阅读。</p>
+<p style="margin:0px 0px 25px;"><a href="https://source.android.com/source/index.html" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">AOSP官方的介绍</a><br/>项目介绍, 代码下载, 环境搭建, 刷机方法, Eclipse配置都在这里，这是一切的基础。</p>
+<p style="margin:0px 0px 25px;"><a href="https://developer.android.com/training/index.html" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">官方教程</a> 和 <a href="http://android-developers.blogspot.jp/" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">官方博客</a><br/>这个其实是给App开发者看的，但是里面也有不少关于系统机制的介绍, 值得细读。而官方博客经常有一些开发者容易疏忽的姿势的讨论，比如“Bitmap数据的回收问题”，推荐阅读。</p>
+<p style="margin:0px 0px 25px;"><a href="http://code.google.com/p/android/issues/list" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">Android Issues</a><br/>Android官方Issue列表，记录一些系统BUG，别掉坑里了。</p>
+<p style="margin:0px 0px 25px;"><a href="http://blog.csdn.net/luoshengyang" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">老罗的Android之旅</a><br/>此老罗非彼老罗,罗升阳老师的博客非常有营养,基本可以作为指引你开始阅读AOSP源码的教程。你可以按照博客的时间顺序一篇篇挑需要的看。但这个系列的博客有些问题：早期的博客是基于旧版本的Android;<br/>大量的代码流程追踪。读文章时你一定要清楚你在看的东西在整个系统处于什么样的位置。</p>
+<p style="margin:0px 0px 25px;"><a href="http://7xih5c.com1.z0.glb.clouddn.com/16-2-9/2827740.jpg" rel="group" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"><img src="阅读ANDROID源码的一些姿势_files/2827740.jpg.png" type="image/png" data-filename="2827740.jpg.png" alt="" height="502" style="max-width:100%;height:auto;border:1px solid rgb(221, 221, 221);margin:0px auto;cursor:-webkit-zoom-in;box-sizing:border-box;padding:3px;display:block;" width="384"/></a></p>
+<p style="margin:0px 0px 25px;">同时推荐老罗的这本书，平时看博客就可以，无聊的时候，比如在动车上可以把这本书翻翻。（非常优秀的书，不过据本人描述，这本书稿费还抵不会出版费）</p>
+<p style="margin:0px 0px 25px;"><a href="http://blog.csdn.net/innost" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">Innost的专栏</a><br/>邓凡平老师也是为Android大牛, 博客同样很有营养。但是不像罗升阳老师的那么系统， 更多的是一些技术点的深入探讨。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E9%98%85%E8%AF%BB%E6%97%B6%E7%9A%84%E5%A7%BF%E5%8A%BF" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="阅读时的姿势"></a>阅读时的姿势</h2><p style="margin:0px 0px 25px;">现在的问题是：当你拿到一份几G的源码，该从哪里开始呢？</p>
+<blockquote style="margin:0px;padding:0px 15px;color:rgb(102, 102, 102);border-left:4px solid rgb(221, 221, 221);">
+<p style="margin:0px 0px 25px;">著作权归作者所有。<br/>商业转载请联系作者获得授权，非商业转载请注明出处。<br/>作者：墨小西<br/>链接：<a href="https://www.zhihu.com/question/19759722/answer/17019083" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">https://www.zhihu.com/question/19759722/answer/17019083</a><br/>来源：知乎</p>
+</blockquote>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E5%AE%8F%E8%A7%82%E4%B8%8A%E7%9C%8B%EF%BC%8CAndroid%E6%BA%90%E7%A0%81%E5%88%86%E4%B8%BA%E5%8A%9F%E8%83%BD%E5%AE%9E%E7%8E%B0%E4%B8%8A%E7%9A%84%E7%BA%B5%E5%90%91%EF%BC%8C%E5%92%8C%E5%8A%9F%E8%83%BD%E6%8B%93%E5%B1%95%E4%B8%8A%E7%9A%84%E6%A8%AA%E5%90%91%E3%80%82" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="宏观上看，Android源码分为功能实现上的纵向，和功能拓展上的横向。"></a>宏观上看，Android源码分为功能实现上的纵向，和功能拓展上的横向。</h3><p style="margin:0px 0px 25px;">在阅读源码时需要把握好着两个思路。譬如你需要研究音频系统的实现原理，纵向：你需要从一个音乐的开始播放追踪，一路下来，你发现解码库的调用，共享内存的创建和使用，路由的切换，音频输入设备的开启，音频流的开始。譬如你要看音频系统包括哪些内容，横向：通过Framework的接口，你会发现，音频系统主要包括：放音，录音，路由切换，音效处理等。</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#Android%E7%9A%84%E5%8A%9F%E8%83%BD%E6%A8%A1%E5%9D%97%E7%BB%9D%E5%A4%A7%E9%83%A8%E5%88%86%E6%98%AFC-S%E6%9E%B6%E6%9E%84" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="Android的功能模块绝大部分是C/S架构"></a>Android的功能模块绝大部分是C/S架构</h3><p style="margin:0px 0px 25px;">你心里一定需要有这个层级关系，你需要思路清晰地找到Server的位置，它才是你需要攻破的城，上面的libraries是不是很亲切的样子？看完它长成啥样后，然后你才能发现HAL和Kernel一层层地剥离。很多研究源码的同学兜兜转转，始终在JAVA层上，这是不科学的，要知道libraries才是它的精髓啊。</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#Android%E7%9A%84%E5%BA%95%E5%B1%82%E6%98%AFLinux-Kernel%E3%80%82" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="Android的底层是Linux Kernel。"></a>Android的底层是Linux Kernel。</h3><p style="margin:0px 0px 25px;">在理解上面两点之后，还是需要对Kernel部分有个简单的理解，起码你要熟悉kernel的基础协议吧！你要能看懂电路图吧！你要熟悉设备的开启和关闭吧！你要熟悉调寄存器了吧！这方面的书太多了，我建议根据实例去阅读，它并不复杂，不需要一本本厚书来铺垫。在libraries和kernel间，可能还会有个HAL的东东，其实它是对kernel层的封装，方便各个硬件的接口统一。这样，如果我换个硬件，不用跑了长得很复杂的libraries里面改了，kernel调试好了后，改改HAL就好了。</p>
+<p style="margin:0px 0px 25px;">好了，你现在是不是跃跃欲试准备去找个突破口准备进攻了，但是好像每个宝库的入口都挺难找了我大概在三个月前阅读完Android UI系统的源码，这是Android最复杂的部分，我要简单说下过程。我需要先找宝库入口，我要研究UI，首先要找什么和UI有亲戚关系吧！View大神跳出来了，沿着它往下找找看，发现它在贴图在画各种形状，但是它在哪里画呢，马良也要纸吧？很明显它就是某个宝藏，但是世人只是向我们描述了它有多美，却无人知在哪里？我们需要找一张地图罗。开发Android的同学逃不掉Activity吧！它有个setcontentview的方法，从这个名字看好像它是把view和activity结合的地方。赶紧看它的实现和被调用，然后我们就发现了Window，ViewRoot和WindowManager的身影，沿着WM和WMS我们就惊喜会发现了Surface，以及draw的函数，它居然在一个DeCorView上画东西哈。借助Source Insight， UI Java层的横向静态图呼之欲出了。完成这个静态UML，我觉得我可以开始功能实现上追踪了，这部分主要是C++的代码（这也是我坚定劝阻的放弃Eclipse的原因），我沿着draw函数，看到了各个层级的关系，SurfaceSession的控制和事务处理，SharedBuffer读写控制，彪悍的SurfaceFlinger主宰一切，OpenGL ES的神笔马良。FrameBuffer和FrameBufferDevice的图像输出，LCD设备打开后，开始接收FBD发过来的一帧帧图像，神奇吧。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="参考文献"></a>参考文献</h2><p style="margin:0px 0px 25px;"><a href="https://www.zhihu.com/question/19759722" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">知乎：大牛们是怎么阅读 Android 系统源码的？</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <div style="display:block;">
+      
+        <div style="margin-top:40px;text-align:center;">
+          
+            <a href="http://kaedea.com/tags/Android/" rel="tag" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;display:inline-block;margin-right:10px;font-size:13px;"># Android</a>
+          
+            <a href="http://kaedea.com/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="tag" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;display:inline-block;margin-right:10px;font-size:13px;"># 源码分析</a>
+          
+        </div>
+      
+
+      
+        <div style="display:table;margin-top:60px;width:100%;border-top:1px solid rgb(238, 238, 238);">
+          <div style="display:table-cell;padding:10px 0px 0px;width:45%;vertical-align:top;">
+            
+              <a href="http://kaedea.com/2016/02/08/android-about-source-code/" rel="next" style="background-color:transparent;text-decoration:none;word-wrap:break-word;color:rgb(85, 85, 85);border-bottom:none;position:relative;display:block;line-height:25px;font-size:14px;padding-left:15px;" title="有没有必要阅读ANDROID源码">
+                <i style="font-family:FontAwesome;display:inline-block;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:1;font-style:normal;-webkit-font-smoothing:antialiased;text-rendering:auto;font-size:12px;position:absolute;top:8px;left:0px;"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:1;font-family:FontAwesome;font-size:12px;"></span></i> 有没有必要阅读ANDROID源码
+              </a>
+            
+          </div>
+
+          <span style="display:table-cell;width:10%;"></span>
+
+          <div style="display:table-cell;padding:10px 0px 0px;width:45%;vertical-align:top;text-align:right;">
+            
+              <a href="http://kaedea.com/2016/02/13/whisper-learning-in-android/" rel="prev" style="background-color:transparent;text-decoration:none;word-wrap:break-word;color:rgb(85, 85, 85);border-bottom:none;position:relative;display:block;line-height:25px;font-size:14px;padding-right:15px;" title="Learning in Android">
+                Learning in Android <i style="font-size:12px;display:inline-block;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:1;font-family:FontAwesome;font-style:normal;text-rendering:auto;-webkit-font-smoothing:antialiased;position:absolute;top:8px;left:auto;right:0px;"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:1;font-family:FontAwesome;font-size:12px;"></span></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </div>
+  </div></div></div></div></div></span></div></div></div></div><br/></div></span>
+</div></body></html> 

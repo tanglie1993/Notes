@@ -1,0 +1,53 @@
+<html>
+<head>
+  <title>Handler和他的小伙伴们（上）</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2063"/>
+<h1>Handler和他的小伙伴们（上）</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1>Handler和他的小伙伴们（上）</h1><div><div></div></div></div>
+          <div>
+            字数1592
+            阅读6700
+            
+            喜欢114
+          </div>
+
+          
+          
+          
+
+          <div><h3>（一）初创</h3><p>老张已过而立之年，踌躇满志，渴望浪迹互联网的英雄豪情始终在内心澎湃，终于，他走出了这一步，成立了一家互联网公司。</p><p>老张凭借着这几年在互联网领域的积累和个人魅力，很快就组建了一个技术团队，作为技术出身的老张很重视公司的技术发展，因此重金请来了一位技术总监，关于技术方面的工作，老张和CTO事必躬亲。于是，形成了这样一种组织架构：</p><div>
+<div><img src="Handler和他的小伙伴们（上）_files/1240.png" type="image/png" data-filename="1240.png" height="324" width="576"/></div><div>老张的团队</div>
+</div><p>在这样组织架构中，老张为每个职能的定位和要求是这样子的：</p><p>自己(UI-Thread)：负责融资、战略、在互联网上撕逼、公司管理等，全身心投入公司，并尽可能挤出时间陪伴老婆孩子。</p><p>技术总监(Handler)：所有技术、产品层面的事情都必须经过技术总监，并且向老张做最后的汇报。</p><p>助理小怡(Looper)：负责汇集一线工作人员的吃喝拉撒等所有消息的汇总，并井然有序的传达给技术总监。</p><p>程序猿、产品汪、设计喵、攻城狮(Thread)：这是一群偏执、精益求精的怪物，在各自专业领域都能独当一面，可谓八仙过海，各显神通。以下简称攻城狮们。</p><h3>（二）1+1&gt;2</h3><p>一个合理的组织架构，简单明了的分工和人际关系是最适合技术团队的。公司成立之初，员工们各司其职，公司一片祥和，每个人在自己的专业领域里大放异彩。</p><h4>助理小怡（Looper）</h4><p>首先，老张为技术总监精挑细选，选拔了一名聪明伶俐，任劳任怨的助理小怡。</p><p>助理小怡的工作内容主要有两件事情，第一件事情是做好准备工作（<b>Looper.prepare()</b>），即到某宝上包邮购买了一个消息盒子（<b>MessageQueue</b>），用来收集攻城狮们（<b>Thread</b>）的各种诉求（<b>Message</b>）。第二件事情是开启无限循环的工作模式（<b>Looper.loop()</b>），她无比勤劳的等待着攻城狮们的各种召唤，收集他们的诉求，并传达给技术总监。让我们来看下她是怎么做到的：</p><p>首先是prepare(),如下：</p><div>
+<div><img src="Handler和他的小伙伴们（上）_files/1240 [1].png" type="image/png" data-filename="1240.png" height="355" width="576"/></div><div>Looper.prepare()源码</div>
+</div><p>其次是loop(),如下：</p><div>
+<div><img src="Handler和他的小伙伴们（上）_files/1240 [2].png" type="image/png" data-filename="1240.png" height="341" width="576"/></div><div>Looper.loop()源码</div>
+</div><p>Looper做好了这两件事，很好的充当了Handler和Message之间的桥梁。</p><h3>技术总监(Handler)<br/>
+</h3><p>有助理小怡这样的贴心小棉袄，技术总监的工作轻松了不少。</p><p>助理Looper在loop()中通过<b>msg.target.dispatchMessage(msg)</b>将消息分发给技术总监Handler，那么Handler将如何对这些Message进行处理，我们来看下dispatchMessage的源代码：</p><div>
+<div><img src="Handler和他的小伙伴们（上）_files/1240 [3].png" type="image/png" data-filename="1240.png" height="479" width="576"/></div><div>Handler.dispatchMessage(Message)</div>
+</div><p>由此我们得知：为什么我们在主线程中实例化Handler的时候需要重写handleMessage()。</p><h4>攻城狮们(Thread）永不安分的需求（Message）<br/>
+</h4><p>程序猿、产品汪、设计喵、攻城狮是时候登场了，这些角色是公司重要的财富，他们对技术狂热而执着，对产品敬畏而精益求精，他们犹如数台高性能的计算机，高并发的运作着，为公司创造着财富。在日常工作中，他们通常有很多技术上的问题和产品上的想法需要与技术总监进行沟通，如下代码：</p><div>
+<div><img src="Handler和他的小伙伴们（上）_files/1240 [4].png" type="image/png" data-filename="1240.png" height="1322" width="576"/></div><div>子线程与主线程的交互</div>
+</div><p>这样的代码平常见太多了，这里不做赘述，输出结果将是：</p><p><i>日理万机的CTO(默认显示)</i></p><p><i>处理Coder的需求：将安排人员排查性能问题（2s后显示）</i></p><p><i>处理PM的需求：开发人员全体加班，严格执行996（5s后显示）</i></p><h4>CEO老张(UI-Thread)</h4><p>这样的组织架构下，各职能部门确实能井然有序的进行着工作，但是彼此之间是怎么进行配合的，还需要CEO老张亲自来解答以下几个问题：</p><p><b>1.助理从哪里来，何时开始工作（<b>Looper何时实例化，</b>Looper.prepare()和Looper.loop()何时调用）？</b></p><p>关于这个问题，得从最初老张决定创建公司的时候说起，答案在ActivityThread中。</p><div>
+<div><img src="Handler和他的小伙伴们（上）_files/1240 [5].png" type="image/png" data-filename="1240.png" height="580" width="576"/></div><div>Android程序入口</div>
+</div><p><b>2.老张是何时为CTO（Handler）分配助理（Looper）的？</b></p><p>其实在老张重金请来CTO的时候，已经为他分配好助理了，如下图，在Handler的构造器中：</p><div>
+<div><img src="Handler和他的小伙伴们（上）_files/1240.jpg" type="image/jpeg" data-filename="1240.jpg" height="359" width="576"/></div><div>Handler与Looper建立关联</div>
+</div><p><b>3.助理（Looper）如何收集攻城狮们（Thread）的诉求（Message）的？</b></p><p>攻城狮们看似直接与CTO打交道（mCTOHandler.sendMessage(message)），但实际上，CTO日理万机，面对同时而来的一线人员的直接诉求，显然无法面面俱到，因此助理（Looper）在这里充当了很重要的角色，当Thread发送Message时，Looper中的消息队列MessageQueue会将Message对象存起来。我们从Handler的sendMessage()说起：</p><div>
+<div><img src="Handler和他的小伙伴们（上）_files/1240 [1].jpg" type="image/jpeg" data-filename="1240.jpg" height="379" width="576"/></div><div>Message存入MessageQueue中</div>
+</div><p>在这样的组织架构下，CEO老张—技术总监—攻城狮们—助理小怡—助理随身携带的那个消息盒子，几个角色之间默契而高效的配合着，真正实现了团队之间1+1&gt;2。</p><h3>（三）年终总结</h3><p>一年下来，公司高速运作着，在刀光剑影的互联江湖厮杀出一片立足之地。CTO对公司现有模式非常认同，在百忙之中，做了一份年终总结，总结了主线程—子线程—Handler—Looper—MessageQueue—Message之间的关系。如下图所示：</p><div>
+<div><img src="Handler和他的小伙伴们（上）_files/1240 [6].png" type="image/png" data-filename="1240.png" height="463" width="576"/></div><div>Handler流程图</div>
+</div><h3>（四）遭遇瓶颈<br/>
+</h3><p>在老张的三年战略里，第一年是“高筑墙广积粮”，用人话来说就是先活下去，目前已经顺利实现。而第二年则是“求发展”。随着A轮融资的顺利到位，老张的雄心壮志迅速燃烧，于是不断扩招人才，扩展产品线。然而此刻却发现原有的组织结构和管理模式碰到了瓶颈，那么，这个瓶颈是什么，老张又是如何来解决这个瓶颈的？且听下回分解—<a href="http://www.jianshu.com/p/1d03fe0b285c" target="_blank">《Handler和他的小伙伴们（中）》</a>。</p></div>
+        </div></div></div><br/></div></span>
+</div></body></html> 

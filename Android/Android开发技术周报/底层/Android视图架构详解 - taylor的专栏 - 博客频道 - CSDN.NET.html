@@ -1,0 +1,252 @@
+<html>
+<head>
+  <title>Android视图架构详解 - taylor的专栏 - 博客频道 - CSDN.NET</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="947"/>
+<h1>Android视图架构详解 - taylor的专栏 - 博客频道 - CSDN.NET</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1> [置顶] Android视图架构详解 </h1><div><div></div></div></div>
+
+   
+
+        <div>
+        
+        <div>
+            
+            <span>3158人阅读</span>
+            
+            <span> <a href="#" target="_blank" title="收藏">收藏</a></span>
+             
+
+        </div>
+    </div>
+    
+    
+    
+      <div>
+        
+        <div>
+                    <span>
+                        <span>android<em>（20）</em></span>
+                      
+                      
+                        
+                    </span>                    
+        </div>
+    </div>
+      
+        <div>         
+            <p>版权声明：本文为博主原创文章，未经博主允许不得转载。</p>
+        </div>
+
+  
+
+  
+  
+     
+
+
+        <p>作者： <a href="http://www.jianshu.com/users/481d9f540fb9/latest_articles" target="_blank">ztelur</a> <br/>
+联系方式：<a href="https://segmentfault.com/u/remcarpediem" target="_blank">segmentfault</a>，<a href="http://blog.csdn.net/u012422440" target="_blank">csdn</a>，<a href="http://ztelur.github.io/" target="_blank">github</a></p>
+
+<blockquote>
+  <p>转载请注明原作者、文章来源，链接，版权归原文作者所有。</p>
+</blockquote>
+
+<p> 最近一直在研究<code>View</code>的绘制相关的机制，发现需要补充一下<a href="http://lib.csdn.net/base/15" target="_blank" title="Android知识库">Android</a> View Architecture的相关知识，所以就特地研究了一下这方面的代码，写成本篇文章 <br/>
+ 为了节约你的时间，本篇文章内容大致如下:</p>
+
+<ul>
+<li><code>Activity</code>，<code>DecorView</code>，<code>PhoneWindow</code>和<code>ViewRoot</code>的作用和相关关系</li>
+</ul>
+
+
+
+<h3>Android View Architecture</h3>
+
+<p> 先来几张图，大致展现一下Android 视图<a href="http://lib.csdn.net/base/16" target="_blank" title="大型网站架构知识库">架构</a>的大概。</p>
+
+<blockquote>
+  <p>感谢网友提醒，泛化和实现这两种关系的箭头画反啦。以后要仔细学一遍UML了，平时经常画，如果有错误可真是闹笑话啊。</p>
+</blockquote>
+
+<p></p><div><img src="Android视图架构详解 - taylor的专栏 - 博客频道 - CSDN.NET_files/20160417151132961.jpg" type="image/jpeg" data-filename="20160417151132961.jpg" alt="Android View Architecture" height="502" width="576"/></div><p></p>
+
+<p></p><div><img src="Android视图架构详解 - taylor的专栏 - 博客频道 - CSDN.NET_files/20160417151156211.png" type="image/png" data-filename="20160417151156211.png" alt="View各类关系图" height="324" width="576"/></div><p></p>
+
+<p></p><div><img src="Android视图架构详解 - taylor的专栏 - 博客频道 - CSDN.NET_files/20160417151223484.png" type="image/png" data-filename="20160417151223484.png" alt="View树状图" height="605" width="500"/></div><p></p>
+
+<h3>Activity和Window</h3>
+
+<p> 总所周知,Activity并不负责视图控制，它只是控制生命周期和处理事件，真正控制视图的是<code>Window</code>。一个Activity包含了一个Window，Window才是真正代表一个窗口，也就是说Activity可以没有Window，那就相当于是Service了。在<code>ActivityThread</code>中也有控制<code>Service</code>的相关函数或许正好印证了这一点。 <br/>
+ <code>Activity</code>和<code>Window</code>的第一次邂逅是在<code>ActivityThread</code>调用<code>Activity</code>的<code>attach()</code>函数时。</p>
+
+
+
+<pre><code>//[window]:通过PolicyManager创建window,实现callback函数,所以,当window接收到
+//外界状态改变时,会调用activity的方法,
+final  attach(Context context, ActivityThread aThread,
+        Instrumentation instr, IBinder token,  ident,
+        Application application, Intent intent, ActivityInfo info,
+        CharSequence title, Activity parent, String id,
+        NonConfigurationInstances lastNonConfigurationInstances,
+        Configuration config, String referrer, IVoiceInteractor voiceInteractor) {
+    ....
+    mWindow = PolicyManager.makeNewWindow();
+    //当window接收系统发送给它的IO输入事件时,例如键盘和触摸屏事件,就可以转发给相应的Activity
+    mWindow.setCallback();
+    .....
+    //设置本地窗口管理器
+    mWindow.setWindowManager(
+            (WindowManager)context.getSystemService(Context.WINDOW_SERVICE),
+            mToken, mComponent.flattenToString(),
+            (info.flags &amp; ActivityInfo.FLAG_HARDWARE_ACCELERATED) != );
+    .....
+}</code></pre>
+
+<p> 在<code>attach()</code>中，新建一个<code>Window</code>实例作为自己的成员变量，它的类型为<code>PhoneWindow</code>,这是抽象类<code>Window</code>的一个子类。然后设置<code>mWindow</code>的<code>WindowManager</code>。</p>
+
+
+
+<h3>Window,Activity和DecorView</h3>
+
+<p> <code>DecorView</code>是<code>FrameLayout</code>的子类，它可以被认为是Android视图树的根节点视图。<code>DecorView</code>作为顶级View，一般情况下它内部包含一个竖直方向的<code>LinearLayout</code>，在这个LinearLayout里面有上下两个部分（具体情况和Android版本及主体有关），上面的是标题栏，下面的是内容栏。在Activity中通过setContentView所设置的布局文件其实就是被加到内容栏之中的，而内容栏的id是content，在代码中可以通过ViewGroup content = （ViewGroup)findViewById(R.android.id.content)来得到content对应的layout。 <br/>
+ <code>Window</code>中有几个视图相关的比较重要的成员变量如下所示:</p>
+
+<ul>
+<li><code>mDecor</code>:<code>DecorView</code>的实例，标示<code>Window</code>内部的顶级视图</li>
+<li><code>mContentParent</code>:<code>setContetView</code>所设置的布局文件就加到这个视图中</li>
+<li><code>mContentRoot</code>:是<code>DecorView</code>的唯一子视图，内部包含<code>mContentParent</code>,标题栏和状态栏。</li>
+</ul>
+
+<p> Activity中不仅持有一个<code>Window</code>实例，还有一个类型为<code>View</code>的<code>mDecor</code>实例。这个实例和<code>Window</code>中的<code>mDecor</code>实例有什么关系呢？它又是什么时候被创建的呢？ <br/>
+ 二者其实指向同一个对象，这个对象是在<code>Activity</code>调用<code>setContentView</code>时创建的。我们都知道<code>Activity</code>的<code>setContentView</code>实际上是调用了<code>Window</code>的<code>setContentView</code>方法。</p>
+
+
+
+<pre><code>@Override
+public  setContentView( layoutResID) {
+     (mContentParent == ) { //[window]如何没有DecorView,那么就新建一个
+        installDecor(); //[window]
+    }   (!hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
+        mContentParent.removeAllViews();
+    }
+    ....
+    //[window]第二步,将layout添加到mContentParent
+    mLayoutInflater.inflate(layoutResID, mContentParent);
+    .....
+}</code></pre>
+
+<p> 代码很清楚的显示了布局文件的视图是添加到<code>mContentParent</code>中，而且<code>Window</code>通过<code>installDecor</code>来新建<code>DecorView</code>。</p>
+
+
+
+<pre><code>//[window]创建一个decorView
+private  installDecor() {
+     (mDecor == ) {
+        mDecor = generateDecor(); //直接new出一个DecorView返回
+        ....
+    }
+     (mContentParent == ) {
+        //[window] 这一步也是很重要的.
+        mContentParent = generateLayout(mDecor); //mContentParent是setContentVIew的关键啊
+        .....
+    }
+    ....
+}
+protected ViewGroup generateLayout(DecorView decor) {
+    // Apply data from current theme.
+    .......
+    //[window] 根据不同的style生成不同的decorview啊
+    View in = mLayoutInflater.inflate(layoutResource, );
+    // 加入到deco中,所以应该是其第一个child
+    decor.addView(in,  ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+    mContentRoot = (ViewGroup) in; //给DecorView的第一个child是mContentView
+    // 这是获得所谓的content 
+    ViewGroup contentParent = (ViewGroup)findViewById(ID_ANDROID_CONTENT);
+    }
+    .....
+    return contentParent;
+}
+</code></pre>
+
+<p> 从上述的代码中，我们可以清楚的看到<code>mDecor</code>和<code>mContentParent</code>和<code>mContentRoot</code>的关系。 <br/>
+ 那么，<code>Activity</code>中的<code>mDecor</code>是何时被赋值的？我们如何确定它和<code>Widnow</code>中的<code>mDecor</code>指向同一个对象呢？我们可以查看<code>ActivityThread</code>的<code>handleResumeActivity</code>函数，它负责处理<code>Activity</code>的<code>resume</code>阶段。在这个函数中，Android直接将<code>Window</code>中的<code>DecorView</code>实例赋值给<code>Activity</code>。</p>
+
+
+
+<pre><code>final Activity a = r.activity;
+r.window = r.activity.getWindow();
+View decor = r.window.getDecorView();
+decor.setVisibility(View.INVISIBLE);
+ViewManager wm = a.getWindowManager();
+WindowManager.LayoutParams l = r.window.getAttributes();
+a.mDecor = decor;</code></pre>
+
+
+
+<h3>Window，DecorView 和 ViewRoot</h3>
+
+<p> <code>ViewRoot</code>对应<code>ViewRootImpl</code>类，它是连接<code>WindowManagerService</code>和<code>DecorView</code>的纽带，View的三大流程(测量（measure），布局（layout），绘制（draw）)均通过ViewRoot来完成。<code>ViewRoot</code>并不属于View树的一份子。从源码实现上来看，它既非View的子类，也非View的父类，但是，它实现了<code>ViewParent</code>接口，这让它可以作为<code>View</code>的名义上的父视图。<code>RootView</code>继承了<code>Handler</code>类，可以接收事件并分发，Android的所有触屏事件、按键事件、界面刷新等事件都是通过ViewRoot进行分发的。<strong>ViewRoot可以被理解为“View树的管理者”——它有一个mView成员变量，它指向的对象和上文中<code>Window</code>和<code>Activity</code>的<code>mDecor</code>指向的对象是同一个对象</strong>。</p>
+
+<p> 我们来先看一下<code>ViewRoot</code>的创建过程。由于<code>ViewRoot</code>作为<code>WindowMangerService</code>和<code>DecorView</code>的纽带，只有在<code>WindowManager</code>将持有<code>DecorView</code>的<code>Window</code>添加进窗口管理器才创建。我们可以查看<code>WindowMangerGlobal</code>中的<code>addView</code>函数。对<code>WindowManager</code>不太熟悉的同学可以参考<a href="http://ztelur.github.io/2015/10/28/Window%E5%92%8CWindowManager%E8%A7%A3%E6%9E%90/" target="_blank">《Window和WindowManager解析》</a></p>
+
+
+
+<pre><code>public  addView(View view, ViewGroup.LayoutParams params,
+        Display display, Window parentWindow) {
+        // 创建ViewRootImpl,然后将下述对象添加到列表中
+    ....
+    root =  ViewRootImpl(view.getContext(), display);
+
+    view.setLayoutParams(wparams);
+
+    mViews.add(view);
+    mRoots.add(root);
+    mParams.add(wparams);
+    ....
+     {
+        // 添加啦!!!!!!!!这是通过ViewRootImpl的setView来完成，这个View就是DecorView实例
+        root.setView(view, wparams, panelParentView);
+    } catch (RuntimeException e) {
+      ....
+    }
+    ....
+}</code></pre>
+
+<p> 那么，<code>Window</code>是什么时候被添加到<code>WindowManager</code>中的呢？我们回到<code>ActivityThread</code>的<code>handleResumeActivity</code>函数。我们都知道Activity的resume阶段就是要显示到屏幕上的阶段，在Activity也就是<code>DecorView</code>将要显示到屏幕时，系统才会调用<code>addView</code>方法。 <br/>
+ 我们在<code>handleResumeActivity</code>函数中找到了下面一段代码,它调用了<code>Activity</code>的<code>makeVisible()</code>函数。</p>
+
+
+
+<pre><code>// ActivityThread
+r.activity.makeVisible();
+
+//Activity
+    //[windows] DecorView正式添加并显示
+     makeVisible() {
+         (!mWindowAdded) {
+            ViewManager wm = getWindowManager();
+            wm.addView(mDecor, getWindow().getAttributes());
+            mWindowAdded = ;
+        }
+        mDecor.setVisibility(View.VISIBLE);
+    }</code></pre>
+
+<p> 我们通过源代码发现，正式在<code>makeVisible</code>函数中，系统进行了<code>Window</code>的添加。</p>
+
+<p>引用 <br/>
+<a href="http://wiki.jikexueyuan.com/project/deep-android-v1/surface.html" target="_blank">http://wiki.jikexueyuan.com/project/deep-android-v1/surface.html</a> <br/>
+<a href="http://blog.csdn.net/guxiao1201/article/details/41744107" target="_blank">http://blog.csdn.net/guxiao1201/article/details/41744107</a> <br/>
+<a href="http://forlan.iteye.com/blog/2269381" target="_blank">http://forlan.iteye.com/blog/2269381</a></p></div></div></div><br/></div></span>
+</div></body></html> 

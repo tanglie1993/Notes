@@ -1,0 +1,397 @@
+<html>
+<head>
+  <title>Android插件化与热修复(六)-微信Tinker原理分析</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3045"/>
+<h1>Android插件化与热修复(六)-微信Tinker原理分析</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:10px;-webkit-tap-highlight-color:transparent;"><div style="box-sizing:border-box;font-size:17px;line-height:1.42857;color:rgb(51, 51, 51);background-color:rgb(255, 255, 255);min-width:768px;font-family:-apple-system, &quot;SF UI Text&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;">
+        <h1 style="box-sizing:border-box;color:inherit;margin-top:20px;margin-bottom:10px;font-size:34px;margin:20px 0px 0px;font-family:-apple-system, &quot;SF UI Display&quot;, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, &quot;WenQuanYi Micro Hei&quot;, sans-serif;font-weight:700;line-height:1.3;word-break:break-word;">Android插件化与热修复(六)-微信Tinker原理分析</h1>
+
+        
+        <div style="box-sizing:border-box;margin:30px 0px 40px;">
+          <a href="https://www.jianshu.com/u/6e5ebce41b4f" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 51, 51);text-decoration:none;cursor:pointer;width:48px;height:48px;display:inline-block;vertical-align:middle;">
+            <img src="Android插件化与热修复(六)-微信Tinker原理分析_files/96.jpg" type="image/jpeg" data-filename="96.jpg" alt="96" height="46" style="box-sizing:border-box;vertical-align:middle;border:1px solid rgb(221, 221, 221);width:100%;height:100%;border-radius:50%;" width="46"/>
+</a>          <div style="box-sizing:border-box;vertical-align:middle;display:inline-block;margin-left:8px;">
+            <span style="box-sizing:border-box;margin-right:3px;font-size:16px;vertical-align:middle;"><a href="https://www.jianshu.com/u/6e5ebce41b4f" style="box-sizing:border-box;background-color:transparent;color:rgb(51, 51, 51);text-decoration:none;cursor:pointer;">野生的安卓兽</a></span>
+            
+            <a style="cursor:pointer;background-color:rgb(66, 192, 46);color:rgb(255, 255, 255);text-decoration:none;display:inline-block;margin-bottom:0px;font-weight:400;text-align:center;vertical-align:middle;touch-action:manipulation;box-sizing:border-box;background-image:none;border:1px solid transparent;white-space:nowrap;user-select:none;border-radius:40px;line-height:normal;border-color:rgb(66, 192, 46);font-size:12px;padding:0px 7px 0px 5px;"><i style="box-sizing:border-box;font-size:inherit;font-style:normal;-webkit-font-smoothing:antialiased;font-family:iconfont;font-weight:400;"><span style="font-size:inherit;font-style:normal;font-family:iconfont;font-weight:400;"></span></i><span style="box-sizing:border-box;margin-left:2px;display:inline;">关注</span></a>
+            
+            <div style="box-sizing:border-box;margin-top:5px;font-size:12px;color:rgb(150, 150, 150);">
+              
+                <span style="box-sizing:border-box;padding-right:5px;" title="">2017.07.23 17:55*</span>
+              <span style="box-sizing:border-box;padding-right:5px;">字数 2637</span>
+            <span style="box-sizing:border-box;padding-right:5px;">阅读 709</span><span style="box-sizing:border-box;padding-right:5px;">评论 0</span><span style="box-sizing:border-box;padding-right:5px;">喜欢 4</span></div>
+          </div>
+          
+        </div>
+        
+
+        
+        <div style="box-sizing:border-box;color:rgb(47, 47, 47);font-size:16px;font-weight:400;line-height:1.7;word-break:break-word;">
+          <h2 style="box-sizing:border-box;font-family:inherit;margin-top:20px;margin-bottom:10px;font-weight:700;line-height:1.7;color:rgb(47, 47, 47);font-size:24px;margin:0px 0px 15px;text-rendering:optimizeLegibility;">Tinker热修复原理分析</h2>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">热补丁技术是在用户不需要重新安装应用的情况下实现应用更新，可快速解决一些线上问题。热补丁省去了Android应用发布版本的成本，而且用户端的更新也是无感知的。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">Tinker 是微信官方发布的 Android 热补丁解决方案，它支持动态下发代码、So库以及资源，让应用能够在不需要重新安装的情况下实现更新。本文中主要介绍一下Tinker的热补丁实现原理以及部分关键代码，本文中只涉及动态下发代码的方案，So库以及资源的更新在后续文章中再介绍。<br style="box-sizing:border-box;"/>
+在介绍Tinker热修复方案之前，我们先简单介绍一下QZONE 的热修复方案，因为两者的原理类似，Tinker 是一个更优化的方案。QZONE和Tinker都利用了Android 的类加载机制，Android中有两个主要的Classloader，PathClassLoader和DexClassLoader，它们都继承自BaseDexClassLoader，这两个类加载器的主要区别是：Android系统通过PathClassLoader来加载系统类和主dex中的类。而DexClassLoader则可用于加载指定路径的apk、jar或dex文件。上述两个类都是继承自BaseDexClassLoader</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:521px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:74.55000000000001%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android插件化与热修复(六)-微信Tinker原理分析_files/700.png" type="image/png" data-filename="700.png" height="522" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+
+</div><br style="box-sizing:border-box;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们可以看一下关键源码：</p>
+
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(147, 161, 161);">//BaseDexClassLoader </span>
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">BaseDexClassLoader</span><span style="box-sizing:border-box;">(String dexPath, File optimizedDirectory,
+            String libraryPath, ClassLoader parent)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">super</span>(parent);
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">this</span>.pathList = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> DexPathList(<span style="box-sizing:border-box;color:rgb(133, 153, 0);">this</span>, dexPath, libraryPath, optimizedDirectory);<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//创建一个DexPathList的实例</span>
+    }
+    
+    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">protected</span> Class&lt;?&gt; findClass(String name) <span style="box-sizing:border-box;color:rgb(133, 153, 0);">throws</span> ClassNotFoundException {
+        List&lt;Throwable&gt; suppressedExceptions = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> ArrayList&lt;Throwable&gt;();
+        Class c = pathList.findClass(name, suppressedExceptions); <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// 调用DexPathList中的findclass方法</span>
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> c; 
+    }
+
+
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">// DexPathList</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> Class <span style="box-sizing:border-box;color:rgb(38, 139, 210);">findClass</span><span style="box-sizing:border-box;">(String name, List&lt;Throwable&gt; suppressed)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">for</span> (Element element : dexElements) {
+            DexFile dex = element.dexFile;
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (dex != <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>) {
+               Class clazz = dex.loadClassBinaryName(name, definingContext, suppressed);
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (clazz != <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>) {
+                    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> clazz;
+                }
+            }
+        }
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (dexElementsSuppressedExceptions != <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>) {
+            suppressed.addAll(Arrays.asList(dexElementsSuppressedExceptions));
+        }
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+    }
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">BaseDexClassLoader 的构造函数中创建一个DexPathList实例，DexPathList的构造函数会创建一个dexElements 数组,BaseDexClassLoader 在findclass方法中调用了pathList.findClass，这个方法中会遍历dexpathlist中的dexElements数组，然后初始化DexFile，如果DexFile不为空那么调用DexFile类的loadClassBinaryName方法返回Class实例。简言之，ClassLoader会遍历dexelements,然后加载这个数组中的dex文件. ClassLoader在加载到正确的类之后就会停止加载此类,因此我们将包含正确的类的Dex文件中插入在dexElements数组前面就可以完成对问题类的修复。这便是QQzone方案的主要机制，如下图所示：</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:280px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:38.3%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android插件化与热修复(六)-微信Tinker原理分析_files/700 [1].png" type="image/png" data-filename="700.png" height="268" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+
+</div>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">但是QQ空间热修复技术存在一个问题：假设A类在static方法，private方法，构造函数，override方法中直接引用到B类。如果A类和B类在同一个dex中，那么A类就会被打上CLASS_ISPREVERIFIED标记，被打上这个标记的类不能引用其他dex中的类，否则就会报错，那使用上述的热修复方法就会出问题。为了防止热修复失败，需要防止类被打上CLASS_ISPREVERIFIED的标志（详细机制请参考QQ空间技术文章<a href="https://link.jianshu.com/?t=https://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&amp;mid=400118620&amp;idx=1&amp;sn=b4fdd5055731290eef12ad0d17f39d4a" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">https://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&amp;mid=400118620&amp;idx=1&amp;sn=b4fdd5055731290eef12ad0d17f39d4a</a>）<br style="box-sizing:border-box;"/>
+Qzone热修复方案会对所有类进行插桩操作，也就是在所有类的构造函数中引用另外一个单独的dex文件 heck.dex文件中的类，这种插桩操作导致所有类都无法打上CLASS_ISPREVERIFIED标识，也就解决了之前描述的问题。但这有一个副作用，会直接导致所有的verify与optimize操作在加载类时触发。这会产生一定的性能损耗。<br style="box-sizing:border-box;"/>
+为了优化性能需要避免进行插桩操作，微信Tinker针对这一问题采用了一种更优的方案。首先我们先通过下图来总体了解下Tinker热修复方案的流程</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:452px;max-height:1155px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:165.04000000000002%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android插件化与热修复(六)-微信Tinker原理分析_files/452.png" type="image/png" data-filename="452.png" height="746" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="452"/></div>
+</div>
+
+</div><br style="box-sizing:border-box;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">Tinker进行热修复的流程为：</p>
+
+<ol style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">新dex与旧dex通过dex差分算法生成差异包  patch.dex</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">将patch dex下发到客户端，客户端将patch dex与旧dex合成为新的全量dex</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">将合成后的全量dex 插入到dex elements前面(此部分和QQ空间机制类似)，完成修复</li>
+</ol>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">可见，Tinker和QQ空间方案最大的不同是，Tinker 下发新旧DEX的差异包，然后将差异包和旧包合成新dex之后进行dex的全量替换，这样也就避免了QQ空间中的插桩操作。然后我们详细看下每一个流程的详细实现细节。<br style="box-sizing:border-box;"/>
+Tinker的差量包patch.dex是如何生成的，Tinker生成新旧dex的差异包使用了微信自研的dexdiff算法，dexdiff算法是基于dex文件的结构来设计的，首先我们详细看一下dex文件结构：</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:700px;max-height:715px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:102.25%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android插件化与热修复(六)-微信Tinker原理分析_files/700 [2].png" type="image/png" data-filename="700.png" height="716" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="700"/></div>
+</div>
+
+</div><br style="box-sizing:border-box;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">以下为dex文件中各个区域的内容含义：<br style="box-sizing:border-box;"/>
+header: dex文件头部，记录整个dex文件的相关属性<br style="box-sizing:border-box;"/>
+string_ids: 涉及了文件中所用到的所有字符串，包括内部名称（比如类型描述符）或者代码引用的常量对象。按照UTF-16来进行排序<br style="box-sizing:border-box;"/>
+type_ids: 涉及了文件中所有用到的类型（如类、数组或者原始类型），不论是否是在文件中定义。按照类型字符串在string_ids中的索引来排序<br style="box-sizing:border-box;"/>
+proto_ids: 文件中所有用到的方法原型。列表按返回值类型在type_ids中的索引进行排序，索引相同的话再按参数类型在type_ids中的索引排序。<br style="box-sizing:border-box;"/>
+field_ids: 文件中所有用到的类属性，不论其是否在文件中定义。列表依次按照所在类的类型（type_ids索引）、属性名（string_ids索引）、自身类型（type_ids）进行排序<br style="box-sizing:border-box;"/>
+method_ids: 涉及了文件中所有用到的方法，不论是否在文件中定义。列表依次按照方法所在类的类型（按type_ids索引）、方法名（按string_ids索引）、方法原型（按proto_ids索引），不得含有重复条目<br style="box-sizing:border-box;"/>
+class_defs: 类定义列表，列表的顺序必须符合一个类的基类以及其所实现的接口在这个类的前面这一规则。此外，列表中出现多个同名类的定义是无效的。<br style="box-sizing:border-box;"/>
+data:  数据区，包含上述各个结构所需的所有支持数据。不同的条目有不同的数据对齐要求，如果有需要，会在条目之前插入若干字节以满足合适的对齐<br style="box-sizing:border-box;"/>
+为了更直观的来理解，我们可以将如下代码编译生成dex文件，然后使用dex查看工具来看下Dex中的详细内容</p>
+
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">class</span> <span style="box-sizing:border-box;color:rgb(181, 137, 0);">Hello</span>
+</span>{
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">main</span><span style="box-sizing:border-box;">(String[] argc)</span>
+    </span>{
+        System.out.println(<span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;Hello, Android!\n&quot;</span>);
+    }
+}
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">使用dex查看工具查看生成的dex文件，其中 string_ids区域的内容如下：</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:299px;max-height:262px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:87.63%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android插件化与热修复(六)-微信Tinker原理分析_files/299.jpg" type="image/jpeg" data-filename="299.jpg" height="262" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="299"/></div>
+</div>
+
+</div>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">以string section为例，string section记录的是文件中所用到的所有字符串，包括内部名称（比如类型描述符）或者代码引用的常量对象，按照UTF-16来进行排序，如果修改代码后dex文件中这一区域数据发生了变化，我们如何记录数据的变更呢，我们通过一个简化的方案来描述diff算法，如下图示意图(图片引用自文章)，假设左边为原dex文件中的string section区域数据，右侧为修改代码后新dex中string section的数据，并且数据是顺序排列的。那么从old变为new，我们就需要知道哪些位置的数据要删除，哪些位置要添加数据，并把这些变化通过最少的数据量记录下来。</p>
+<br style="box-sizing:border-box;"/>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:645px;max-height:175px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:27.13%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android插件化与热修复(六)-微信Tinker原理分析_files/645.jpg" type="image/jpeg" data-filename="645.jpg" height="175" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="645"/></div>
+</div>
+
+</div><br style="box-sizing:border-box;"/>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">看着上面这个简化的示意图，我们描述一下diff算法的主要流程</p>
+
+<ol style="box-sizing:border-box;margin-top:0px;margin-bottom:20px;padding:0px;margin-left:22px;word-break:break-word;">
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">对于dex文件中的每项Section，遍历其每一项Item，进行新数据与旧数据的对比（新旧数据的对比方法是oldItem.compareTo(newItem)，结果小于0记为DEL，大于0记为ADD），记录在哪些位置需要ADD一个值，哪些位置需要DEL一个值，并把这些操作项存放于patchOperationList中。按照图中的例子，就是删除位置2的数据，在位置5添加f。为了减少存储的数据，</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">Tinker中会遍历patchOperationList，将同一个位置既有DEL标识又有ADD标识的情况，替换为REPLACE标识，最后将ADD，DEL，REPLACE标识数据分别记录到各自的List中</li>
+<li style="box-sizing:border-box;line-height:30px;margin-bottom:10px;">最后将操作记录列表写入补丁patch.dex中<br style="box-sizing:border-box;"/>
+生成patch.dex后，进行下一步是将patch下发到客户端后合成全量的dex，合成dex这部分内容此处不再展开说，是差量过程的反过程</li>
+</ol>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:387px;max-height:462px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:119.38%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android插件化与热修复(六)-微信Tinker原理分析_files/387.png" type="image/png" data-filename="387.png" height="462" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="387"/></div>
+</div>
+
+</div>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">下面通过关键代码来分析下合成dex结束后加载全量dex的流程：因为打完补丁的全量dex的加载是在Application 启动之后onBaseContextAttached完成的，这样无法对application类进行修复，为了解决这一问题Tinker中也是使用了一个application的代理类来完成application的实际逻辑处理。我们从代理application类的onBaseContextAttached方法开始看，设计到的几个关键类如下：</p>
+<div style="box-sizing:border-box;padding-bottom:25px;width:700px;margin-left:-40px;text-align:center;">
+<div style="box-sizing:border-box;z-index:100;position:relative;background-color:transparent;transition:background-color 0.1s linear;margin:0px auto;max-width:674px;max-height:552px;">
+<div style="box-sizing:border-box;z-index:50;padding-bottom:81.89999999999999%;"></div>
+<div style="box-sizing:border-box;position:absolute;top:0px;left:0px;width:100%;height:100%;overflow:hidden;"><img src="Android插件化与热修复(六)-微信Tinker原理分析_files/674.png" type="image/png" data-filename="674.png" height="552" style="box-sizing:border-box;border:0px;vertical-align:middle;max-width:100%;height:auto;transition:all 0.15s linear;z-index:100;filter:blur(0px);opacity:1;cursor:zoom-in;" width="674"/></div>
+</div>
+
+</div>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">以下为源码部分</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">    <span style="box-sizing:border-box;">@Override</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onBaseContextAttached</span><span style="box-sizing:border-box;">(Context base)</span> </span>{
+        loadTinker(); <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// 通过反射初始化我们之前传过来的com.tencent.tinker.loader.TinkerLoader，并且调用它的tryLoad方法，这个是加载补丁包的关键方法</span>
+        ensureDelegate();<span style="box-sizing:border-box;color:rgb(147, 161, 161);">// 生成application代理类，处理生命周期调用</span>
+        applicationLike.onBaseContextAttached(base);
+        ...
+    }
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">通过反射来调用TinkerLoader中的tryload方法，</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">loadTinker</span><span style="box-sizing:border-box;">()</span> </span>{
+        tinkerResultIntent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent();
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">try</span> {
+            <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//通过反射调用TinkerLoader中的tryload方法</span>
+            Class&lt;?&gt; tinkerLoadClass = Class.forName(loaderClassName, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">false</span>, getClassLoader());
+            Method loadMethod = tinkerLoadClass.getMethod(TINKER_LOADER_METHOD, TinkerApplication.class, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span>.class, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span>.class);
+            Constructor&lt;?&gt; constructor = tinkerLoadClass.getConstructor();
+            tinkerResultIntent = (Intent) loadMethod.invoke(constructor.newInstance(), <span style="box-sizing:border-box;color:rgb(133, 153, 0);">this</span>, tinkerFlags, tinkerLoadVerifyFlag);
+        } <span style="box-sizing:border-box;color:rgb(133, 153, 0);">catch</span> (Throwable e) {
+            ShareIntentUtil.setIntentReturnCode(tinkerResultIntent, ShareConstants.ERROR_LOAD_PATCH_UNKNOWN_EXCEPTION);
+            tinkerResultIntent.putExtra(INTENT_PATCH_EXCEPTION, e);
+        }
+    }
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">TinkerLoader 类</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> Intent <span style="box-sizing:border-box;color:rgb(38, 139, 210);">tryLoad</span><span style="box-sizing:border-box;">(TinkerApplication app, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> tinkerFlag, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> tinkerLoadVerifyFlag)</span> </span>{
+        Intent resultIntent = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> Intent();
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">long</span> begin = SystemClock.elapsedRealtime();
+        tryLoadPatchFilesInternal(app, tinkerFlag, tinkerLoadVerifyFlag, resultIntent); <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//在tryLoadPatchFilesInternal中首先要进行环境校验,完成校验流程后再加载补丁，校验的详细内容不展开讨论</span>
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">long</span> cost = SystemClock.elapsedRealtime() - begin;
+        ShareIntentUtil.setIntentPatchCostTime(resultIntent, cost);
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> resultIntent;
+    }
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">tryLoadPatchFilesInternal中首先进行校验工作，这部分校验工作的代码细节省略</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;">    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">tryLoadPatchFilesInternal</span><span style="box-sizing:border-box;">(TinkerApplication app, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">int</span> tinkerFlag, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> tinkerLoadVerifyFlag, Intent resultIntent)</span> </span>{
+
+....省略掉安全校验部分代码
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">final</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> isEnabledForDex = ShareTinkerInternals.isTinkerEnabledForDex(tinkerFlag);  <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// 检查是否支持dex文件修复</span>
+
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isEnabledForDex) {
+            <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//tinker/patch.info/patch-641e634c/dex</span>
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> dexCheck = TinkerDexLoader.checkComplete(patchVersionDirectory, securityCheck, resultIntent); <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// 进一步检查dex文件是否存在</span>
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (!dexCheck) {
+                Log.w(TAG, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;tryLoadPatchFiles:dex check fail&quot;</span>);
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+            }
+        }
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> isSystemOTA = ShareTinkerInternals.isVmArt() &amp;&amp; ShareTinkerInternals.isSystemOTA(patchInfo.fingerPrint);
+        resultIntent.putExtra(ShareIntentUtil.INTENT_PATCH_SYSTEM_OTA, isSystemOTA);  <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//如果用户是在ART环境并且做了OTA升级则在加载dex补丁的时候就会先把最近一次的补丁全部DexFile.loadDex一遍重新生成odex.再加载dex补丁</span>
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isEnabledForDex) {
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> loadTinkerJars = TinkerDexLoader.loadTinkerJars(app, tinkerLoadVerifyFlag, patchVersionDirectory, resultIntent, isSystemOTA);
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (!loadTinkerJars) {
+                Log.w(TAG, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;tryLoadPatchFiles:onPatchLoadDexesFail&quot;</span>);
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+            }
+        }
+        ····
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span>;
+    }
+</code></pre>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(147, 161, 161);">//TinkerDexLoader</span>
+    <span style="box-sizing:border-box;">@TargetApi</span>(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">loadTinkerJars</span><span style="box-sizing:border-box;">(Application application, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> tinkerLoadVerifyFlag, String directory, Intent intentResult, <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> isSystemOTA)</span> </span>{
+
+        PathClassLoader classLoader = (PathClassLoader) TinkerDexLoader.class.getClassLoader();
+        String dexPath = directory + <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;/&quot;</span> + DEX_PATH + <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;/&quot;</span>;
+        File optimizeDir = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> File(directory + <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;/&quot;</span> + DEX_OPTIMIZE_PATH);
+        ArrayList&lt;File&gt; legalFiles = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> ArrayList&lt;&gt;();
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">final</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">boolean</span> isArtPlatForm = ShareTinkerInternals.isVmArt();
+        <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// 获取合法的文件列表</span>
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">for</span> (ShareDexDiffPatchInfo info : dexList) {
+            <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//for dalvik, ignore art support dex</span>
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isJustArtSupportDex(info)) {
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">continue</span>;
+            }
+            String path = dexPath + info.realName;
+            File file = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> File(path);
+            }
+            legalFiles.add(file);
+        }
+<span style="box-sizing:border-box;color:rgb(147, 161, 161);">//isSystemOTA判断,如果用户是ART环境并且做了OTA升级，加载dex补丁的时候首先将最近一次的补丁全部DexFile.loadDex一遍.之所以这样做是因为有些场景做了OTA后,OTA的规则可能发生变化,在这种情况下去加载上个系统版本oat过的dex就会出现问题.</span>
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (isSystemOTA) {
+            parallelOTAResult = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">true</span>;
+            parallelOTAThrowable = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">null</span>;
+            Log.w(TAG, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;systemOTA, try parallel oat dexes!!!!!&quot;</span>);
+
+            TinkerParallelDexOptimizer.optimizeAll(
+                legalFiles, optimizeDir,
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> TinkerParallelDexOptimizer.ResultCallback() {
+                    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">long</span> start;
+
+                    <span style="box-sizing:border-box;">@Override</span>
+                    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onSuccess</span><span style="box-sizing:border-box;">(File dexFile, File optimizedDir, File optimizedFile)</span> </span>{
+                        <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// Do nothing.</span>
+                        Log.i(TAG, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;success to optimize dex &quot;</span> + dexFile.getPath() + <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;use time &quot;</span> + (System.currentTimeMillis() - start));
+                    }
+                    <span style="box-sizing:border-box;">@Override</span>
+                    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">onFailed</span><span style="box-sizing:border-box;">(File dexFile, File optimizedDir, Throwable thr)</span> </span>{
+                        parallelOTAResult = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">false</span>;
+                        parallelOTAThrowable = thr;
+                        Log.i(TAG, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;fail to optimize dex &quot;</span> + dexFile.getPath() + <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;use time &quot;</span> + (System.currentTimeMillis() - start));
+                    }
+                }
+            );          
+               intentResult.putExtra(ShareIntentUtil.INTENT_PATCH_EXCEPTION, parallelOTAThrowable);
+                ShareIntentUtil.setIntentReturnCode(intentResult, ShareConstants.ERROR_LOAD_PATCH_VERSION_PARALLEL_DEX_OPT_EXCEPTION);
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">false</span>;
+            }
+        }
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">try</span> {
+            <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//接下来就是调用SystemClassLoaderAdder的installDexes方法</span>
+            SystemClassLoaderAdder.installDexes(application, classLoader, optimizeDir, legalFiles);
+        } <span style="box-sizing:border-box;color:rgb(133, 153, 0);">catch</span> (Throwable e) {
+            intentResult.putExtra(ShareIntentUtil.INTENT_PATCH_EXCEPTION, e);
+            ShareIntentUtil.setIntentReturnCode(intentResult, ShareConstants.ERROR_LOAD_PATCH_VERSION_DEX_LOAD_EXCEPTION);
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">false</span>;
+        }
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">true</span>;
+    }
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">经过前面的各种校验操作后，接下来到了真正加载dex补丁的流程。Tinker加载dex补丁按照系统版本不同会分别进行处理，如果加载失败将记录失败信息到intentResult中。</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(147, 161, 161);">// SystemClassLoaderAdder</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">public</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">installDexes</span><span style="box-sizing:border-box;">(Application application, PathClassLoader loader, File dexOptDir, List&lt;File&gt; files)</span>
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">throws</span> Throwable </span>{
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (!files.isEmpty()) {
+            ClassLoader classLoader = loader;
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (Build.VERSION.SDK_INT &gt;= <span style="box-sizing:border-box;color:rgb(42, 161, 152);">24</span>) {
+                classLoader = AndroidNClassLoader.inject(loader, application);
+            }
+            <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//because in dalvik, if inner class is not the same classloader with it wrapper class.</span>
+            <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//it won't fail at dex2opt</span>
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (Build.VERSION.SDK_INT &gt;= <span style="box-sizing:border-box;color:rgb(42, 161, 152);">23</span>) {
+                V23.install(classLoader, files, dexOptDir);
+            } <span style="box-sizing:border-box;color:rgb(133, 153, 0);">else</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (Build.VERSION.SDK_INT &gt;= <span style="box-sizing:border-box;color:rgb(42, 161, 152);">19</span>) {
+                V19.install(classLoader, files, dexOptDir);
+            } <span style="box-sizing:border-box;color:rgb(133, 153, 0);">else</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (Build.VERSION.SDK_INT &gt;= <span style="box-sizing:border-box;color:rgb(42, 161, 152);">14</span>) {
+                V14.install(classLoader, files, dexOptDir);
+            } <span style="box-sizing:border-box;color:rgb(133, 153, 0);">else</span> {
+                V4.install(classLoader, files, dexOptDir);
+            }
+            <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//install done</span>
+            sPatchDexCount = files.size();
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">if</span> (!checkDexInstall(classLoader)) {
+                <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//reset patch dex</span>
+                SystemClassLoaderAdder.uninstallPatchDex(classLoader);
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">throw</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> TinkerRuntimeException(ShareConstants.CHECK_DEX_INSTALL_FAIL);
+            }
+        }
+    }
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">对于每个系统版本的不同处理我们就不一一展开看，看下V23里面的处理流程</p>
+<pre style="word-wrap:normal;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);box-sizing:border-box;display:block;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;margin:0px 0px 10px;line-height:1.42857;color:rgb(101, 123, 131);background:rgb(246, 246, 246);text-size-adjust:none;padding:15px;font-size:13px;border-radius:0px;margin-bottom:20px;white-space:pre;overflow:auto;word-break:break-word;"><code style="box-sizing:border-box;font-family:Menlo, Monaco, Consolas, &quot;Courier New&quot;, monospace;border-radius:0px;font-size:12px;color:rgb(101, 123, 131);border:none;background-color:transparent;padding:0px;white-space:pre;"><span style="box-sizing:border-box;color:rgb(147, 161, 161);">//V23</span>
+        <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">void</span> <span style="box-sizing:border-box;color:rgb(38, 139, 210);">install</span><span style="box-sizing:border-box;">(ClassLoader loader, List&lt;File&gt; additionalClassPathEntries,File optimizedDirectory)</span>
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">throws</span> IllegalArgumentException, IllegalAccessException,
+            NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IOException </span>{
+            Field pathListField = ShareReflectUtil.findField(loader, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;pathList&quot;</span>);
+            Object dexPathList = pathListField.get(loader); <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//通过反射拿到classloader的patchlist变量</span>
+            ArrayList&lt;IOException&gt; suppressedExceptions = <span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> ArrayList&lt;IOException&gt;();
+            <span style="box-sizing:border-box;color:rgb(147, 161, 161);">// 通过反射获取pathList的dexElements参数，把经过合并后的DexElements设置为pathList的dexElements。</span>
+            ShareReflectUtil.expandFieldArray(dexPathList, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;dexElements&quot;</span>, makePathElements(dexPathList,<span style="box-sizing:border-box;color:rgb(133, 153, 0);">new</span> ArrayList&lt;File&gt;(additionalClassPathEntries), optimizedDirectory,suppressedExceptions));
+        }
+
+
+        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">private</span> <span style="box-sizing:border-box;color:rgb(133, 153, 0);">static</span> Object[] makePathElements(
+            Object dexPathList, ArrayList&lt;File&gt; files, File optimizedDirectory,
+            ArrayList&lt;IOException&gt; suppressedExceptions)
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">throws</span> IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+
+            Method makePathElements;
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">try</span> {
+            <span style="box-sizing:border-box;color:rgb(147, 161, 161);">//反射pathList的makeDexElements方法，传入插件补丁dexList路径与优化过的opt目录，通过这个方法生成一个新的DexElements，这个DexElements为插件的DexElements。</span>
+                makePathElements = ShareReflectUtil.findMethod(dexPathList, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;makePathElements&quot;</span>, List.class, File.class,
+                    List.class);
+            } <span style="box-sizing:border-box;color:rgb(133, 153, 0);">catch</span> (NoSuchMethodException e) {
+                Log.e(TAG, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;NoSuchMethodException: makePathElements(List,File,List) failure&quot;</span>);
+                <span style="box-sizing:border-box;color:rgb(133, 153, 0);">try</span> {
+                    makePathElements = ShareReflectUtil.findMethod(dexPathList, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;makePathElements&quot;</span>, ArrayList.class, File.class, ArrayList.class);
+                } <span style="box-sizing:border-box;color:rgb(133, 153, 0);">catch</span> (NoSuchMethodException e1) {
+                    Log.e(TAG, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;NoSuchMethodException: makeDexElements(ArrayList,File,ArrayList) failure&quot;</span>);
+                    <span style="box-sizing:border-box;color:rgb(133, 153, 0);">try</span> {
+                        Log.e(TAG, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;NoSuchMethodException: try use v19 instead&quot;</span>);
+                        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> V19.makeDexElements(dexPathList, files, optimizedDirectory, suppressedExceptions);
+                    } <span style="box-sizing:border-box;color:rgb(133, 153, 0);">catch</span> (NoSuchMethodException e2) {
+                        Log.e(TAG, <span style="box-sizing:border-box;color:rgb(42, 161, 152);">&quot;NoSuchMethodException: makeDexElements(List,File,List) failure&quot;</span>);
+                        <span style="box-sizing:border-box;color:rgb(133, 153, 0);">throw</span> e2;
+                    }
+                }
+            }
+
+            <span style="box-sizing:border-box;color:rgb(133, 153, 0);">return</span> (Object[]) makePathElements.invoke(dexPathList, files, optimizedDirectory, suppressedExceptions);
+        }
+    }
+</code></pre>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">我们看到上面的流程，就是在文章开头的时候讲到的和QZONE一样的原理，通过反射获取到patchlist的dexElements字段，然后将合成补丁后的dex文件插入到dexelements数组的前面，这样打了补丁后的dex就可以先记载到从而完成修复工作。<br style="box-sizing:border-box;"/>
+微信tinker的资源与so的加载将在后续文章中继续介绍。</p>
+<p style="box-sizing:border-box;margin:0px 0px 25px;word-break:break-word;">参考文章列表：<br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://dev.qq.com/topic/57ecdf2d98250b4631ae034b" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">微信Tinker的一切都在这里，包括源码</a><br style="box-sizing:border-box;"/>
+<a href="https://link.jianshu.com/?t=http://blog.csdn.net/qq_19711823/article/details/53199045" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">微信热补丁Tinker – 补丁流程</a><br style="box-sizing:border-box;"/>
+[dex文件格式]<br style="box-sizing:border-box;"/>
+(<a href="https://link.jianshu.com/?t=http://www.cnblogs.com/dacainiao/p/6035274.html" rel="nofollow" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(49, 148, 208);" target="_blank">http://www.cnblogs.com/dacainiao/p/6035274.html</a>)</p>
+
+        </div>
+        
+
+        <div style="box-sizing:border-box;margin:40px 0px 30px;">
+          <a href="https://www.jianshu.com/nb/11828881" style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(155, 155, 155);font-size:12px;">
+            <i style="box-sizing:border-box;font-style:normal;-webkit-font-smoothing:antialiased;font-size:15px;margin-right:2px;font-family:iconfont;font-weight:400;"><span style="font-size:15px;font-style:normal;font-family:iconfont;font-weight:400;"></span></i>
+            <span style="box-sizing:border-box;">插件化和热修复系列</span>
+</a>          <div style="box-sizing:border-box;float:right;margin-top:5px;font-size:12px;line-height:1.7;color:rgb(155, 155, 155);">
+            © 著作权归作者所有
+          </div>
+          <div style="box-sizing:border-box;float:right;margin-top:5px;margin-right:20px;font-size:12px;line-height:1.7;">
+            <a style="box-sizing:border-box;background-color:transparent;text-decoration:none;cursor:pointer;color:rgb(155, 155, 155);">举报文章</a>
+          </div>
+        </div>
+    </div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

@@ -1,0 +1,234 @@
+<html>
+<head>
+  <title>简单的动态加载模式</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3739"/>
+<h1>简单的动态加载模式</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="font-family:sans-serif;text-size-adjust:100%;"><div style="font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:14px;line-height:2;color:rgb(85, 85, 85);background:rgb(255, 255, 255);"><div><span><div><div><div><div><div style="opacity:1;transform:translateY(0px);">
+  
+
+  
+
+  
+
+    
+      <div style="display:block;">
+
+        
+        
+          <h1 style="margin:0px;padding:0px;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:26px;font-weight:400;text-align:center;word-break:break-word;">
+            
+            
+              
+                简单的动态加载模式
+              
+            
+          </h1>
+        
+
+        <div style="margin:3px 0px 60px;color:rgb(153, 153, 153);font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:12px;text-align:center;">
+          <span>
+            
+            <span>Posted on</span>
+            <span title="Post created">
+              2016-06-05
+            </span>
+
+             | 
+
+            
+            <span title="Post modified">
+              2017-09-12
+            </span>
+            
+          </span>
+
+          
+            <span>
+                |  
+              
+              <span>In</span>
+              
+                <span>
+                  <a href="http://kaedea.com/categories/Android/" rel="index" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;">
+                    <span>Android</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+
+              
+                <span>
+                  <a href="http://kaedea.com/categories/Android/%E5%8A%A8%E6%80%81%E5%8A%A0%E8%BD%BD/" rel="index" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;">
+                    <span>动态加载</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span>
+                  |  
+                <a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#comments" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;">
+                  <span></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span>
+                 |  
+               
+               <span>Visitors </span>
+               <span>348</span>
+              </span>
+          
+
+          
+          
+          
+
+        </div>
+      </div>
+    
+
+
+    <div style="font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;">
+
+      
+      
+
+      
+        <p style="margin:0px 0px 25px;">从这个章节开始，加载SO库的问题算是告一段落，现在开始谈及的动态加载，主要是指基于ClassLoader的加载方式，这也是这个动态加载系列文章的核心。</p>
+<p style="margin:0px 0px 25px;">Java程序中，JVM虚拟机是通过类加载器ClassLoader加载 <strong style="font-weight:bold;">.jar</strong> 文件里面的类的。Android也类似，不过Android用的是Dalvik/ART虚拟机，不是JVM，也不能直接加载 <strong style="font-weight:bold;">.jar</strong> 文件，而是加载 <strong style="font-weight:bold;">.dex</strong> 文件。</p>
+<p style="margin:0px 0px 25px;">通过Android SDK提供的 <strong style="font-weight:bold;">DX工具</strong> 把 <strong style="font-weight:bold;">.jar</strong> 文件优化成 <strong style="font-weight:bold;">.dex</strong> 文件，然后Android的虚拟机才能加载。注意，有的Android应用能直接加载 <strong style="font-weight:bold;">.jar</strong> 文件，那是因为这个 <strong style="font-weight:bold;">.jar</strong> 文件已经经过优化，只不过后缀名没改（其实已经是 <strong style="font-weight:bold;">.dex</strong> 文件）。</p>
+<p style="margin:0px 0px 25px;">如果对ClassLoader的工作机制有兴趣，具体过程请参考 <a href="https://zhuanlan.zhihu.com/p/20524252" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">动态加载基础 ClassLoader的工作机制</a>，这里不再赘述。<br/><a style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"></a></p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#%E5%9F%BA%E6%9C%AC%E4%BF%A1%E6%81%AF" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="基本信息"></a>基本信息</h2><ul style="list-style:none;">
+<li style="list-style:circle;">Author : <a href="https://github.com/kaedea" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">Kaede</a></li>
+<li style="list-style:circle;">Index : <a href="http://kaedea.com/2016/02/05/android-dynamical-loading-00-index" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;">ANDROID动态加载系列</a></li>
+<li style="list-style:circle;">GitHub : <a href="https://github.com/kaedea/android-dynamical-loading" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">kaedea/android-dynamical-loading</a></li>
+</ul>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96%E8%83%BD%E5%A4%9F%E5%8A%A0%E8%BD%BD%E7%9A%84DEX%E6%96%87%E4%BB%B6" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="如何获取能够加载的DEX文件"></a>如何获取能够加载的DEX文件</h2><p style="margin:0px 0px 25px;">首先我们可以通过JDK的编译命令javac把Java代码编译成 <strong style="font-weight:bold;">.class</strong> 文件，再使用jar命令把 <strong style="font-weight:bold;">.class</strong> 文件封装成 <strong style="font-weight:bold;">.jar</strong> 文件，这与编译普通Java程序的时候完全一样。</p>
+<p style="margin:0px 0px 25px;">之后再用Android SDK的DX工具把 <strong style="font-weight:bold;">.jar</strong> 文件优化成 <strong style="font-weight:bold;">.dex</strong> 文件（在“android-sdk\build-tools\具体版本\”路径下）</p>
+<blockquote style="margin:0px;padding:0px 15px;color:rgb(102, 102, 102);border-left:4px solid rgb(221, 221, 221);">
+<p style="margin:0px 0px 25px;">dx –dex –output=target.dex origin.jar          // target.dex就是我们要的了</p>
+</blockquote>
+<p style="margin:0px 0px 25px;">此外，我们可以先把代码编译成APK文件，再把APK里面的 <strong style="font-weight:bold;">.dex</strong> 文件解压出来，或者直接把APK文件当成 <strong style="font-weight:bold;">.dex</strong> 使用（只是APK里面的静态资源文件我们暂时还用不到）。至此我们发现，无论加载 <strong style="font-weight:bold;">.jar</strong>，还是 <strong style="font-weight:bold;">.apk</strong>，其实都和加载 <strong style="font-weight:bold;">.dex</strong> 是等价的，Android能加载 <strong style="font-weight:bold;">.jar</strong> 和 <strong style="font-weight:bold;">.apk</strong>，是因为它们都包含有 <strong style="font-weight:bold;">.dex</strong>，直接加载 <strong style="font-weight:bold;">.apk</strong> 文件时，ClassLoader也会自动把 <strong style="font-weight:bold;">.apk</strong> 里的 <strong style="font-weight:bold;">.dex</strong> 解压出来（具体实现代码，有兴趣的话请阅读DexClassLoader和DexFile的源码，兴许以后开个源码分析系列的文章再仔细探讨吧）。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#%E5%8A%A0%E8%BD%BD%E5%B9%B6%E8%B0%83%E7%94%A8DEX%E6%96%87%E4%BB%B6%E9%87%8C%E9%9D%A2%E7%9A%84%E6%96%B9%E6%B3%95" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="加载并调用DEX文件里面的方法"></a>加载并调用DEX文件里面的方法</h2><p style="margin:0px 0px 25px;">与JVM不同，Android的虚拟机不能用ClassCload直接加载 <strong style="font-weight:bold;">.dex</strong>，而是要用DexClassLoader或者PathClassLoader,他们都是ClassLoader的子类，这两者的区别是</p>
+<ol>
+<li>DexClassLoader：可以加载 <strong style="font-weight:bold;">.jar/apk/dex</strong> 文件，可以从SD卡中加载未安装的APK；</li>
+<li>PathClassLoader：要传入系统中已经安装过的 <strong style="font-weight:bold;">.apk</strong> 文件的存放Path，所以只能加载已经安装的APK；</li>
+</ol>
+<p style="margin:0px 0px 25px;">使用前，先看看DexClassLoader的构造方法<br/></p><div style="display:block;margin:20px 0px;overflow:auto;padding:0px;font-size:13px;color:rgb(204, 204, 204);background:rgb(45, 45, 45);line-height:1.6;border-radius:1px;"><table style="font-weight:inherit;font-style:inherit;font-variant:inherit;font-size:14px;border-collapse:collapse;border-spacing:0px;table-layout:fixed;margin:0px;width:auto;border:none;"><tbody><tr style="background-color:rgb(249, 249, 249);"><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);user-select:none;padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;padding:10px 0px;margin:0px;border:none;color:rgb(153, 153, 153);padding-left:10px;padding-right:10px;text-align:right;background-color:rgb(27, 27, 27);"><div style="height:20px;">1</div><div style="height:20px;">2</div><div style="height:20px;">3</div><div style="height:20px;">4</div></pre></td><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;color:rgb(204, 204, 204);padding:10px 0px;margin:0px;border:none;padding-left:10px;padding-right:10px;background-color:rgb(45, 45, 45);"><div style="height:20px;"><span style="color:rgb(102, 153, 204);"><span style="color:rgb(204, 153, 204);">public</span> <span style="color:rgb(102, 204, 204);">DexClassLoader</span><span style="color:rgb(249, 145, 87);">(String dexPath, String optimizedDirectory, String libraryPath, ClassLoader parent)</span> </span>{</div><div style="height:20px;">    <span style="color:rgb(204, 153, 204);">super</span>((String)<span style="color:rgb(204, 153, 204);">null</span>, (File)<span style="color:rgb(204, 153, 204);">null</span>, (String)<span style="color:rgb(204, 153, 204);">null</span>, (ClassLoader)<span style="color:rgb(204, 153, 204);">null</span>);</div><div style="height:20px;">    <span style="color:rgb(204, 153, 204);">throw</span> <span style="color:rgb(204, 153, 204);">new</span> RuntimeException(<span style="color:rgb(153, 204, 153);">&quot;Stub!&quot;</span>);</div><div style="height:20px;">}</div></pre></td></tr></tbody></table></div><p style="margin:0px 0px 25px;"></p>
+<p style="margin:0px 0px 25px;">注意，我们之前提到的，DexClassLoader并不能直接加载外部存储等noexec存储路径中的 <strong style="font-weight:bold;">.dex</strong> 文件，而是要先拷贝到内部存储里。这里的dexPath就是 <strong style="font-weight:bold;">.dex</strong> 的外部存储路径，而optimizedDirectory则是内部路径（exec存储），libraryPath是Native库（其实就是SO库）的所在路径，必须是内部路径，如果不需要用到SO库的话这里直接用null即可，parent则是要传入当前应用的ClassLoader，这与ClassLoader的“双亲代理模式”有关。实际上，DexClassLoader之所以能加载SD卡中的APK文件，就是因为它会先提取并优化dexPath路径上APK文件中的 <strong style="font-weight:bold;">.dex</strong> 文件，并保存到optimizedDirectory路径上，然后再加载优化好的 <strong style="font-weight:bold;">.dex</strong> 文件，所有的动态加载只能发生在exec存储路径上。</p>
+<p style="margin:0px 0px 25px;">注意，如果 <strong style="font-weight:bold;">.dex</strong> 里面有用到SO库相关的代码，我们需要事先把SO库拷贝到内部存储路径，并把路径作为参数传给libraryPath，或者如果你不想在创建DexClassLoader的时候就加载SO库，可以把libraryPath置为null，并确保在调用相关的Native方法前，使用System#loadLibrary加载了相应的SO库。这里我们并不需要用到SO库，所以才使用null。</p>
+<p style="margin:0px 0px 25px;">实例使用DexClassLoader的代码：<br/></p><div style="display:block;margin:20px 0px;overflow:auto;padding:0px;font-size:13px;color:rgb(204, 204, 204);background:rgb(45, 45, 45);line-height:1.6;border-radius:1px;"><table style="font-weight:inherit;font-style:inherit;font-variant:inherit;font-size:14px;border-collapse:collapse;border-spacing:0px;table-layout:fixed;margin:0px;width:auto;border:none;"><tbody><tr style="background-color:rgb(249, 249, 249);"><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);user-select:none;padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;padding:10px 0px;margin:0px;border:none;color:rgb(153, 153, 153);padding-left:10px;padding-right:10px;text-align:right;background-color:rgb(27, 27, 27);"><div style="height:20px;">1</div><div style="height:20px;">2</div><div style="height:20px;">3</div></pre></td><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;color:rgb(204, 204, 204);padding:10px 0px;margin:0px;border:none;padding-left:10px;padding-right:10px;background-color:rgb(45, 45, 45);"><div style="height:20px;">File optimizedDexOutputPath = <span style="color:rgb(204, 153, 204);">new</span> File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + <span style="color:rgb(153, 204, 153);">&quot;test_dexloader.jar&quot;</span>); <span style="color:rgb(153, 153, 153);">// 外部路径</span></div><div style="height:20px;">File dexOutputDir = <span style="color:rgb(204, 153, 204);">this</span>.getDir(<span style="color:rgb(153, 204, 153);">&quot;dex&quot;</span>, <span style="color:rgb(153, 204, 153);">0</span>); <span style="color:rgb(153, 153, 153);">// 无法直接从外部路径加载.dex文件，需要指定APP内部路径作为缓存目录（.dex文件会被解压到此目录）</span></div><div style="height:20px;">DexClassLoader dexClassLoader = <span style="color:rgb(204, 153, 204);">new</span> DexClassLoader(optimizedDexOutputPath.getAbsolutePath(),dexOutputDir.getAbsolutePath(), <span style="color:rgb(204, 153, 204);">null</span>, getClassLoader());</div></pre></td></tr></tbody></table></div><p style="margin:0px 0px 25px;"></p>
+<p style="margin:0px 0px 25px;">到这里，我们已经成功把 <strong style="font-weight:bold;">.dex</strong> 文件给加载进来了，接下来就是如何调用 <strong style="font-weight:bold;">.dex</strong> 里面的代码，主要有两种方式。</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#%E4%BD%BF%E7%94%A8%E5%8F%8D%E5%B0%84%E7%9A%84%E6%96%B9%E5%BC%8F" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="使用反射的方式"></a>使用反射的方式</h3><p style="margin:0px 0px 25px;">使用DexClassLoader加载进来的类，我们本地并没有这些类的源码，所以无法直接调用新加载进来的类，不过可以通过反射的方法调用，简单粗暴。<br/></p><div style="display:block;margin:20px 0px;overflow:auto;padding:0px;font-size:13px;color:rgb(204, 204, 204);background:rgb(45, 45, 45);line-height:1.6;border-radius:1px;"><table style="font-weight:inherit;font-style:inherit;font-variant:inherit;font-size:14px;border-collapse:collapse;border-spacing:0px;table-layout:fixed;margin:0px;width:auto;border:none;"><tbody><tr style="background-color:rgb(249, 249, 249);"><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);user-select:none;padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;padding:10px 0px;margin:0px;border:none;color:rgb(153, 153, 153);padding-left:10px;padding-right:10px;text-align:right;background-color:rgb(27, 27, 27);"><div style="height:20px;">1</div><div style="height:20px;">2</div><div style="height:20px;">3</div><div style="height:20px;">4</div><div style="height:20px;">5</div><div style="height:20px;">6</div><div style="height:20px;">7</div><div style="height:20px;">8</div><div style="height:20px;">9</div><div style="height:20px;">10</div><div style="height:20px;">11</div><div style="height:20px;">12</div><div style="height:20px;">13</div><div style="height:20px;">14</div><div style="height:20px;">15</div><div style="height:20px;">16</div><div style="height:20px;">17</div></pre></td><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;color:rgb(204, 204, 204);padding:10px 0px;margin:0px;border:none;padding-left:10px;padding-right:10px;background-color:rgb(45, 45, 45);"><div style="height:20px;">DexClassLoader dexClassLoader = <span style="color:rgb(204, 153, 204);">new</span> DexClassLoader(optimizedDexOutputPath.getAbsolutePath(), dexOutputDir.getAbsolutePath(), <span style="color:rgb(204, 153, 204);">null</span>, getClassLoader());</div><div style="height:20px;">			Class libProviderClazz = <span style="color:rgb(204, 153, 204);">null</span>;</div><div style="height:20px;">			<span style="color:rgb(204, 153, 204);">try</span> {</div><div style="height:20px;">				libProviderClazz = dexClassLoader.loadClass(<span style="color:rgb(153, 204, 153);">&quot;me.kaede.dexclassloader.MyLoader&quot;</span>);</div><div style="height:20px;">				<span style="color:rgb(153, 153, 153);">// 遍历类里所有方法</span></div><div style="height:20px;">				Method[] methods = libProviderClazz.getDeclaredMethods();</div><div style="height:20px;">				<span style="color:rgb(204, 153, 204);">for</span> (<span style="color:rgb(204, 153, 204);">int</span> i = <span style="color:rgb(153, 204, 153);">0</span>; i &lt; methods.length; i++) {</div><div style="height:20px;">					Log.e(TAG, methods[i].toString());</div><div style="height:20px;">				}</div><div style="height:20px;">				Method start = libProviderClazz.getDeclaredMethod(<span style="color:rgb(153, 204, 153);">&quot;func&quot;</span>);<span style="color:rgb(153, 153, 153);">// 获取方法</span></div><div style="height:20px;">				start.setAccessible(<span style="color:rgb(204, 153, 204);">true</span>);<span style="color:rgb(153, 153, 153);">// 把方法设为public，让外部可以调用</span></div><div style="height:20px;">				String string = (String) start.invoke(libProviderClazz.newInstance());<span style="color:rgb(153, 153, 153);">// 调用方法并获取返回值</span></div><div style="height:20px;">				Toast.makeText(<span style="color:rgb(204, 153, 204);">this</span>, string, Toast.LENGTH_LONG).show();</div><div style="height:20px;">			} <span style="color:rgb(204, 153, 204);">catch</span> (Exception exception) {</div><div style="height:20px;">				<span style="color:rgb(153, 153, 153);">// Handle exception gracefully here.</span></div><div style="height:20px;">				exception.printStackTrace();</div><div style="height:20px;">			}</div></pre></td></tr></tbody></table></div><p style="margin:0px 0px 25px;"></p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#%E4%BD%BF%E7%94%A8%E6%8E%A5%E5%8F%A3%E7%9A%84%E6%96%B9%E5%BC%8F" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="使用接口的方式"></a>使用接口的方式</h3><p style="margin:0px 0px 25px;">使用反射的方式不利于代码维护，如果动态加载的业务是多变的话，就不适合了。毕竟 <strong style="font-weight:bold;">.dex</strong> 里面的类也是我们自己维护的，所以可以设计一个宿主和插件共用的基础类，把方法抽象成公共接口，再把这些接口复制到公共库里面去，宿主项目和插件项目都依赖公共库，这样就可以通过这些接口调用动态加载插件得到的类的方法了。<br/></p><div style="display:block;margin:20px 0px;overflow:auto;padding:0px;font-size:13px;color:rgb(204, 204, 204);background:rgb(45, 45, 45);line-height:1.6;border-radius:1px;"><table style="font-weight:inherit;font-style:inherit;font-variant:inherit;font-size:14px;border-collapse:collapse;border-spacing:0px;table-layout:fixed;margin:0px;width:auto;border:none;"><tbody><tr style="background-color:rgb(249, 249, 249);"><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);user-select:none;padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;padding:10px 0px;margin:0px;border:none;color:rgb(153, 153, 153);padding-left:10px;padding-right:10px;text-align:right;background-color:rgb(27, 27, 27);"><div style="height:20px;">1</div><div style="height:20px;">2</div><div style="height:20px;">3</div><div style="height:20px;">4</div><div style="height:20px;">5</div><div style="height:20px;">6</div><div style="height:20px;">7</div><div style="height:20px;">8</div></pre></td><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;color:rgb(204, 204, 204);padding:10px 0px;margin:0px;border:none;padding-left:10px;padding-right:10px;background-color:rgb(45, 45, 45);"><div style="height:20px;">pulic <span><span style="color:rgb(204, 153, 204);">interface</span> <span style="color:rgb(102, 204, 204);">IFunc</span></span>{</div><div style="height:20px;">    <span style="color:rgb(102, 153, 204);"><span style="color:rgb(204, 153, 204);">public</span> String <span style="color:rgb(102, 204, 204);">func</span><span style="color:rgb(249, 145, 87);">()</span></span>;</div><div style="height:20px;">}</div><div style="height:20px;"></div><div style="height:20px;"><span style="color:rgb(153, 153, 153);">// 调用</span></div><div style="height:20px;">IFunc ifunc = (IFunc)libProviderClazz;</div><div style="height:20px;">String string = ifunc.func(); <span style="color:rgb(153, 153, 153);">// 这样看上去是不是比较好维护</span></div><div style="height:20px;">Toast.makeText(<span style="color:rgb(204, 153, 204);">this</span>, string, Toast.LENGTH_LONG).show();</div></pre></td></tr></tbody></table></div><p style="margin:0px 0px 25px;"></p>
+<p style="margin:0px 0px 25px;">到这里，我们已经成功从外部路径动态加载一个 <strong style="font-weight:bold;">.dex</strong> 文件，并执行里面的代码逻辑了。通过从服务器下载最新的 <strong style="font-weight:bold;">.dex</strong> 文件并替换本地的旧文件，就能初步实现“APP的动态升级了”。但是这只是非常基础的功能，所以我称之为“简单加载”。从一般的Android开发需要来看，“简单动态加载”虽然能动态更换类了，但还是有不少问题需要解决。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#%E5%A6%82%E4%BD%95%E5%8A%A8%E6%80%81%E6%9B%B4%E6%94%B9XML%E5%B8%83%E5%B1%80" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="如何动态更改XML布局"></a>如何动态更改XML布局</h2><p style="margin:0px 0px 25px;">虽然已经能动态更改代码逻辑了，但是UI界面要怎么更改啊？Android开发中大部分的情况下，UI界面都是通过XML布局实现的，放在res目录下，可是 <strong style="font-weight:bold;">.dex</strong> 库里面并没有这些静态资源啊，所以无法改变XML布局。（这里即使直接动态加载APK文件，但是通过DexClassLoader只能加载新的APK其中的 <strong style="font-weight:bold;">.dex</strong> 文件，并无法加载其中的res资源文件，所以如果在动态加载的 <strong style="font-weight:bold;">.dex</strong> 的类中直接使用新的APK的res资源的话会抛出异常。）</p>
+<p style="margin:0px 0px 25px;">大家都知道，所有的XML布局在运行的时候都要通过LayoutInflator渲染成View的实例，这个实例与我们使用纯Java代码创建的View实例几乎是等价的，而且后者可能效率还更高，所有的XML布局实现的UI界面都有等价的纯代码的创建方案。由此伸展开来，<strong style="font-weight:bold;">res目录下所有XML资源都有等价的纯代码的实现方式</strong>，比如XML动画、XML Drawable等。</p>
+<p style="margin:0px 0px 25px;">所以，如果想要动态更改应用的UI界面的话，可以通过用纯代码创建布局的形式来解决。此外，还可以模仿LayoutInflator的工作方式，自己写一套布局渲染机制来代替系统的LayoutInflator方案（类似于许多跨平台游戏引擎的方案），这样就能在完全不依赖res资源的情况下创建UI界面了，当然这样的工作量不少，而且，完全避开res资源的话，所有的分辨率、国际化等自适应问题都要自己在应用层写代码维护了，显然脱离res资源框架不是一个很明智的做法，<strong style="font-weight:bold;">但是这种做法确实可行</strong>，在我们之前的实际生产中的项目中也稳定使用着，这里出于责任问题就不方便公开细节了。</p>
+<p style="margin:0px 0px 25px;">（早期还没有解决res资源的方案，现在有了，宝宝心里苦 🌚，说实在，这种方案非常繁琐，不好维护，一方面，这是产品一句“技术可行就做呗”而产生的解决方案；另一方面，当时动态加载技术还很不成熟，也没有什么实际投入到生产的项目，所以采取了非常保守的开发方式）。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#%E4%BD%BF%E7%94%A8Fragment%E4%BB%A3%E6%9B%BFActivity" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="使用Fragment代替Activity"></a>使用Fragment代替Activity</h2><p style="margin:0px 0px 25px;">Activity需要在Manifest里注册，然后以标准的Intent启动才会具有生命周期（详情参考AMS的工作机制），很明显，如果想要动态加载的 <strong style="font-weight:bold;">.dex</strong> 里的Activity没有注册的话，是无法启动的。</p>
+<p style="margin:0px 0px 25px;">有一种简单粗暴的做法就是可以把 <strong style="font-weight:bold;">.dex</strong> 里所有需要用到的Activity都事先注册到原项目里，不过这样只适用于Activity数量不经常改变的业务，如果 <strong style="font-weight:bold;">.dex</strong> 里的Activity有变化，原项目就必须跟着升级。另外一种方案是使用Fragment，Fragment只是普通的Java类，不是组件类，但是自带生命周期（同步FragmentActivity的），不需要在Manifest里注册，所以可以在 <strong style="font-weight:bold;">.dex</strong> 里使用Fragment来代替Activity，代价就是Fragment之间的切换会繁琐许多。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#ART%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%85%BC%E5%AE%B9%E6%80%A7%E9%97%AE%E9%A2%98" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="ART模式的兼容性问题"></a>ART模式的兼容性问题</h2><p style="margin:0px 0px 25px;">当初我们开始设计动态加载方案的时候，还没有ART模式。随着Kitkat的发布以及ART模式的出现，我们开始担心“用DexClassLoader加载 <strong style="font-weight:bold;">.dex</strong> 文件”的方案会不会在ART模式上面存在兼容性问题。</p>
+<p style="margin:0px 0px 25px;">其实，ART模式相比原来的Dalvik，会在安装APK的时候，使用Android系统自带的 <strong style="font-weight:bold;">dex2oat</strong> 工具把APK里面的. <strong style="font-weight:bold;">.dex</strong> 文件转化成 <strong style="font-weight:bold;">OAT</strong> 文件， <strong style="font-weight:bold;">OAT</strong> 文件是一种Android私有ELF文件格式，它不仅包含有从DEX文件翻译而来的本地机器指令，还包含有原来的DEX文件内容。这使得我们无需重新编译原有的APK就可以让它正常地在ART里面运行，也就是我们不需要改变原来的APK编程接口。ART模式的系统里，同样存在DexClassLoader类，包名路径也没变，只不过它的具体实现与原来的有所不同，但是接口是一致的。（如果你熟悉设计模式的话，应该会知道有种原则叫做“针对接口编程，而不针对实现编程”，就是因为接口没有变化，才能保证ART模式的向下兼容。）</p>
+<p style="margin:0px 0px 25px;">在Kitkat项目的源码中，我们依然能找到同样API的DexClassLoader：<br/></p><div style="display:block;margin:20px 0px;overflow:auto;padding:0px;font-size:13px;color:rgb(204, 204, 204);background:rgb(45, 45, 45);line-height:1.6;border-radius:1px;"><table style="font-weight:inherit;font-style:inherit;font-variant:inherit;font-size:14px;border-collapse:collapse;border-spacing:0px;table-layout:fixed;margin:0px;width:auto;border:none;"><tbody><tr style="background-color:rgb(249, 249, 249);"><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);user-select:none;padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;padding:10px 0px;margin:0px;border:none;color:rgb(153, 153, 153);padding-left:10px;padding-right:10px;text-align:right;background-color:rgb(27, 27, 27);"><div style="height:20px;">1</div><div style="height:20px;">2</div><div style="height:20px;">3</div><div style="height:20px;">4</div><div style="height:20px;">5</div><div style="height:20px;">6</div><div style="height:20px;">7</div><div style="height:20px;">8</div><div style="height:20px;">9</div><div style="height:20px;">10</div><div style="height:20px;">11</div></pre></td><td style="text-align:left;vertical-align:middle;font-weight:normal;border-bottom:3px solid rgb(221, 221, 221);border-right:1px solid rgb(238, 238, 238);padding:0px;border:none;"><pre style="background:rgb(45, 45, 45);overflow:auto;font-size:13px;line-height:1.6;font-family:consolas, Menlo, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, monospace;color:rgb(204, 204, 204);padding:10px 0px;margin:0px;border:none;padding-left:10px;padding-right:10px;background-color:rgb(45, 45, 45);"><div style="height:20px;"><span style="color:rgb(204, 153, 204);">package</span> dalvik.system;</div><div style="height:20px;"></div><div style="height:20px;"><span style="color:rgb(204, 153, 204);">import</span> dalvik.system.BaseDexClassLoader;</div><div style="height:20px;"><span style="color:rgb(204, 153, 204);">import</span> java.io.File;</div><div style="height:20px;"></div><div style="height:20px;"><span style="color:rgb(204, 153, 204);">public</span> <span><span style="color:rgb(204, 153, 204);">class</span> <span style="color:rgb(102, 204, 204);">DexClassLoader</span> <span style="color:rgb(204, 153, 204);">extends</span> <span style="color:rgb(102, 204, 204);">BaseDexClassLoader</span> </span>{</div><div style="height:20px;">    <span style="color:rgb(102, 153, 204);"><span style="color:rgb(204, 153, 204);">public</span> <span style="color:rgb(102, 204, 204);">DexClassLoader</span><span style="color:rgb(249, 145, 87);">(String dexPath, String optimizedDirectory, String libraryPath, ClassLoader parent)</span> </span>{</div><div style="height:20px;">        <span style="color:rgb(204, 153, 204);">super</span>((String)<span style="color:rgb(204, 153, 204);">null</span>, (File)<span style="color:rgb(204, 153, 204);">null</span>, (String)<span style="color:rgb(204, 153, 204);">null</span>, (ClassLoader)<span style="color:rgb(204, 153, 204);">null</span>);</div><div style="height:20px;">        <span style="color:rgb(204, 153, 204);">throw</span> <span style="color:rgb(204, 153, 204);">new</span> RuntimeException(<span style="color:rgb(153, 204, 153);">&quot;Stub!&quot;</span>);</div><div style="height:20px;">    }</div><div style="height:20px;">}</div></pre></td></tr></tbody></table></div><p style="margin:0px 0px 25px;"></p>
+<p style="margin:0px 0px 25px;">也就是说，ART模式在加载 <strong style="font-weight:bold;">.dex</strong> 文件的方法上，对Dalvik做了向下兼容，所以使用DexClassLoader加载进来的 <strong style="font-weight:bold;">.dex</strong> 文件同样也会被转化成OAT文件再被执行，“以DexClassLoader为核心的动态加载方案”在ART模式上可以稳定运行。</p>
+<p style="margin:0px 0px 25px;">关于ART模式以及OAT文件的详细分析，请参考官方的<a href="https://source.android.com/devices/tech/dalvik/" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">ART and Dalvik</a>，以及老罗的<a href="http://blog.csdn.net/luoshengyang/article/details/18006645" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">Android ART运行时无缝替换Dalvik虚拟机的过程分析</a>。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98%E4%B8%8E%E6%94%B9%E8%BF%9B%E6%96%B9%E6%A1%88" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="存在的问题与改进方案"></a>存在的问题与改进方案</h2><p style="margin:0px 0px 25px;">以上大致就是“Android动态性加载初级阶段”的解决方案，虽然现在已经能投入到具体的生产中去，但是还有一些问题无法忽略。</p>
+<ol>
+<li>无法使用res目录下的资源，比如layout、values等；</li>
+<li>无法动态加载新的Activity等组件，因为这些组件需要在Manifest中注册，动态加载无法更改当前APK的Manifest；</li>
+</ol>
+<p style="margin:0px 0px 25px;">在这些问题没有解决的情况下，虽然可以以比较“绕”的方式开发插件项目，但是还是过于繁琐（方正我是受不了）。以上问题可以通过 <strong style="font-weight:bold;">使用反射调用Framework层的隐藏API接口加载res资源</strong> 以及 <strong style="font-weight:bold;">代理Activity</strong> 的方式解决，可以把这种的动态加载框架成为“代理模式”。在代理模式下，我们能以接近常规Android开发的方式开发插件项目。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/06/05/android-dynamical-loading-05-simple-mode/#%E5%8F%82%E8%80%83%E6%97%A5%E5%BF%97" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="参考日志"></a>参考日志</h2><ul style="list-style:none;">
+<li style="list-style:circle;"><a href="http://44289533.iteye.com/blog/1954453" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">http://44289533.iteye.com/blog/1954453</a></li>
+<li style="list-style:circle;"><a href="http://blog.csdn.net/bboyfeiyu/article/details/11710497" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">http://blog.csdn.net/bboyfeiyu/article/details/11710497</a></li>
+<li style="list-style:circle;"><a href="http://www.cnblogs.com/over140/archive/2011/11/23/2259367.html" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">http://www.cnblogs.com/over140/archive/2011/11/23/2259367.html</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <div style="display:block;">
+      
+        <div style="margin-top:40px;text-align:center;">
+          
+            <a href="http://kaedea.com/tags/Android/" rel="tag" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;display:inline-block;margin-right:10px;font-size:13px;"># Android</a>
+          
+            <a href="http://kaedea.com/tags/%E5%8A%A8%E6%80%81%E5%8A%A0%E8%BD%BD/" rel="tag" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;display:inline-block;margin-right:10px;font-size:13px;"># 动态加载</a>
+          
+            <a href="http://kaedea.com/tags/%E6%8F%92%E4%BB%B6%E5%8C%96/" rel="tag" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;display:inline-block;margin-right:10px;font-size:13px;"># 插件化</a>
+          
+        </div>
+      
+
+      
+        <div style="display:table;margin-top:60px;width:100%;border-top:1px solid rgb(238, 238, 238);">
+          <div style="display:table-cell;padding:10px 0px 0px;width:45%;vertical-align:top;">
+            
+              <a href="http://kaedea.com/2016/06/04/android-dynamical-loading-04-so-problems/" rel="next" style="background-color:transparent;text-decoration:none;word-wrap:break-word;color:rgb(85, 85, 85);border-bottom:none;position:relative;display:block;line-height:25px;font-size:14px;padding-left:15px;" title="使用SO库时要注意的一些问题">
+                <i style="font-family:FontAwesome;display:inline-block;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:1;font-style:normal;-webkit-font-smoothing:antialiased;text-rendering:auto;font-size:12px;position:absolute;top:8px;left:0px;"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:1;font-family:FontAwesome;font-size:12px;"></span></i> 使用SO库时要注意的一些问题
+              </a>
+            
+          </div>
+
+          <span style="display:table-cell;width:10%;"></span>
+
+          <div style="display:table-cell;padding:10px 0px 0px;width:45%;vertical-align:top;text-align:right;">
+            
+              <a href="http://kaedea.com/2016/06/09/living-cp18-video/" rel="prev" style="background-color:transparent;text-decoration:none;word-wrap:break-word;color:rgb(85, 85, 85);border-bottom:none;position:relative;display:block;line-height:25px;font-size:14px;padding-right:15px;" title="魔都漫展 COMICCUP18 DAY1">
+                魔都漫展 COMICCUP18 DAY1 <i style="font-size:12px;display:inline-block;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:1;font-family:FontAwesome;font-style:normal;text-rendering:auto;-webkit-font-smoothing:antialiased;position:absolute;top:8px;left:auto;right:0px;"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:1;font-family:FontAwesome;font-size:12px;"></span></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </div>
+  </div></div></div></div></div></span></div></div></div></div><br/></div></span>
+</div></body></html> 

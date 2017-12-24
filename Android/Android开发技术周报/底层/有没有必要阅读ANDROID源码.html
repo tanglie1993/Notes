@@ -1,0 +1,186 @@
+<html>
+<head>
+  <title>有没有必要阅读ANDROID源码</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3058"/>
+<h1>有没有必要阅读ANDROID源码</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="font-family:sans-serif;text-size-adjust:100%;"><div style="font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:14px;line-height:2;color:rgb(85, 85, 85);background:rgb(255, 255, 255);"><div><span><div><div><div><div><div style="opacity:1;transform:translateY(0px);">
+  
+
+  
+
+  
+
+    
+      <div style="display:block;">
+
+        
+        
+          <h1 style="margin:0px;padding:0px;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:26px;font-weight:400;text-align:center;word-break:break-word;">
+            
+            
+              
+                有没有必要阅读ANDROID源码
+              
+            
+          </h1>
+        
+
+        <div style="margin:3px 0px 60px;color:rgb(153, 153, 153);font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:12px;text-align:center;">
+          <span>
+            
+            <span>Posted on</span>
+            <span title="Post created">
+              2016-02-08
+            </span>
+
+             | 
+
+            
+            <span title="Post modified">
+              2017-09-12
+            </span>
+            
+          </span>
+
+          
+            <span>
+                |  
+              
+              <span>In</span>
+              
+                <span>
+                  <a href="http://kaedea.com/categories/Android/" rel="index" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;">
+                    <span>Android</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span>
+                  |  
+                <a href="http://kaedea.com/2016/02/08/android-about-source-code/#comments" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;">
+                  <span></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span>
+                 |  
+               
+               <span>Visitors </span>
+               <span>1744</span>
+              </span>
+          
+
+          
+          
+          
+
+        </div>
+      </div>
+    
+
+
+    <div style="font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;">
+
+      
+      
+
+      
+        <p style="margin:0px 0px 25px;"><a href="http://7xih5c.com1.z0.glb.clouddn.com/16-2-8/20986738.jpg?imageView2/2/w/600/interlace/1" rel="group" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"><img src="有没有必要阅读ANDROID源码_files/1.png" type="image/png" data-filename="1.png" alt="" height="310" style="max-width:100%;height:auto;border:1px solid rgb(221, 221, 221);margin:0px auto;cursor:-webkit-zoom-in;box-sizing:border-box;padding:3px;display:block;" width="441"/></a></p>
+<p style="margin:0px 0px 25px;">或许对于许多Android开发者来说，所谓的Android工程师的工作“不过就是用XML实现设计师的美术图，用JSON解析服务器的数据，再把数据显示到界面上”就好了，源码什么的，看也好不看也罢，反正应用层的开发用不上，再加上现在优秀的轮子越来越多，拿来主义泛滥，能用就是，反正老板也不关心是不是你自己写的，用我现在老大的话来说，阅读源码似乎只是一种“锦上添花”的事，有自然好，没有也罢。</p>
+<p style="margin:0px 0px 25px;">那么，作为Android开发者的自我修养，到底有没有必要阅读AOSP以及其他开源项目的源码呢？<br/><a style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;"></a></p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/02/08/android-about-source-code/#%E5%88%9A%E5%BC%80%E5%A7%8B%E6%97%B6%E5%80%99%E7%9A%84%E6%95%85%E4%BA%8B" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="刚开始时候的故事"></a>刚开始时候的故事</h2><p style="margin:0px 0px 25px;">对于我来说，选择编程是因为我看见了 <a href="http://moeloader.sinaapp.com/" rel="external" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" target="_blank">MoeLoader</a> 这款收图应用实在是漂亮才开始写代码，我要的目的只是应用漂亮，不用在乎代码写成什么样，而且我觉得代码是我写的，这么辛苦的作品可不能白白开源给别人看。所以对于这个时候的我，那时候虽然没有考虑过类似的问题，但是很可能觉得阅读源码是没有必要的。</p>
+<p style="margin:0px 0px 25px;">后来我开始学习Android，原因非常简单，C#根本无法找到合适的工作，而学生党我的我根本无法买得起苹果三套件，此外，IE6的兼容工作让我实在是对前端敬而远之，所以选择只剩下Android了。说实在的，一开始我是不太喜欢Android开发，特别是IDE从Visual Studio切换到万恶的Eclipse，丑，卡顿，动不动就找不到依赖，甚至有时候编译一直报红Error，定位了半天找不到问题，到最后把红色的Error删除掉后居然就编译通过了！这时候的我，别说阅读源码了，我只求同一份代码在运行的时候有同样的逻辑就好。</p>
+<p style="margin:0px 0px 25px;">再到后来，我已经有一些Android程序设计的经验了，IDE也开始换到Android Studio（Preview版本刚出来的时候，我在Android Studio和Eclipse之间切换过好几次，不得不说习惯这种东西有时很有帮助，有时候也会很可怕），换到Android Studio很大一个原因是因为Github上面许多开源项目用Android Studio来部署很方便。这个时候我接触的开源项目已经比较多了，许多时候一些开源项目总有一些BUG，我会给其提交ISSUE，不过更多时候我不能等项目所有者来解决，需要我自己解决BUG；许多时候开源项目并不能直接满足业务的需要，所以我也需要先阅读源码再改造成自己的项目能用的。</p>
+<p style="margin:0px 0px 25px;">这里需要特别说明的是，我的第一份工作的项目是一个SDK项目，整体使用了基于ClassLoader的动态加载的框架。那时候还比较早，国外对动态加载不感兴趣，国内的话也只有零星的技术博客对这有讨论，不过大多是介绍如何实现动态加载而没有分析其工作机制。所以，当有新的技术需求，或者项目出现BUG的时候，我都需要自己阅读源码去解决问题。比如，有一次设计师需要一个全圆角的菜单背景，然而Android的点九图是X轴和Y轴都需要拉伸的，当Y轴拉伸的时候就无法实现全圆角。我能做的就是，先把点九图的原图等比缩放到Y轴填满，这样Y轴就不会被拉伸了，但是原图缩放后，点九图X轴的拉伸却出现了扭曲的样式。通过阅读NinePatchDrawable的源码，我发现点九图的原理就是一个普通的Drawable加上一个用于描述拉伸坐标的数组chunk，当我缩放Drawable的时候，也必须更新chunk，不然拉伸的坐标就对不上，后面通过阅读源码中关于chunk的描述，把对应的拉伸坐标更新后，<strong style="font-weight:bold;">全圆角的点九图</strong> 也就实现了。</p>
+<h2 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:20px;padding-top:10px;"><a href="http://kaedea.com/2016/02/08/android-about-source-code/#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E9%98%85%E8%AF%BB%E6%BA%90%E7%A0%81" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="为什么要阅读源码"></a>为什么要阅读源码</h2><p style="margin:0px 0px 25px;">说了这么多，到底有没有必要阅读源码？有必要，而且非常有必要！原因有三。</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/08/android-about-source-code/#%E5%85%B6%E4%B8%80%EF%BC%8C%E4%BA%86%E8%A7%A3%E5%9F%BA%E5%B1%82%EF%BC%8C%E9%AB%98%E5%B1%82%E6%89%8D%E8%83%BD%E6%9B%B4%E5%A5%BD%E5%9C%B0%E5%B7%A5%E4%BD%9C%E3%80%82" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="其一，了解基层，高层才能更好地工作。"></a>其一，了解基层，高层才能更好地工作。</h3><p style="margin:0px 0px 25px;">比如，了解View的绘制过程，了解TouchEvent的分发和拦截过程的细节，才能写出酷炫的UI，要不然，只知道大概的原理的话，你可能要在“无法接收到触摸事件”或者“滑动事件和点击事件冲突”的这些问题上折腾半天。</p>
+<p style="margin:0px 0px 25px;">又比如，如果哪里出现异常，你能快速定位到源码抛异常类的地方，就能快速解决BUG，对症下药，一招撂倒，有些时候，修复BUG的时间不是用在解决问题上，而是用在定位问题上。</p>
+<p style="margin:0px 0px 25px;">这里有必要提一下，当Logcat把异常的栈信息打印出来的时候，有些异常出现的原因并不真的是Logcat的信息里描述的原因，因为Logcat里的异常的信息也只是由系统源码打印出来的，而这些源码大多时候只是普通的Java代码，和你自己写的没什么区别，如果源码抛出异常的代码的逻辑不够严谨的话，那实际的异常和Logcat里描述的异常可能对不上。比如之前搞动态加载的时候，在使用LayoutInflator渲染一个外部的XML布局时，抛了一个“Class not found”的异常，我要渲染的类可是LinearLayout啊，怎么可能没有！定位到源码里才发现，这里只要是类渲染失败就会抛这个异常，再定位到具体抛异常的地方，发现实际是Dimens资源找不到，困扰半年的问题立刻解决。</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/08/android-about-source-code/#%E5%85%B6%E4%BA%8C%EF%BC%8C%E8%83%BD%E5%A4%9F%E7%90%86%E8%A7%A3Android%E8%AE%BE%E8%AE%A1%E8%80%85%E7%9A%84%E6%84%8F%E5%9B%BE%E3%80%82" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="其二，能够理解Android设计者的意图。"></a>其二，能够理解Android设计者的意图。</h3><p style="margin:0px 0px 25px;">这个描述可能不好，比如说，许多人都觉得Android开发其实就是Java开发，通过阅读Context类的设计，你能够理解Google是如何在Java的基础上加上Android的特性的，你能够理解Context被叫做“环境”的原因。此外，阅读Activity/Service的源码，你能理解到四大组件类明明就是普通的JAVA类，为什么他们就是组件而别的类就不是组件。阅读Handler/Message/Looper的源码，你还能理解到Handler的精髓，数据驱动比事件驱动更适合用于设计需要经常改动的框架。阅读源码，你能知道Android是怎么管理Window以及向控制View的触摸事件的，你能知道基本上所有的res资源都有等价的Java代码的实现方式，你还能知道Dalvik是怎么无缝向ART过度的，在看通的那一瞬间，保证你觉得“水可载舟，亦可赛艇”！</p>
+<h3 style="margin:20px 0px 15px;padding:0px;font-weight:bold;line-height:1.5;font-family:Lato, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:18px;padding-top:10px;"><a href="http://kaedea.com/2016/02/08/android-about-source-code/#%E5%85%B6%E4%B8%89%EF%BC%8C%E8%83%BD%E5%A4%9F%E5%AD%A6%E4%B9%A0%E4%BC%98%E7%A7%80%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE%E7%9A%84%E4%BB%A3%E7%A0%81%E9%A3%8E%E6%A0%BC%E5%92%8C%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;" title="其三，能够学习优秀开源项目的代码风格和设计理念"></a>其三，能够学习优秀开源项目的代码风格和设计理念</h3><p style="margin:0px 0px 25px;">这也是最重要的，看多了源码之后，你会发现所谓的源码也不过是普通的的Java代码，在不知不觉中受到这些优秀设计思想的影响。相信许多人在看 <strong style="font-weight:bold;">Volley</strong> 源码此前，对异步任务控制的想法基本就是毫无想法，看完之后简直是醍醐灌顶，原来代码也能写得这么有魅力，再看看自己之前写的异步任务，“new Thread().start”…，简直是“too young, sometime naive”有没有。</p>
+<p style="margin:0px 0px 25px;">看了越来越多Android的源码，自己的写应用的时候，也就能写出更加“Best Performance”的代码，见识了越来越多的开源项目，自己也能够更容易找到最符合自己应用的框架和技术方案，学习了越来越多的优秀的代码风格，自己也就更能写出漂亮以及容易扩展的代码。</p>
+<p style="margin:0px 0px 25px;">或许对许多做Android开发来说，平时的工作就是按照设计的图写个布局，再解析后台的数据，下班了把测试用的安卓机扔进抽屉拿出自己的苹果手机…… 但有时候花点时间看看源码，或许会觉得设计代码还是挺有意思的，特别是，当你花了两天的时间构思代码，再花两天的时间写代码，这时你可能觉得你还有许多代码要写，但是突然发现只要把你写好的接口衔接一下就都完成了，而且写了两天的代码居然一次编译通过！更甚，产品突然改了个需求，你在抱怨了一顿后发现只要花10分钟把原来的接口换个实现就搞定了，这或许是程序员工作中为数不多的乐趣吧。</p>
+<p style="margin:0px 0px 25px;">最后，我想说的是，每个人对技术的追求不一样，有的人总是恨不得多知道一点，有的只需要日复一日地重复类似的码代码工作就足够了。所以，“需不需要阅读源码”就是一个伪命题，对任何人来说答案都不太一样。不过，既然Android相比隔壁iOS最大的优势在于开源，如果你还在犹豫要不要阅读源码，我建议有时间还是稍微看看吧，万一就打开新世界的大门呢？</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <div style="display:block;">
+      
+        <div style="margin-top:40px;text-align:center;">
+          
+            <a href="http://kaedea.com/tags/Android/" rel="tag" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;display:inline-block;margin-right:10px;font-size:13px;"># Android</a>
+          
+            <a href="http://kaedea.com/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="tag" style="background-color:transparent;color:rgb(85, 85, 85);text-decoration:none;border-bottom:1px solid rgb(153, 153, 153);word-wrap:break-word;display:inline-block;margin-right:10px;font-size:13px;"># 源码分析</a>
+          
+        </div>
+      
+
+      
+        <div style="display:table;margin-top:60px;width:100%;border-top:1px solid rgb(238, 238, 238);">
+          <div style="display:table-cell;padding:10px 0px 0px;width:45%;vertical-align:top;">
+            
+              <a href="http://kaedea.com/2016/02/07/android-dynamical-loading-02-classloader/" rel="next" style="background-color:transparent;text-decoration:none;word-wrap:break-word;color:rgb(85, 85, 85);border-bottom:none;position:relative;display:block;line-height:25px;font-size:14px;padding-left:15px;" title="CLASSLOADER的工作机制">
+                <i style="font-family:FontAwesome;display:inline-block;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:1;font-style:normal;-webkit-font-smoothing:antialiased;text-rendering:auto;font-size:12px;position:absolute;top:8px;left:0px;"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:1;font-family:FontAwesome;font-size:12px;"></span></i> CLASSLOADER的工作机制
+              </a>
+            
+          </div>
+
+          <span style="display:table-cell;width:10%;"></span>
+
+          <div style="display:table-cell;padding:10px 0px 0px;width:45%;vertical-align:top;text-align:right;">
+            
+              <a href="http://kaedea.com/2016/02/09/android-about-source-code-how-to-read/" rel="prev" style="background-color:transparent;text-decoration:none;word-wrap:break-word;color:rgb(85, 85, 85);border-bottom:none;position:relative;display:block;line-height:25px;font-size:14px;padding-right:15px;" title="阅读ANDROID源码的一些姿势">
+                阅读ANDROID源码的一些姿势 <i style="font-size:12px;display:inline-block;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:1;font-family:FontAwesome;font-style:normal;text-rendering:auto;-webkit-font-smoothing:antialiased;position:absolute;top:8px;left:auto;right:0px;"><span style="font-style:normal;font-variant:normal;font-weight:normal;line-height:1;font-family:FontAwesome;font-size:12px;"></span></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </div>
+  </div></div></div></div></div></span></div></div></div></div><br/></div></span>
+</div></body></html> 

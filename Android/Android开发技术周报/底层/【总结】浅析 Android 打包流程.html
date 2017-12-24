@@ -1,0 +1,133 @@
+<html>
+<head>
+  <title>【总结】浅析 Android 打包流程</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3072"/>
+<h1>【总结】浅析 Android 打包流程</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="font-family:sans-serif;text-size-adjust:100%;font-size:100%;"><div style="font-size:12px;font-family:&quot;PingFang SC&quot;, Arial, 微软雅黑, 宋体, simsun, sans-serif;-webkit-font-smoothing:antialiased;background:rgb(255, 255, 255);color:rgb(102, 102, 102);line-height:1.667;overflow-x:hidden;"><div style="font-size:100%;"><div style="font-size:100%;"><div style="font-size:100%;"><div style="font-size:100%;">
+                        <div style="border:0px;margin:0px;padding:0px;font-size:100%;position:relative;top:-6px;">
+    <h1 style="margin:0px;border:0px;padding:0px;font-size:28px;font-weight:700;line-height:38px;color:rgb(25, 25, 25);">【总结】浅析 Android 打包流程<span style="border:0px;margin:0px;padding:0px;font-size:100%;display:inline-block;font-weight:400;position:relative;top:-4px;">
+                 </span>
+    </h1>
+            <div style="border:0px;margin:0px;padding:0px;font-size:14px;line-height:20px;color:rgb(153, 153, 153);padding-top:15px;">
+        <span style="border:0px;margin:0px;padding:0px;font-size:100%;">2017-06-17 16:24</span>
+        
+                <span style="border:0px;margin:0px;padding:0px;font-size:100%;float:right;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAASCAYAAACEnoQPAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6N0Y2Qjk4QUU3MTEzMTFFNzlBQzY4MTYyNjBFODlCMzUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6N0Y2Qjk4QUY3MTEzMTFFNzlBQzY4MTYyNjBFODlCMzUiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo3RjZCOThBQzcxMTMxMUU3OUFDNjgxNjI2MEU4OUIzNSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo3RjZCOThBRDcxMTMxMUU3OUFDNjgxNjI2MEU4OUIzNSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PikSsmEAAAJASURBVHjafFPNi1JRFD/v8fBzFBWT/AgE0cCF+AEugjYh/RVBmzYD0RRTDVOLgTbNIqKhoKh9UBEERRAILWoVmoiItsvUUktHFL9B+53Xm8eojw78OPece373no97hcViQVqSTqd3oTYBA/ATqAG/gB/Ak1Qq9VvQIoO4b7VadyKRCImiSJPJRMV4PKZ6vU7T6dQlaRDv2Wy27Wg0SpL0b1un05HFYlFj5vM5VSqVi+IK8b7D4diOxWIqsdPp0Gg0WrrAYOBKyC8dIz5wOp1bR6mylMtlGg6HMtnr9ZLf75f9RqNRJosK8aHL5Voi8o1MjMfjlEgkqFarrd4clkDcc7vdl8PhMAmCoAaYzWYaDAbU6/Wo2+0SDlf3lJu9fM1mMBhcIrLo9XoKBAJy6txhn8+n7vFhkD9MfpzL5Wg2m62NzOPxUDKZpFAoRCaTSfa1223K5/O8PGTyt36/P8tkMjw7+p+0Wi2ZiFFdgrkhKq8ohfr2+ABOUUsajQYVCgUmnof5EnAwuQGcxHO7g+7uZrPZtbnyiyoWi4TXeBbmR+AZlyvXDDxH1y/ggH0Qb3AG3GmWarVKpVKJiQmYX4BXXAFid+S3DeIZOD5xCXA+hX0FT/LAbrdTs9nkwx8B34HX3CPEXOWD1Y8BQhTqK3ANmwewT2B9DusXWG9g/RbIwr5+VM7Sr0LQaagtzhZBdxWfDeo98Bm+m8d7sfYlEXwKiv/yoZLuO+ADiLdWJyCuOhBUhboN8MyywBstIstfAQYANicOKtO4GqgAAAAASUVORK5CYII=&quot;) 0px 0px no-repeat;padding-left:25px;">
+                                                  <a href="http://www.sohu.com/tag/60038" style="background-color:transparent;border:0px;margin:0px;padding:0px;font-size:100%;text-decoration:none;color:rgb(83, 159, 243);float:left;" target="_blank">程序设计</a>
+                                                                  <em style="border:0px;padding:0px;font-size:100%;font-style:normal;margin:0px 6px;float:left;color:rgb(223, 223, 223);">/</em><a href="http://www.sohu.com/tag/70122" style="background-color:transparent;border:0px;margin:0px;padding:0px;font-size:100%;text-decoration:none;color:rgb(83, 159, 243);float:left;" target="_blank">Android</a>
+                                                                  <em style="border:0px;padding:0px;font-size:100%;font-style:normal;margin:0px 6px;float:left;color:rgb(223, 223, 223);">/</em><a href="http://www.sohu.com/tag/65790" style="background-color:transparent;border:0px;margin:0px;padding:0px;font-size:100%;text-decoration:none;color:rgb(83, 159, 243);float:left;" target="_blank">技术</a>
+                                      </span>
+            </div>
+</div>
+<div style="display:block;border:0px;margin:0px;padding:0px;font-size:16px;color:rgb(25, 25, 25);line-height:30px;padding-top:5px;overflow:hidden;">
+      
+            <p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">Ⅰ 起因</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">本来想好好琢磨琢磨写个开头，后来一想，做技术的哪来这么多讲究，直接开门见山。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">和一些同行交流的过程中发现部分朋友实际上对 Android 打包流程基本没有比较清晰完整的概念，所以本文主要聊一聊 Android 的打包流程，以及目前已有的或多或少可以与 Android 打包搭一点边的开源技术，互相学习。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">更好的了解 Android 的打包流程，有助于我们做一些针对编译期的优化，包括但不限于提高打包速度（毕竟时间就是金钱，我的朋友），提高 Android 应用的 hack 难度增加安全性，减少 Android 安装包的体积，完成一些自动化的编码减少编码压力等。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">以上这些在本文中，都会有简要的提及。希望可以对大家有一点帮助。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">Ⅱ Apk 的组成结构</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">本文脉络采用的是一个由结果反推至过程的流程。 在开始时，我们需要先弄明白，apk 文件也就是 Android 打包流程的产物，是一个什么类型的文件，它包含了一些什么内容。 弄清楚了这些，我们就可以带着目的性，去分析打包流程，可以更好的关注 apk 文件中的这些内容是在打包流程的哪个过程中产生，以及是如何产生的。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">众所周知，apk 文件本质上其实是一个 zip 包。想要知道其中包含了什么，改后缀直接解压便可以看到了。 这里笔者挑软柿子，解压了某个未经过加固或者其他手段加密的 Android 安装包文件，以下为结果截图：</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;"><img src="【总结】浅析 Android 打包流程_files/635ea160f3d74ce6bf68eaa8428f7ffe_th.png.jpg" type="image/jpeg" data-filename="635ea160f3d74ce6bf68eaa8428f7ffe_th.png.jpg" height="549" style="border:0px;padding:0px;font-size:100%;display:block;max-width:100%;height:auto;margin:10px auto 0px;" width="640"/></p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">主要注意红色标注部分，这一些文件和文件夹是一个 Android 应用基本都具备的。而其他的一些文件和文件夹则是一些第三方库，或者是其他一些代码生成的。 接下来，依次大概介绍一下这些文件和文件夹的作用。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">2.1. AndroidManifest.xml</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">这是 Android 应用的全局配置文件，它包含了这个应用的很多配置信息，例如包名、版本号、所需权限、注册的服务等。可以根据这个文件在相当程度上了解这个应用的一些信息。该文件目前状态是被编译为二进制的 XML 文件，可以通过一些工具（如 apktool）反编译后进行查看。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">这里强烈安利大家升级一下 Android Studio 2.2 Preview，其新功能 Analyze apk是一个很不错的 apk 分析(~~hack 入门~~)工具。我们可以通过它直接反编译看到原始的 AndroidManifest.xml 文件，如下图。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;"><img src="【总结】浅析 Android 打包流程_files/79a0064baff649e589ae20f43b7bbf9a_th.png.jpg" type="image/jpeg" data-filename="79a0064baff649e589ae20f43b7bbf9a_th.png.jpg" height="702" style="border:0px;padding:0px;font-size:100%;display:block;max-width:100%;height:auto;margin:10px auto 0px;" width="640"/></p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">2.2. assets 文件夹</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">assets 文件夹用于保存需要保持原始文件的资源文件夹，开发过程中拖了什么到里面，打包完之后里面还是什么。一般用于存放音频，网页（帮助页面之类的），字体等文件。主要需要知道的点是，它与 res 文件夹的区分以及如何在应用中访问该文件夹的资源，如它可以有多级目录而 res 则只有两级。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;"><img src="【总结】浅析 Android 打包流程_files/bc3a23bdd6f041ada698c9b15b0c53bf_th.png.jpg" type="image/jpeg" data-filename="bc3a23bdd6f041ada698c9b15b0c53bf_th.png.jpg" height="489" style="border:0px;padding:0px;font-size:100%;display:block;max-width:100%;height:auto;margin:10px auto 0px;" width="640"/></p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">2.3. dex 文件</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">classes.dex 文件是 Android 系统运行于 Dalvik Virtual Machine 上的可执行文件，也是Android 应用程序的核心所在。项目工程中的 Java 源码通过 javac 生成 class 文件，再通过 dx 工具转换为 classes.dex，注意到我们这里有 classes2.dex 和 classes3.dex。这是方法数超过一个 dex 的上限，分 dex 的结果。分 dex 在 Android 5.0 之前需要开发者自行完成，5.0 后 dx 自带支持。dex 文件的数据结构不算复杂，如下图所示。目前一些热补丁有关的技术，主要便是对 dex 做各种处理。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">2.4. lib 文件夹</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">该目录存放着应用需要的 native 库文件。比如一些底层实现的图片处理、音视频处理、数据加密的库以 so 库的形式在该文件夹中。而该文件夹下有时会多一个层级，这是根据不同CPU 型号而划分的，如 ARM，ARM-v7a，x86等，如下图：</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;"><img src="【总结】浅析 Android 打包流程_files/71e394ea7a8b4a9395c616ce26ecf4d1_th.png.jpg" type="image/jpeg" data-filename="71e394ea7a8b4a9395c616ce26ecf4d1_th.png.jpg" height="582" style="border:0px;padding:0px;font-size:100%;display:block;max-width:100%;height:auto;margin:10px auto 0px;" width="640"/></p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">2.5. META-INF 文件夹</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">该目录的主要作用是用于保证 APK 的完整性以及安全性。该文件夹下，主要有三个文件。如下图：</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;"><img src="【总结】浅析 Android 打包流程_files/a532e307772247428623e790b9c4e400_th.png.jpg" type="image/jpeg" data-filename="a532e307772247428623e790b9c4e400_th.png.jpg" height="440" style="border:0px;padding:0px;font-size:100%;display:block;max-width:100%;height:auto;margin:10px auto 0px;" width="640"/></p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">先说 MANIFEST.MF，这个文件保存了整个 apk 文件中所有文件的文件名 + SHA-1后的 编码值。这也就意味着，MANIFEST.MF 象征着 apk 包的完整性。再说 CERT.RSA，这个文件保存了公钥和加密方式的信息。最后说 CERT.SF，这个文件与 MANIFEST.MF 的结构一样，只是其编码会被被私钥加密。这样一来每次安装时，通过该文件夹中的文件，就可以完成验证的过程。如果 apk 包被改变了，而篡改者没有私钥生成 CERT.SF，则无法完成校验。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">2.6. res 文件夹</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">顾名思义，该文件夹是资源文件夹。它里面存放的所有文件都会被映射到 R 文件中，生成对应的资源 ID，便于代码中通过 ID 直接访问。其中的资源文件包括了动画(anim)，图像(drwable)，布局(layout)，常量值(values)，颜色值(colors)，尺寸值(dimens)，字符串(strings)，自定义样式(styles)等。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">2.7. resource.arsc 文件</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">这个文件可以说是所有文件中结构最复杂的。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">它记录了资源文件，资源文件位置(各个维度的路径)和资源 id 的映射关系。并且将所有的 string 都存放在了 string pool 中，节省了在查找资源时，字符串处理的开销。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">我们可以使用 Androdi Studio 2.2 Preview 中的新功能 Analyze apk （这个新功能用来分析 apk 非常好用，强烈推荐各位读者可以尝试一下）来看看它到底包含了些什么，一图胜过千言：</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;"><img src="【总结】浅析 Android 打包流程_files/b3cb4332b69f47c39575e8321fc29332_th.png.jpg" type="image/jpeg" data-filename="b3cb4332b69f47c39575e8321fc29332_th.png.jpg" height="248" style="border:0px;padding:0px;font-size:100%;display:block;max-width:100%;height:auto;margin:10px auto 0px;" width="640"/></p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">我们可以看到，首先是有个 package 可选，实际上 resource.arsc 是可以包含多个 package 的资源的。 然后可以看到一个 Resource Types 的列表。这里看到的是 drawable 的 type。 右边显示了有多少个 drawable 以及多少项 configurations，以及表的具体内容为 ID - Name - 各个维度的值（在这里即是资源的路径），通过这个，我们可以完成通过 id + 对应的 configuration 获取对应资源的操作。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">而后面要提到资源混淆的原理，就是修改这里各个维度的值，并修改对应 res 里面的文件夹以及文件名实现的。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">具体其完整的数据结构比较复杂，在这里就不展开说了，有兴趣的读者可以自行查阅信息，甚至写一个 parser 出来也是非常有意思的。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">Ⅲ Android 打包流程</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">在了解了 apk 文件的结构后，我们开始分析 Android 的打包流程。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">3.1 资源</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">Android 打包流程的第一步，是处理资源文件。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">在这个步骤中，起主要作用的是 aapt。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">刚刚提及的 AndroidManifest.xml, res 文件夹，resource.arsc 文件的生成都与其有关，简单来说，aapt 解析项目代码中的 AndroidManifest.xml，收集项目中 res 文件夹的资源文件及 xml 文件，对其做压缩以及编译的处理。在此过程中，分配了资源 id 并生成了 R.java 文件 以及 arsc 文件。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">3.2 代码</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">上一步得到了 R.java 文件后，将其与项目代码一起编译得到 .class文件，然后打包为 jar 包。这个过程中，还会有混淆代码这一步骤。之后，再通过 dx 工具，将生成的 jar 包与第三方库的 jar 包一起编译为 dex 文件。这个过程中，如果是 5.0 以前的系统且超过了 65535 方法数的限制，需要人为的分 dex，5.0 以后则由 dx 工具包办。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">到这一步，实际上 apk 所需要的主要内容已经大致齐全了。只需要把上面生成的 AndroidManifest.xml，classes.dex，res文件夹，resource.arsc 打包进 apk，并且将项目工程中的 assets 以及 lib 目录一并放入，就有了一个未经签名的 Android 安装包了。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">3.3 签名</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">接下来还缺简单但是却关键的最后一步，那便是 apk 包的签名，这一步在之前对 META-INF 的介绍中，实际已有提及。只需要按步骤生成 MANIFEST.MF, CERT.RSA，CERT.SF 并放入META-INF 文件夹即可。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">以上便是 Android 打包的基本流程，宏观来看实际并不复杂，但是其中的一些步骤展开来讲，却是很有内容的，比如 appt 对资源处理的那个部分，R.java 是如何生成的，resource.arsc 又是如何生成的，Android 是怎样完成对资源的获取的，这些内容笔者之后会继续整理分享。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">Ⅳ 业内有关技术小结</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">分析完流程之后，我们来看看目前业内有哪一些与编译有关的技术可以运用起来的。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">4.1 apk 加固</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">目前业内已经有很多 apk 加固的服务，这里提及最常见的一种加固方案。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">一个比较典型的加固流程如下图：</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;"><img src="【总结】浅析 Android 打包流程_files/0add2de910a14fc8a7cfca1386205210_th.png.jpg" type="image/jpeg" data-filename="0add2de910a14fc8a7cfca1386205210_th.png.jpg" height="389" style="border:0px;padding:0px;font-size:100%;display:block;max-width:100%;height:auto;margin:10px auto 0px;" width="640"/></p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">实际上是通过外包一层解壳 apk，将我们自己的 dex 文藏在加密 apk 的 dex 中。由于破坏了正常的 dex 结构，所以一般的反编译工具，如 apktool 并不能直接反编译 apk。但是如果了解了加密的方式以及方案，实际上要破解得到脱壳 dex 并不复杂，这只是一定程度上提高了 hack 的成本，不过针对一般的 hack 依然很有效。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">4.2 快速多渠道包</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">由于国内有着数不胜数的 Android 应用市场，所以越来越多的渠道包成为了每一个应用的必须。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">在之前，开发者一般通过 AndroidManifest.xml 中的meta 信息来区分渠道。在了解了打包流程后，大家应该明白，一旦改变了 AndroidManifest.xml 就意味着要重新打包。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">ts（多渠道包的时间） = t （打每个包的耗时） * n （n为渠道数量）， n 在大到一定程度后，ts 就会变得非常的大。这显然是让开发者十分痛苦的。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">要解决这个问题，实际上需要攻破的是，META-INF 的完整性校验机制。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">目前业界比较常用的两种方案是：</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">1. META-INF 下添加空文件不会破坏签名（文件名为渠道号，若 Google 更改签名机制，有可能失效）</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">2. apk 文件末尾写入信息（本质是利用了 zip 文件可以添加 comment 数据结构的特点）</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">这两种改动方案都不会导致 MANIFEST.MF 文件的改变，也就不需要再次打包，只需要简单的读改文件即可。为广大开发者节省了上线前漫长的等待渠道包的时间。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">4.3 资源混淆</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">资源混淆通过混淆资源路径名以及资源文件名，比如：</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">res/drawable/icon -&gt; r/s/a</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">这样不但可以减少安装包的体积，一定程度上也可以提高破解难度。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">该方案目前业内也有两种实现，但是原理基本一致。入手点皆为resource.arsc。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">第一种方案是修改我们刚刚提及的 aapt，使得在生成 resource.arsc 的过程中，就修改掉项目中资源的名称，实现了资源的混淆。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">第二种方案则是在打出 apk 包之后，读入已生成的 resource.arsc 文件，进行混淆，改写，同时修改掉 res 文件夹下的资源名称，完成混淆。最后再重新打包得到混淆资源后的新 apk 文件。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">既可以减小体积，又可以一定程度增加被 hack 的难度，如果还有没有用起来的同学，可以尝试用起来了。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">4.4 热补丁</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">由于移动平台的特性，移动应用版本的升级率并不高。这种时候，如果应用应用也可以像网页那般动态部署，无疑可以带来非常大的优势，比如在线修复 bug，小版本的升级，临时特性的上线等。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">目前业界已经有比较多的技术方案了，在这里我们提及两种比较有代表性的方案。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">1. 通过 native hook 的方式，替换 class 中的方法实现完成热补丁。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">2. classloader 加载新 dex 覆盖原有 class 完成替换的方案。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">因为实际上每种方案都并非几句话可以讲解清楚，本文主要目的也只是做个大概介绍，若读者有兴趣可以谷歌后进一步研究，这里就不具体展开讲了。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">实际上还有一些技术，比如使用 Anotation 自动生成代码，buck exopackage 提高打包速度等。有兴趣的话，可以自行查阅，相信可以学到不少知识的。</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">Ⅴ 最后</p> 
+<p style="border:0px;margin:0px;font-size:100%;padding:10px 0px 20px;">以上就是本文所有内容了，希望可以对大家有所帮助。感谢阅读=w=。<a href="http://www.sohu.com/?strategyid=00001" style="background-color:transparent;border:0px;margin:0px;padding:0px;font-size:100%;text-decoration:none;color:rgb(5, 107, 193);white-space:nowrap;" target="_blank" title="点击进入搜狐首页"><span style="border:0px;margin:0px;padding:0px;font-size:15px;display:inline-block;height:15px;line-height:15px;padding-left:5px;color:rgb(83, 159, 243);"><i style="border:0px;margin:0px;padding:0px;font-size:100%;margin-right:5px;width:15px;height:15px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NTBERkMzM0M3MDUxMTFFNzk1NkRCNzg0RkMwMDUzMzkiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NTBERkMzM0Q3MDUxMTFFNzk1NkRCNzg0RkMwMDUzMzkiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo1MERGQzMzQTcwNTExMUU3OTU2REI3ODRGQzAwNTMzOSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo1MERGQzMzQjcwNTExMUU3OTU2REI3ODRGQzAwNTMzOSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PjUUOd0AAAKHSURBVHjaVJJdSBRRFMf/d/aOs7szq7huFiuNrLaUkqhkUoJCQR8vgUFZIX08GEiED0H5ID1VEPTxavkkQfaSYCRkEAg+hA9BWGhJoUuirK5K5dbOzM7O6exuPXRh4J4z53fu/f/PFZnnaBUSU+ClKICq5jf4fxHgZoFcjvdCB7mZDmGNgdQari0BPEfDp4SGVOon0pkiE9CAUEhHQ1wgEEqDsm1wvs4ADFreLCj5Nkh3rjdSqHQn96+mQ60ldLTNR0YozHGELp+J0sIkyJsD5ZkCSIugp3eNQkHtrloaG9pHtKQRrUiaGqmh/c1x/mfQ/WvgfBGU/2Soal5YEOsbGays8v2y+ayL9sMJjJtVmJgEDjSx3K1ifV6jpdZC29rSsLCm4c30Dtx67KA6sgSp5CB9Ale7JS72cadl9sHingnYRTAGLe+c4uOkG0QylUH6Nyd8QYxO7ca9wQ+IVkUxNGCh/WAK9izsgvFKGfDslYRo0HCk10COgqhrBOoaXPT3Aj1dZfg8v4rE0nfW9FdbwZwvoLnxMJ07XU/lYT+d3KvT60eCJoYV6jkb4KP9VL8nTu9GI0TzRXOE+xKWjzXOfAQ2vSgeDPuRnFzDsuOi3LAQ4xmbLdvQ1+2hLrYBLw0432BLBQKDT1TcHpRI/XAQKXXg6ApulPpwJeaD0cIvozUFVLAxfLbgUF3fDowMSMuv5ocsSBQeF4g9ohOKoE3FT6Tp5Bp+cpoDlD1mkN3Bs7x0nOTDUYLwHNRUm0wp+MW0uZJEl2NxLJGzMyD2ULwXPNUspB4GKo1OZTlVQecvnJoWPmnqumH6DcPUPc9s6r+5GK6qtG1Gi59jy1i1LeORTsjciz8CDACzHh/U4gnF4AAAAABJRU5ErkJggg==&quot;) center center no-repeat;display:inline-block;vertical-align:top;"></i>返回搜狐，查看更多</span></a></p>      
+</div>
+  <div style="border:0px;margin:0px;padding:0px;font-size:100%;color:rgb(153, 153, 153);line-height:16px;">声明：本文由入驻搜狐号的作者撰写，除搜狐官方账号外，观点仅代表作者本人，不代表搜狐立场。</div>  <div style="border:0px;padding:0px;font-size:100%;margin:45px auto 0px;height:39px;">
+    <div style="border:0px;margin:0px;padding:0px;font-size:100%;float:left;display:inline;">
+        <span style="border:0px;margin:0px;padding:0px;font-size:14px;line-height:22px;">阅读 (<em style="border:0px;margin:0px;padding:0px;font-size:100%;font-style:normal;">152</em>)</span>
+    </div>
+    <div style="border:0px;margin:0px;padding:0px;font-size:100%;float:right;display:inline;line-height:24px;">
+        <span style="border:0px;margin:0px;padding:0px;font-size:100%;display:inline-block;margin-right:25px;position:relative;z-index:13;"><a href="http://www.sohu.com/a/149758866_675634#" style="border:0px;margin:0px;padding:0px;text-decoration:none;font-size:12px;padding-left:20px;line-height:24px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAFlSURBVHjaYvz//z8DDBw+fFgYSOUDsSsQW0CFTwDxNiCeaGtr+wmmFiCAmJA0+QOpe0DMCMSFQEWMIAxiAzE3EF8EqnGEqQcIIEaQjVBNiUA8Hah4JwMWAFQTCqQygXgqUM1agABiPHTokDDUpjBcmpA0OwOpdUCsBBBATFA/TYJpAkqeQXYSiA0SA7GBavaC1IL0AAQQC5AAOTMWyeACIN4AdRoILAfiACT51UC8GCCAQDYqAPEDmCjQ1CNQhathmoBiJ5A0gtQqAAQQEw7vcEFpkIs4sSkACCAmmAlIfnIDUsuA2AdmM7KfYS4ECCCQxo1AHIgk0Q3SBHIe1Nkgv05Akgep3QgQQKDoEAcybgFxEDTUiIkONYAAYgIqfglkJIEiFyqBSxPI2WUgtSA9AAHECEurQIlgIDUPGk9bQU4FioFcYwzEdkAcDsTpQPFdIPUAAcRIIJGDXHMWinuQEzlAgAEAGo2BkOFYhvQAAAAASUVORK5CYII=&quot;) 0px 5px no-repeat;color:rgb(168, 168, 168);display:inline-block;" target="_blank">不感兴趣</a>
+
+
+</span>
+        <a href="https://passport.zhan.sohu.com/passport/sohu/login-jumpto?callback=https://yonghufankui.kuaizhan.com/clubpc/topics/WhOlhDSItmL75kIf#!/comments/0" style="background-color:transparent;border:0px;margin:0px;padding:0px;font-size:100%;text-decoration:none;color:rgb(168, 168, 168);display:inline-block;" target="_blank"><em style="border:0px;padding:0px;font-size:100%;font-style:normal;display:inline-block;vertical-align:top;margin:4px 6px 0px 0px;width:14px;height:14px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAoCAYAAADOvcv6AAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALdSURBVHjaYvz//z8DDBw+fFgVSM0FYkMg5oEKfwHiU0AcZ2tr+xSmFiCAmJA0tQGpm0DMCMSFQEWMIAxiAzEXED8AqimEqQcIIEaQjVBNiUA8Gai4jQELAKrpA1IJIBcB1ZQCBBDjoUOHVKE21SBrAip8B6KBYkJIYiVAqguI1QECiAnqp6NYbBKEYjgAqukBqQXpAQggkEZTIJ7IQDwAqTUFCCCQRnYgPk6CRpBadoAAYsGj4D0+3QABBNL4E4gtgXgNmn+EcOgBqf0JEEAgp54G4mwswf8OFrJoAKT2NEAAgTRmAbE9NKjxAqgae5AegACCJYBuICcSiCdAgxybpnYglQrE80EJACCAGGFpFaq5GBpPC4GSc4BiOkB2MBB7ALEJENcBxUEGMAAEECOBRP4PiN8C8Q2Qi5ATOUAAoWgkBQAEENkaAQKIbI0AAUS2RoAAIlsjQACRrREggBjJLXMAAgg5AYAycoWcnByjkJAQAy8vL1j88+fPDG/evGF48uTJHyC3DKi5HyQOEEAMII3A4qPt6tWr/9+9e/cfF3j9+vX/S5cu/Qeq7QbpAQggeJmjo6PDKCgoiNdfHz58YLh8+TLIieoAAQQuc0DOg2k6f/48WAGyYpAYCAgICDCA1IL0AAQQuMwRERGBK1RWVma4ceMGWAMI37x5k0FFRQUuD1VrChBAoBKAnYODAy7Bx8fHoKWlxXDt2jUGRkZGMBsWUCAAVcsOEEBM2Pzy9+9feMDB2OgAIIBAGn/++PEDUUK9fw92nra2Ntg2mLNhAKr2J0AAgcuct2/fwiXu378P1gRyHsjZGhoaDPfu3YPLQ9WeBgggUHSAcvklXV1dRlCoERkdegABBEsA3cDA+A90Js4EAEw9/0GaYAkAIIAwyhzkJPfr1y+GL1++MHz8+BGW5OBlDkAAkV3mAAQQ2dkKIIDI1ggQQGRrBAggsjUCBBDZGgECiGyNAAEGAPZpkD2Go8VJAAAAAElFTkSuQmCC&quot;) 0px 0px no-repeat;"></em>投诉</a>
+    </div>
+</div>
+ 
+ 
+
+                        </div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

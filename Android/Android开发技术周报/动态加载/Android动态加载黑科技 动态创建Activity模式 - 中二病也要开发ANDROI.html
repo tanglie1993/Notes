@@ -1,0 +1,173 @@
+<html>
+<head>
+  <title>Android动态加载黑科技 动态创建Activity模式 - 中二病也要开发ANDROID - SegmentFault</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3466"/>
+<h1>Android动态加载黑科技 动态创建Activity模式 - 中二病也要开发ANDROID - SegmentFault</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:10px;-webkit-tap-highlight-color:transparent;"><div style="box-sizing:border-box;font-family:-apple-system, &quot;Helvetica Neue&quot;, Helvetica, Arial, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;WenQuanYi Micro Hei&quot;, &quot;Microsoft Yahei&quot;, sans-serif;font-size:14px;line-height:1.42858;color:rgb(51, 51, 51);background-color:rgb(255, 255, 255);-webkit-font-smoothing:antialiased;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;line-height:1.6;word-wrap:break-word;"><span style="line-height:1.6;display:table;"> </span>
+                    
+<h2 style="box-sizing:border-box;font-family:inherit;font-weight:500;line-height:1.2;color:inherit;font-size:1.75em;margin:1.5em 0px 0px;border-bottom:1px solid rgb(238, 238, 238);padding-bottom:10px;margin-top:0px;">基本信息</h2>
+<ul style="box-sizing:border-box;margin:1.5em 0px;padding-left:0px;margin-left:3em;">
+<li style="box-sizing:border-box;margin:0.3em 0px;"><p style="box-sizing:border-box;margin:0px;margin-top:0px;margin-bottom:0px;">Author：<a href="https://github.com/kaedea" style="box-sizing:border-box;background:transparent;color:rgb(0, 154, 97);text-decoration:none;outline:0px;border-bottom:1px solid rgba(0, 154, 97, 0.25);padding-bottom:1px;" target="_blank">kaedea</a></p></li>
+<li style="box-sizing:border-box;margin:0.3em 0px;"><p style="box-sizing:border-box;margin:0px;margin-top:0px;margin-bottom:0px;">GitHub：<a href="https://github.com/kaedea/android-dynamical-loading" style="box-sizing:border-box;background:transparent;color:rgb(0, 154, 97);text-decoration:none;outline:0px;border-bottom:1px solid rgba(0, 154, 97, 0.25);padding-bottom:1px;" target="_blank">android-dynamical-loading</a></p></li>
+</ul>
+<h2 style="box-sizing:border-box;font-family:inherit;font-weight:500;line-height:1.2;color:inherit;font-size:1.75em;margin:1.5em 0px 0px;border-bottom:1px solid rgb(238, 238, 238);padding-bottom:10px;">代理Activity模式的限制</h2>
+<p style="box-sizing:border-box;margin:1.5em 0px;">还记得我们在代理Activity模式里谈到启动插件APK里的Activity的两个难题吗，由于插件里的Activity没在主项目的Manifest里面注册，所以无法经历系统Framework层级的一系列初始化过程，最终导致获得的Activity实例并没有生命周期和无法使用res资源。</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">使用代理Activity能够解决这两个问题，但是有一些限制</p>
+<ol style="box-sizing:border-box;margin:1.5em 0px;padding-left:0px;margin-left:3em;">
+<li style="box-sizing:border-box;margin:0.3em 0px;"><p style="box-sizing:border-box;margin:0px;margin-top:0px;margin-bottom:0px;">实际运行的Activity实例其实都是ProxyActivity，并不是真正想要启动的Activity；</p></li>
+<li style="box-sizing:border-box;margin:0.3em 0px;"><p style="box-sizing:border-box;margin:0px;margin-top:0px;margin-bottom:0px;">ProxyActivity只能指定一种LaunchMode，所以插件里的Activity无法自定义LaunchMode；</p></li>
+<li style="box-sizing:border-box;margin:0.3em 0px;"><p style="box-sizing:border-box;margin:0px;margin-top:0px;margin-bottom:0px;">不支持静态注册的BroadcastReceiver；</p></li>
+<li style="box-sizing:border-box;margin:0.3em 0px;"><p style="box-sizing:border-box;margin:0px;margin-top:0px;margin-bottom:0px;">往往不是所有的apk都可作为插件被加载，插件项目需要依赖特定的框架，还有需要遵循一定的&quot;开发规范&quot;；</p></li>
+</ol>
+<p style="box-sizing:border-box;margin:1.5em 0px;">特别是最后一个，无法直接把一个普通的APK作为插件使用。怎么避开这些限制呢？插件的Activity不是标准的Activity对象才会有这些限制，使其成为标准的Activity是解决问题的关键，而要使其成为标准的Activity，则需要在主项目里注册这些Activity。</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">总不能把插件APK所有的Activity都事先注册到主项目里面吧，想到代理模式需要注册一个代理的ProxyActivity，那么能不能在主项目里<strong style="box-sizing:border-box;font-weight:bold;">注册一个通用的Activity</strong>（比如TargetActivity）给插件里所有的Activity用呢？解决对策就是，在需要启动插件的某一个Activity（比如PlugActivity）的时候，动态创建一个TargetActivity，新创建的TargetActivity会继承PlugActivity的所有共有行为，而这个TargetActivity的包名与类名刚好与我们事先注册的TargetActivity一致，我们就能以标准的方式启动这个Activity。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;font-weight:500;line-height:1.2;color:inherit;font-size:1.75em;margin:1.5em 0px 0px;border-bottom:1px solid rgb(238, 238, 238);padding-bottom:10px;">动态创建Activity模式</h2>
+<p style="box-sizing:border-box;margin:1.5em 0px;">运行时动态创建并编译一个Activity类，这种想法不是天方夜谭，动态创建类的工具有<a href="https://github.com/crittercism/dexmaker" style="box-sizing:border-box;background:transparent;color:rgb(0, 154, 97);text-decoration:none;outline:0px;border-bottom:1px solid rgba(0, 154, 97, 0.25);padding-bottom:1px;" target="_blank">dexmaker</a>和<a href="http://asm.ow2.org/" style="box-sizing:border-box;background:transparent;color:rgb(0, 154, 97);text-decoration:none;outline:0px;border-bottom:1px solid rgba(0, 154, 97, 0.25);padding-bottom:1px;" target="_blank">asmdex</a>，二者均能实现动态字节码操作，最大的区别是前者是创建dex文件，而后者是创建class文件。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;font-weight:500;line-height:1.2;color:inherit;font-size:1.75em;margin:1.5em 0px 0px;border-bottom:1px solid rgb(238, 238, 238);padding-bottom:10px;">使用dexmaker动态创建一个类</h2>
+<p style="box-sizing:border-box;margin:1.5em 0px;">运行时创建一个编译好并能运行的类叫做“动态字节码操作（runtime bytecode manipulation）”，使用dexmaker工具能创建一个dex文件，之后我们再反编译这个dex看看创建出来的类是什么样子。</p>
+<pre style="word-break:break-all;overflow:auto;font-size:0.93em;box-sizing:border-box;display:block;padding:1em;margin:1.5em 0px;line-height:1.45;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;word-wrap:break-word;color:rgb(51, 51, 51);border:none;border-radius:4px;position:relative;max-height:35em;background:url(&quot;https://static.segmentfault.com/v-5a3dc087/global/css/../img/blueprint.png&quot;) 0% 0% / 30px rgb(246, 246, 246), 0% 0% / 30px;margin-top:0px;"><code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:0px;color:inherit;border-radius:0px;font-size:1em;white-space:inherit;background:none;overflow-wrap:normal;"><span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">class</span> <span style="box-sizing:border-box;color:rgb(68, 85, 136);font-weight:bold;">MainActivity</span> <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">extends</span> <span style="box-sizing:border-box;color:rgb(68, 85, 136);font-weight:bold;">AppCompatActivity</span> </span>{
+
+    <span style="box-sizing:border-box;color:rgb(153, 153, 153);font-weight:bold;">@Override</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">protected</span> <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">void</span> <span style="box-sizing:border-box;color:rgb(153, 0, 0);font-weight:bold;">onCreate</span><span style="box-sizing:border-box;">(Bundle savedInstanceState)</span> </span>{
+        <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">super</span>.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">public</span> <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">void</span> <span style="box-sizing:border-box;color:rgb(153, 0, 0);font-weight:bold;">onMakeDex</span><span style="box-sizing:border-box;">(View view)</span></span>{
+        <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">try</span> {
+            DexMaker dexMaker = <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">new</span> DexMaker();
+            <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// Generate a HelloWorld class.</span>
+            TypeId&lt;?&gt; helloWorld = TypeId.get(<span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;LHelloWorld;&quot;</span>);
+            dexMaker.declare(helloWorld, <span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;HelloWorld.generated&quot;</span>, Modifier.PUBLIC, TypeId.OBJECT);
+            generateHelloMethod(dexMaker, helloWorld);
+            <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// Create the dex file and load it.</span>
+            File outputDir = <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">new</span> File(Environment.getExternalStorageDirectory() + File.separator + <span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;dexmaker&quot;</span>);
+            <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">if</span> (!outputDir.exists())outputDir.mkdir();
+            ClassLoader loader = dexMaker.generateAndLoad(<span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">this</span>.getClassLoader(), outputDir);
+            Class&lt;?&gt; helloWorldClass = loader.loadClass(<span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;HelloWorld&quot;</span>);
+            <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// Execute our newly-generated code in-process.</span>
+            helloWorldClass.getMethod(<span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;hello&quot;</span>).invoke(<span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">null</span>);
+        } <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">catch</span> (Exception e) {
+            Log.e(<span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;MainActivity&quot;</span>,<span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;[onMakeDex]&quot;</span>,e);
+        }
+    }
+
+    <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">/**
+     * Generates Dalvik bytecode equivalent to the following method.
+     *    public static void hello() {
+     *        int a = 0xabcd;
+     *        int b = 0xaaaa;
+     *        int c = a - b;
+     *        String s = Integer.toHexString(c);
+     *        System.out.println(s);
+     *        return;
+     *    }
+     */</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">private</span> <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">static</span> <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">void</span> <span style="box-sizing:border-box;color:rgb(153, 0, 0);font-weight:bold;">generateHelloMethod</span><span style="box-sizing:border-box;">(DexMaker dexMaker, TypeId&lt;?&gt; declaringType)</span> </span>{
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// Lookup some types we'll need along the way.</span>
+        TypeId&lt;System&gt; systemType = TypeId.get(System.class);
+        TypeId&lt;PrintStream&gt; printStreamType = TypeId.get(PrintStream.class);
+
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// Identify the 'hello()' method on declaringType.</span>
+        MethodId hello = declaringType.getMethod(TypeId.VOID, <span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;hello&quot;</span>);
+
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// Declare that method on the dexMaker. Use the returned Code instance</span>
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// as a builder that we can append instructions to.</span>
+        Code code = dexMaker.declare(hello, Modifier.STATIC | Modifier.PUBLIC);
+
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// Declare all the locals we'll need up front. The API requires this.</span>
+        Local&lt;Integer&gt; a = code.newLocal(TypeId.INT);
+        Local&lt;Integer&gt; b = code.newLocal(TypeId.INT);
+        Local&lt;Integer&gt; c = code.newLocal(TypeId.INT);
+        Local&lt;String&gt; s = code.newLocal(TypeId.STRING);
+        Local&lt;PrintStream&gt; localSystemOut = code.newLocal(printStreamType);
+
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// int a = 0xabcd;</span>
+        code.loadConstant(a, <span style="box-sizing:border-box;color:rgb(0, 128, 128);">0xabcd</span>);
+
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// int b = 0xaaaa;</span>
+        code.loadConstant(b, <span style="box-sizing:border-box;color:rgb(0, 128, 128);">0xaaaa</span>);
+
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// int c = a - b;</span>
+        code.op(BinaryOp.SUBTRACT, c, a, b);
+
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// String s = Integer.toHexString(c);</span>
+        MethodId&lt;Integer, String&gt; toHexString
+                = TypeId.get(Integer.class).getMethod(TypeId.STRING, <span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;toHexString&quot;</span>, TypeId.INT);
+        code.invokeStatic(toHexString, s, c);
+
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// System.out.println(s);</span>
+        FieldId&lt;System, PrintStream&gt; systemOutField = systemType.getField(printStreamType, <span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;out&quot;</span>);
+        code.sget(systemOutField, localSystemOut);
+        MethodId&lt;PrintStream, Void&gt; printlnMethod = printStreamType.getMethod(
+                TypeId.VOID, <span style="box-sizing:border-box;color:rgb(221, 17, 68);">&quot;println&quot;</span>, TypeId.STRING);
+        code.invokeVirtual(printlnMethod, <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">null</span>, localSystemOut, s);
+
+        <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">// return;</span>
+        code.returnVoid();
+    }
+    
+}</code></pre>
+<p style="box-sizing:border-box;margin:1.5em 0px;">运行后在SD卡的dexmaker目录下找到刚创建的文件“Generated1532509318.jar”，把里面的“classes.dex”解压出来，然后再用“dex2jar”工具转化成jar文件，最后再用“jd-gui”工具反编译jar的源码。<br style="box-sizing:border-box;"/><span style="box-sizing:border-box;"><img src="Android动态加载黑科技 动态创建Activity模式 - 中二病也要开发ANDROI_files/15858284.jpg&objectId=1190000004077469&token=e72179de58d4a7228c06c06b15e8729d.png" type="image/png" data-filename="15858284.jpg&objectId=1190000004077469&token=e72179de58d4a7228c06c06b15e8729d.png" height="291" style="box-sizing:border-box;vertical-align:middle;border:1px solid rgb(221, 221, 221);max-width:100%;padding:3px;position:static;cursor:pointer;display:inline;" width="680"/></span></p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">至此，已经成功在运行时创建一个编译好的类。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;font-weight:500;line-height:1.2;color:inherit;font-size:1.75em;margin:1.5em 0px 0px;border-bottom:1px solid rgb(238, 238, 238);padding-bottom:10px;">修改需要启动的目标Activity</h2>
+<p style="box-sizing:border-box;margin:1.5em 0px;">接下来的问题是如何把需要启动的、在Manifest里面没有注册的PlugActivity换成有注册的TargetActivity。</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">在Android，虚拟机加载类的时候，是通过ClassLoader的loadClass方法，而loadClass方法并不是final类型的，这意味着我们可以创建自己的类去继承ClassLoader，以重载loadClass方法并改写类的加载逻辑，在需要加载PlugActivity的时候，偷偷把其换成TargetActivity。</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">大致思路如下</p>
+<pre style="word-break:break-all;overflow:auto;font-size:0.93em;box-sizing:border-box;display:block;padding:1em;margin:1.5em 0px;line-height:1.45;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;word-wrap:break-word;color:rgb(51, 51, 51);border:none;border-radius:4px;position:relative;max-height:35em;background:url(&quot;https://static.segmentfault.com/v-5a3dc087/global/css/../img/blueprint.png&quot;) 0% 0% / 30px rgb(246, 246, 246), 0% 0% / 30px;margin-top:0px;"><code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:0px;color:inherit;border-radius:0px;font-size:1em;white-space:inherit;background:none;overflow-wrap:normal;"><span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">public</span> <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">class</span> <span style="box-sizing:border-box;color:rgb(68, 85, 136);font-weight:bold;">CJClassLoader</span> <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">extends</span> <span style="box-sizing:border-box;color:rgb(68, 85, 136);font-weight:bold;">ClassLoader</span></span>{
+
+<span style="box-sizing:border-box;color:rgb(153, 153, 153);font-weight:bold;">@override</span>
+    <span style="box-sizing:border-box;"><span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">public</span> Class <span style="box-sizing:border-box;color:rgb(153, 0, 0);font-weight:bold;">loadClass</span><span style="box-sizing:border-box;">(String className)</span></span>{
+      <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">if</span>(当前上下文插件不为空) {
+        <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">if</span>( className 是 TargetActivity){
+             找到当前实际要加载的原始PlugActivity，动态创建类（TargetActivity extends PlugActivity ）的dex文件
+             <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">return</span>  从dex文件中加载的TargetActivity
+        }<span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">else</span>{
+             <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">return</span>  使用对应的PluginClassLoader加载普通类
+        }  
+     }<span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">else</span>{
+         <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">return</span> <span style="box-sizing:border-box;color:rgb(51, 51, 51);font-weight:bold;">super</span>.loadClass() <span style="box-sizing:border-box;font-style:italic;color:rgb(153, 153, 136);">//使用原来的类加载方法</span>
+     }   
+    } 
+}</code></pre>
+<p style="box-sizing:border-box;margin:1.5em 0px;">这样就能把启动插件里的PlugActivity变成启动动态创建的TargetActivity。</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">不过还有一个问题，主项目启动插件Activity的时候，我们可以替换Activity，但是如果在插件Activity（比如MainActivity）启动另一个Activity（SubActivity）的时候怎么办？插件时普通的第三方APK，我们无法更改里面跳转Activity的逻辑。其实，从主项目启动插件MainActivity的时候，其实启动的是我们动态创建的TargetActivity（extends MainActivity），而我们知道Activity启动另一个Activity的时候都是使用其“startActivityForResult”方法，所以我们可以在创建TargetActivity时，重写其“startActivityForResult”方法，让它在启动其他Activity的时候，也采用动态创建Activity的方式，这样就能解决问题。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;font-weight:500;line-height:1.2;color:inherit;font-size:1.75em;margin:1.5em 0px 0px;border-bottom:1px solid rgb(238, 238, 238);padding-bottom:10px;">动态创建Activity开源项目 <a href="https://github.com/houkx/android-pluginmgr/" style="box-sizing:border-box;background:transparent;color:rgb(0, 154, 97);text-decoration:none;outline:0px;border-bottom:1px solid rgba(0, 154, 97, 0.25);padding-bottom:1px;" target="_blank">android-pluginmgr</a>
+</h2>
+<p style="box-sizing:border-box;margin:1.5em 0px;">这种脑洞大开的动态加载思路来自于<strong style="box-sizing:border-box;font-weight:bold;">houkx</strong>的开源项目<strong style="box-sizing:border-box;font-weight:bold;">android-pluginmgr</strong></p>
+<p style="box-sizing:border-box;margin:1.5em 0px;"><span style="box-sizing:border-box;"><img src="Android动态加载黑科技 动态创建Activity模式 - 中二病也要开发ANDROI_files/6260656.jpg&objectId=1190000004077469&token=ea666a7cb66617149f46eaec0927f2fb.png" type="image/png" data-filename="6260656.jpg&objectId=1190000004077469&token=ea666a7cb66617149f46eaec0927f2fb.png" height="650" style="box-sizing:border-box;vertical-align:middle;border:1px solid rgb(221, 221, 221);max-width:100%;padding:3px;position:static;cursor:pointer;display:inline;" width="533"/></span></p>
+<p style="box-sizing:border-box;margin:1.5em 0px;"><code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">android-pluginmgr；</code>项目中有三种ClassLoader，一是用于替换宿主APK的Application的<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">CJClassLoader</code>，二是用于加载插件APK的<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">PluginClassLoader</code>，再来是用于加载启动插件Activity时动态生成的PlugActivity的dex包的<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">DexClassLoader</code>（存放在Map集合<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">proxyActivityLoaderMap</code>里面）。其中<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">CJClassLoader</code>是<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">PluginClassLoader</code>的Parent，而<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">PluginClassLoader</code>又是第三种<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">DexClassLoader</code>的Parent。</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">ClassLoader类加载Class的时候，会先使用Parent的<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">ClassLoader</code>，但Parent不能完成加载工作时，才会调用Child的<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">ClassLoader</code>去完成工作。</p>
+<blockquote style="box-sizing:border-box;padding:10px 20px;margin:1.5em 0px;font-size:1em;border-left:2px solid rgb(0, 154, 97);background:rgb(246, 246, 246);color:rgb(85, 85, 85);"><span style="font-size:1em;color:rgb(85, 85, 85);"></span><p style="box-sizing:border-box;margin:1.5em 0px;margin-bottom:0px;margin-top:0px;">java.lang.ClassLoader</p><span style="font-size:1em;color:rgb(85, 85, 85);"></span></blockquote>
+<p style="box-sizing:border-box;margin:1.5em 0px;">Loads classes and resources from a repository. One or more class loaders are installed at runtime. These are consulted whenever the runtime system needs a specific class that is not yet available in-memory. Typically, class loaders are grouped into a tree where child class loaders delegate all requests to parent class loaders. Only if the parent class loader cannot satisfy the request, the child class loader itself tries to handle it.</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">具体分析请参考 <a href="http://segmentfault.com/a/1190000004062880" style="box-sizing:border-box;background:transparent;color:rgb(0, 154, 97);text-decoration:none;outline:0px;border-bottom:1px solid rgba(0, 154, 97, 0.25);padding-bottom:1px;">Android动态加载基础 ClassLoader的工作机制</a>。</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">所以每加载一个Activity的时候都会调用到最上级的<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">CJClassLoader</code>的<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">loadClass</code>方法，从而保证启动插件Activity的时候能顺利替换成PlugActivity。当然如何控制着三种ClassLoader的加载工作，也是<code style="box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, Consolas, Menlo, Monaco, &quot;Courier New&quot;, monospace;padding:2px 4px;color:rgb(199, 37, 78);background-color:rgb(249, 242, 244);border-radius:4px;font-size:0.93em;">pluginmgr</code>项目的设计难度之一。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;font-weight:500;line-height:1.2;color:inherit;font-size:1.75em;margin:1.5em 0px 0px;border-bottom:1px solid rgb(238, 238, 238);padding-bottom:10px;">存在的问题</h2>
+<p style="box-sizing:border-box;margin:1.5em 0px;">动态类创建的方式，使得注册一个通用的Activity就能给多给Activity使用，对这种做法存在的问题也是明显的</p>
+<ol style="box-sizing:border-box;margin:1.5em 0px;padding-left:0px;margin-left:3em;">
+<li style="box-sizing:border-box;margin:0.3em 0px;"><p style="box-sizing:border-box;margin:0px;margin-top:0px;margin-bottom:0px;">使用同一个注册的Activity，所以一些需要在Manifest注册的属性无法做到每个Activity都自定义配置；</p></li>
+<li style="box-sizing:border-box;margin:0.3em 0px;"><p style="box-sizing:border-box;margin:0px;margin-top:0px;margin-bottom:0px;">插件中的权限，无法动态注册，插件需要的权限都得在宿主中注册，无法动态添加权限；</p></li>
+<li style="box-sizing:border-box;margin:0.3em 0px;"><p style="box-sizing:border-box;margin:0px;margin-top:0px;margin-bottom:0px;">插件的Activity无法开启独立进程，因为这需要在Manifest里面注册；</p></li>
+<li style="box-sizing:border-box;margin:0.3em 0px;"><p style="box-sizing:border-box;margin:0px;margin-top:0px;margin-bottom:0px;">动态字节码操作涉及到Hack开发，所以相比代理模式起来不稳定；</p></li>
+</ol>
+<p style="box-sizing:border-box;margin:1.5em 0px;">其中不稳定的问题出现在对Service的支持上，使用动态创建类的方式可以搞定Activity和Broadcast Receiver，但是使用类似的方式处理Service却不行，因为“ContextImpl.getApplicationContext” 期待得到一个非ContextWrapper的context，如果不是则继续下次循环，目前的Context实例都是wrapper，所以会进入死循环。</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">据<strong style="box-sizing:border-box;font-weight:bold;">houkx</strong>称他现在有另外的思路实现“启动为安装的普通第三方APK”的目的，而且不是基于动态类创建的原理，期待他的开源项目的更新。</p>
+<h2 style="box-sizing:border-box;font-family:inherit;font-weight:500;line-height:1.2;color:inherit;font-size:1.75em;margin:1.5em 0px 0px;border-bottom:1px solid rgb(238, 238, 238);padding-bottom:10px;">代理Activity模式与动态创建Activity模式的区别</h2>
+<p style="box-sizing:border-box;margin:1.5em 0px;">简单地说，最大的不同是代理模式使用了一个<strong style="box-sizing:border-box;font-weight:bold;">代理的Activity</strong>，而动态创建Activity模式使用了一个<strong style="box-sizing:border-box;font-weight:bold;">通用的Activity</strong>。</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;">代理模式中，使用一个代理Activity去完成本应该由插件Activity完成的工作，这个代理Activity是一个标准的Android Activity组件，具有生命周期和上下文环境（ContextWrapper和ContextCompl），但是它自身只是一个空壳，并没有承担什么业务逻辑；而插件Activity其实只是一个普通的Java对象，它没有上下文环境，但是却能正常执行业务逻辑的代码。代理Activity和不同的插件Activity配合起来，就能完成不同的业务逻辑了。所以代理模式其实还是使用常规的Android开发技术，只是在处理插件资源的时候强制调用了系统的隐藏API，因此这种模式还是可以稳定工作和升级的。</p>
+<p style="box-sizing:border-box;margin:1.5em 0px;margin-bottom:0px;">动态创建Activity模式，被动态创建出来的Activity类是有在主项目里面注册的，它是一个标准的Activity，它有自己的Context和生命周期，不需要代理的Activity。</p>
+
+                <span style="line-height:1.6;display:table;clear:both;"> </span></div></div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

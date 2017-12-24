@@ -1,0 +1,665 @@
+<html>
+<head>
+  <title>深入理解 Android 控件</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="4048"/>
+<h1>深入理解 Android 控件</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14px;line-height:20px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;text-size-adjust:100%;background:rgb(245, 245, 245);color:rgb(68, 68, 68);"><div style="color:rgb(68, 68, 68);font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;box-sizing:border-box;background:url('https://pqpo.me/2017/07/01/learn-android-view/?utm_source=androidweekly.cn&amp;utm_medium=websitedata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACFJREFUeNpiZGBg4GegAsBlCD8TqSYNQg2Mo6FEBAAIMACdPABtrSW/IQAAAABJRU5ErkJggg==&quot;');"><div style="flex-wrap:wrap;list-style:none;"><div style="flex-wrap:wrap;list-style:none;flex:0 0 auto;box-sizing:border-box;"><div style="flex:0 0 auto;box-sizing:border-box;"><div style="word-wrap:break-word;box-shadow:rgba(0, 0, 0, 0.02) 0px 0px 0px 1px, rgba(0, 0, 0, 0.06) 0px 4px 10px;background:rgb(255, 255, 255);border-radius:10px;"><div><span style="display:table;"></span>
+						    <h1 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;color:rgb(68, 68, 68);font-weight:400;text-transform:none;font-size:36px;line-height:42px;">深入理解 Android 控件	</h1>
+						
+					    	<ul style="margin:0px 0px 15px;margin-top:15px;padding:0px;list-style:none;font-size:0px;">
+					    		<li style="vertical-align:top;display:inline-block;font-size:13px;color:rgba(0, 0, 0, 0.5);"><i style="font-family:FontAwesome;display:inline-block;font-weight:400;font-style:normal;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none;"><span style="font-family:FontAwesome;font-weight:400;font-style:normal;line-height:1;"></span></i> 2017-07-01</li>
+					    		<li style="vertical-align:top;display:inline-block;font-size:13px;color:rgba(0, 0, 0, 0.5);"><span style="font-size:13px;color:rgba(0, 0, 0, 0.5);display:inline-block;margin:0px 8px;">/</span><i style="font-family:FontAwesome;display:inline-block;font-weight:400;font-style:normal;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none;"><span style="font-family:FontAwesome;font-weight:400;font-style:normal;line-height:1;"></span></i> 5,574</li>
+					    		<li style="vertical-align:top;display:inline-block;font-size:13px;color:rgba(0, 0, 0, 0.5);"><span style="font-size:13px;color:rgba(0, 0, 0, 0.5);display:inline-block;margin:0px 8px;">/</span><i style="font-family:FontAwesome;display:inline-block;font-weight:400;font-style:normal;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none;"><span style="font-family:FontAwesome;font-weight:400;font-style:normal;line-height:1;"></span></i>  <a href="https://pqpo.me/2017/07/01/learn-android-view/#comments" style="background:0px 0px;text-decoration:none;cursor:pointer;display:inline-block;color:rgba(0, 0, 0, 0.5);font-size:13px;">13</a></li>
+					    							    							    	</ul>
+						    <h2 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;font-weight:400;color:rgb(68, 68, 68);text-transform:none;font-size:24px;line-height:30px;margin-top:25px;">概述</h2>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">本篇文章主要通过源码讲述 Android 控件系统，包括输入事件是如何产生的， View 是如何绘制的，输入事件是如何传递给 View 的，Window token 与 type 之间的联系等。整个系统比较复杂，每个部分只能点到为止，有兴趣可以继续深入，主要是让读者对 Android 控件系统有一个大体的认识。</p>
+<h2 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;font-weight:400;color:rgb(68, 68, 68);text-transform:none;font-size:24px;line-height:30px;margin-top:25px;">例子</h2>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">下面是创建 Window 并显示 View 最简单的一个例子:</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span style="color:rgb(180, 142, 173);">public</span> <span><span style="color:rgb(180, 142, 173);">class</span> <span style="color:rgb(143, 161, 179);">WindowService</span> <span style="color:rgb(180, 142, 173);">extends</span> <span style="color:rgb(143, 161, 179);">Service</span> </span>{
+    WindowManager windowManager;
+    ImageView imageView;
+    <span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(143, 161, 179);">WindowService</span><span style="color:rgb(208, 135, 112);">()</span> </span>{
+    }
+    <span style="color:rgb(208, 135, 112);">@Override</span>
+    <span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">onCreate</span><span style="color:rgb(208, 135, 112);">()</span> </span>{
+        <span style="color:rgb(180, 142, 173);">super</span>.onCreate();
+        windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+    }
+    <span style="color:rgb(208, 135, 112);">@Override</span>
+    <span><span style="color:rgb(180, 142, 173);">public</span> IBinder <span style="color:rgb(143, 161, 179);">onBind</span><span style="color:rgb(208, 135, 112);">(Intent intent)</span> </span>{
+        <span style="color:rgb(180, 142, 173);">return</span> <span style="color:rgb(180, 142, 173);">null</span>;
+    }
+    <span style="color:rgb(208, 135, 112);">@Override</span>
+    <span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(180, 142, 173);">int</span> <span style="color:rgb(143, 161, 179);">onStartCommand</span><span style="color:rgb(208, 135, 112);">(Intent intent, <span style="color:rgb(180, 142, 173);">int</span> flags, <span style="color:rgb(180, 142, 173);">int</span> startId)</span> </span>{
+        <span style="color:rgb(180, 142, 173);">if</span> (imageView == <span style="color:rgb(180, 142, 173);">null</span>) {
+            installWindow();
+        }
+        <span style="color:rgb(180, 142, 173);">return</span> START_STICKY;
+    }
+    <span style="color:rgb(208, 135, 112);">@Override</span>
+    <span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">onDestroy</span><span style="color:rgb(208, 135, 112);">()</span> </span>{
+        <span style="color:rgb(180, 142, 173);">super</span>.onDestroy();
+        <span style="color:rgb(180, 142, 173);">if</span> (imageView != <span style="color:rgb(180, 142, 173);">null</span>) {
+            windowManager.removeView(imageView);
+        }
+    }
+    <span><span style="color:rgb(180, 142, 173);">private</span> <span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">installWindow</span><span style="color:rgb(208, 135, 112);">()</span> </span>{
+        imageView = <span style="color:rgb(180, 142, 173);">new</span> ImageView(<span style="color:rgb(180, 142, 173);">this</span>.getBaseContext());
+        imageView.setImageResource(R.mipmap.ic_launcher_round);
+        <span style="color:rgb(180, 142, 173);">final</span> WindowManager.LayoutParams layoutParams = <span style="color:rgb(180, 142, 173);">new</span> WindowManager.LayoutParams();
+        layoutParams.format = PixelFormat.TRANSPARENT;
+        layoutParams.width = <span style="color:rgb(208, 135, 112);">200</span>;
+        layoutParams.height = <span style="color:rgb(208, 135, 112);">200</span>;
+        layoutParams.gravity = Gravity.LEFT | Gravity.TOP;
+        layoutParams.type = WindowManager.LayoutParams.TYPE_PHONE ;
+        layoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL 
+                             |WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE 
+                             | WindowManager.LayoutParams.FLAG_FULLSCREEN 
+                             | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+        windowManager.addView(imageView, layoutParams);
+        imageView.setOnTouchListener(<span style="color:rgb(180, 142, 173);">new</span> View.OnTouchListener() {
+            <span style="color:rgb(208, 135, 112);">@Override</span>
+            <span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(180, 142, 173);">boolean</span> <span style="color:rgb(143, 161, 179);">onTouch</span><span style="color:rgb(208, 135, 112);">(View v, MotionEvent event)</span> </span>{
+                layoutParams.x = (<span style="color:rgb(180, 142, 173);">int</span>) event.getRawX() - <span style="color:rgb(208, 135, 112);">100</span>;
+                layoutParams.y = (<span style="color:rgb(180, 142, 173);">int</span>) event.getRawY() - <span style="color:rgb(208, 135, 112);">100</span>;
+                windowManager.updateViewLayout(imageView, layoutParams);
+                <span style="color:rgb(180, 142, 173);">return</span> <span style="color:rgb(180, 142, 173);">true</span>;
+            }
+
+        });
+    }
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">只要启动这个 Service，就会创建一个随手指移动的悬浮窗，关闭 Service 会移除悬浮窗。另外由于这里设置了 Window 的 type 为 TYPE_PHONE， 所以需要 SYSTEM_ALERT_WINDOW 权限，也可以使用 TYPE_TOAST。</p>
+<h3 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;font-weight:400;color:rgb(68, 68, 68);text-transform:none;font-size:18px;line-height:24px;margin-top:25px;">Window type 与 token</h3>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">这里简单的说一下 Window type 对窗口创建的影响，WindowManager.LayoutParams 还有一个 token 的属性，token 标志着一组窗口，<br/>
+比如 Activity 启动的时候会向 WMS 注册一个 type 为 TYPE_APPLICATION 的 AppWindowToken，然后 Activity 就可以拿着这个 token 创建类型为 TYPE_APPLICATION 的窗口，Dialog 就必须传 Activity 的 Context，这是因为 Dialog 的窗口类型为 TYPE_APPLICATION。</p>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">WMS 中会有一个 Map 保存所有的 WindowToken，其中 key 为 WindowManager.LayoutParams 中设置的 token，可以是任意一个 IBinder 对象，value 为 WindowToken，WindowToken 是由 WMS 创建的，同时会保存应用传过来的 token 对象。</p>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">WindowToken 又分为显式创建和隐式创建，如果 Window 的 type 不是 APPLICATION_WINDOW，TYPE_INPUT_METHOD， TYPE_WALLPAPER， TYPE_DREAM 中的任意一个， 那么即使未注册 token，WMS 也会隐式创建一个 WindowToken 保存在 Map 中，其他类型必须通过 WMS 显式注册 token。对于 type 为 APPLICATION_WINDOW 的窗口， token 必须为 WindowToken 的子类 AppWindowToken，其他类型需要与 Token 注册的类型一一对应。</p>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">回到 WindowManger，提供了3操作方法，分别是新增，修改和移除：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span style="color:rgb(180, 142, 173);">windowManager</span><span style="color:rgb(191, 97, 106);">.addView</span>(<span style="color:rgb(180, 142, 173);">imageView</span>, <span style="color:rgb(180, 142, 173);">layoutParams</span>);
+<span style="color:rgb(180, 142, 173);">windowManager</span><span style="color:rgb(191, 97, 106);">.updateViewLayout</span>(<span style="color:rgb(180, 142, 173);">imageView</span>, <span style="color:rgb(180, 142, 173);">layoutParams</span>);
+<span style="color:rgb(180, 142, 173);">windowManager</span><span style="color:rgb(191, 97, 106);">.removeView</span>(<span style="color:rgb(180, 142, 173);">imageView</span>)
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">Android 控件系统相当复杂，但是 Android 工程师们为我们高度封装了 WindowManager，简洁到只有三个方法。</p>
+<h2 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;font-weight:400;color:rgb(68, 68, 68);text-transform:none;font-size:24px;line-height:30px;margin-top:25px;">从 WindowManager 开始</h2>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">WindowManager 是一个继承于 ViewManager 的接口，实际类型是WindowManagerImpl，事实上 ViewGroup 也继承于 ViewManager 接口，可见 WindowManagerImpl 的功能与 ViewGroup 类似，提供了一个显示 View 的容器。<br/>
+可以通过下面的方法拿到 WindowManager 的实例：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span>windowManager</span> = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">我们知道通过 addView 方法可以将一个 View 显示出来，下面是位于 WindowManagerImpl 中 addView 方法的实现：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+@<span>Override
+<span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">addView</span>(<span style="color:rgb(208, 135, 112);">@NonNull View view, @NonNull ViewGroup.LayoutParams <span style="color:rgb(180, 142, 173);">params</span></span>) </span>{
+     applyDefaultToken(<span style="color:rgb(180, 142, 173);">params</span>);
+     mGlobal.addView(view, <span style="color:rgb(180, 142, 173);">params</span>, mDisplay, mParentWindow);
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">直接交给了 mGlobal, 它是进程唯一的，类型为 WindowManagerGlobal， 继续看 WindowManagerGlobal 的 addView 方法，截取了主要逻辑：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">addView</span>(<span style="color:rgb(208, 135, 112);">View view, ViewGroup.LayoutParams <span style="color:rgb(180, 142, 173);">params</span>,Display display, Window parentWindow</span>) </span>{
+    final WindowManager.LayoutParams wparams = (WindowManager.LayoutParams) <span style="color:rgb(180, 142, 173);">params</span>;
+    ViewRootImpl root;
+    View panelParentView = <span style="color:rgb(208, 135, 112);">null</span>;
+    synchronized (mLock) {
+        <span style="color:rgb(180, 142, 173);">int</span> index = findViewLocked(view, <span style="color:rgb(208, 135, 112);">false</span>);
+        <span style="color:rgb(180, 142, 173);">if</span> (index &gt;= <span style="color:rgb(208, 135, 112);">0</span>) {
+            <span style="color:rgb(180, 142, 173);">if</span> (mDyingViews.contains(view)) {
+                mRoots.<span style="color:rgb(180, 142, 173);">get</span>(index).doDie();
+            } <span style="color:rgb(180, 142, 173);">else</span> {
+                <span style="color:rgb(180, 142, 173);">throw</span> <span style="color:rgb(180, 142, 173);">new</span> IllegalStateException(<span style="color:rgb(163, 190, 140);">&quot;View &quot;</span> + view + <span style="color:rgb(163, 190, 140);">&quot; has already been added to the window manager.&quot;</span>);
+            }
+        }
+        <span style="color:rgb(180, 142, 173);">if</span> (wparams.type &gt;= WindowManager.LayoutParams.FIRST_SUB_WINDOW &amp;&amp;
+                wparams.type &lt;= WindowManager.LayoutParams.LAST_SUB_WINDOW) {
+            final <span style="color:rgb(180, 142, 173);">int</span> count = mViews.size();
+            <span style="color:rgb(180, 142, 173);">for</span> (<span style="color:rgb(180, 142, 173);">int</span> i = <span style="color:rgb(208, 135, 112);">0</span>; i &lt; count; i++) {
+                <span style="color:rgb(180, 142, 173);">if</span> (mRoots.<span style="color:rgb(180, 142, 173);">get</span>(i).mWindow.asBinder() == wparams.token) {
+                    panelParentView = mViews.<span style="color:rgb(180, 142, 173);">get</span>(i);
+                }
+            }
+        }
+        root = <span style="color:rgb(180, 142, 173);">new</span> ViewRootImpl(view.getContext(), display);
+        view.setLayoutParams(wparams);
+        mViews.<span style="color:rgb(180, 142, 173);">add</span>(view);
+        mRoots.<span style="color:rgb(180, 142, 173);">add</span>(root);
+        mParams.<span style="color:rgb(180, 142, 173);">add</span>(wparams);
+    }
+
+    <span style="color:rgb(180, 142, 173);">try</span> {
+        root.setView(view, wparams, panelParentView);
+    } <span style="color:rgb(180, 142, 173);">catch</span> (RuntimeException e) {
+        <span style="color:rgb(101, 115, 126);">// BadTokenException or InvalidDisplayException, clean up.</span>
+        synchronized (mLock) {
+            final <span style="color:rgb(180, 142, 173);">int</span> index = findViewLocked(view, <span style="color:rgb(208, 135, 112);">false</span>);
+            <span style="color:rgb(180, 142, 173);">if</span> (index &gt;= <span style="color:rgb(208, 135, 112);">0</span>) {
+                removeViewLocked(index, <span style="color:rgb(208, 135, 112);">true</span>);
+            }
+        }
+        <span style="color:rgb(180, 142, 173);">throw</span> e;
+    }
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">先是查看 View 是否已经被添加过，如果已经被添加过则抛出异常，与 ViewGroup 添加子 View 的行为一致，只能添加一次。<br/>
+然后查看 Window 设置的 type 是否是位于 FIRST_SUB_WINDOW 到 LAST_SUB_WINDOW，这类 Window 被视为子窗口， 子窗口的 token 必须与其父窗口一致。所以接来下的代码就是找出子窗口的父窗口保存为 panelParentView。<br/>
+然后实例化了一个 ViewRootImpl 对象，并且将 View, ViewRootImpl, LayoutPamrms 分别保存至各自的列表中以便后续查询。<br/>
+最后调用 ViewRootImpl 的 setView 方法，ViewRootImpl 是 Android 上层应用界面绘制的核心类。</p>
+<h2 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;font-weight:400;color:rgb(68, 68, 68);text-transform:none;font-size:24px;line-height:30px;margin-top:25px;">深入 ViewRootImpl</h2>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">ViewRootImpl 的构造方法接受两个参数，一个是 Context，一个是 Display。构造 ViewRootImpl 的时候会初始化很多成员变量，需要注意的有：<br/>
+1. <strong style="font-weight:700;">sWindowSession</strong>，单例的 WindowSession 类型，与系统进程通讯的关键，客户端向WMS请求窗口操作的中间代理：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span>mWindowSession</span> = WindowManagerGlobal.getWindowSession();
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">下面是 WindowManagerGlobal 中获取 WindowSession 的代码，可以看到是由 WindowManagerService 产生，并且与 InputMethodManager 相关，以支持接收输入事件。</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(180, 142, 173);">static</span> IWindowSession <span style="color:rgb(143, 161, 179);">getWindowSession</span><span style="color:rgb(208, 135, 112);">()</span> </span>{
+    <span style="color:rgb(180, 142, 173);">synchronized</span> (WindowManagerGlobal.class) {
+        <span style="color:rgb(180, 142, 173);">if</span> (sWindowSession == <span style="color:rgb(180, 142, 173);">null</span>) {
+            <span style="color:rgb(180, 142, 173);">try</span> {
+                InputMethodManager imm = InputMethodManager.getInstance();
+                IWindowManager windowManager = getWindowManagerService();
+                sWindowSession = windowManager.openSession(
+                        <span style="color:rgb(180, 142, 173);">new</span> IWindowSessionCallback.Stub() {
+                            <span style="color:rgb(208, 135, 112);">@Override</span>
+                            <span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">onAnimatorScaleChanged</span><span style="color:rgb(208, 135, 112);">(<span style="color:rgb(180, 142, 173);">float</span> scale)</span> </span>{
+                                ValueAnimator.setDurationScale(scale);
+                            }
+                        },
+                        imm.getClient(), imm.getInputContext());
+            } <span style="color:rgb(180, 142, 173);">catch</span> (RemoteException e) {
+                Log.e(TAG, <span style="color:rgb(163, 190, 140);">&quot;Failed to open window session&quot;</span>, e);
+            }
+        }
+        <span style="color:rgb(180, 142, 173);">return</span> sWindowSession;
+    }
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">2. <strong style="font-weight:700;">mThread</strong>，保存当前的线程，即UI线程：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span>mThread</span> = Thread.currentThread();
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">用于校验操作 UI 的线程是否正确：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">checkThread</span>(<span style="color:rgb(208, 135, 112);"></span>) </span>{
+    <span style="color:rgb(180, 142, 173);">if</span> (mThread != Thread.currentThread()) {
+        <span style="color:rgb(180, 142, 173);">throw</span> <span style="color:rgb(180, 142, 173);">new</span> CalledFromWrongThreadException(
+                <span style="color:rgb(163, 190, 140);">&quot;Only the original thread that created a view hierarchy can touch its views.&quot;</span>);
+    }
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">3. <strong style="font-weight:700;">mWindow</strong>，一个 Binder 对象的服务端，IWindow.Stub 的子类，标志这个窗口的ID，同时用于接收回调：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span>mWindow</span> = new W(this);
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">上面提到 WMS 会保存 WindowToken 标志一组窗口组，那么这里的 mWindow 会作为这个窗口的唯一标识，WMS 中还有一个 Map 用于保存所有的 Window，其中 key 为 mWindow.asBinder()，value 为 WindowState 对象, 表示一个窗口的所有属性。<br/>
+4. <strong style="font-weight:700;">mSurface</strong>， Surface 实例，用于绘制界面，但是刚创建的时候是无效的，后续 WindowManagerService 会为其分配对应 native 层的对象。上面的 mWindow 并不是真正意义上的窗口，是一个窗口 ID，并承载着远程回调的作用，真正绘制界面的是 Surface。<br/>
+5. <strong style="font-weight:700;">mChoreographer</strong>，功能类似于 Handler，区别在于 Handler 会在 Looper 所在线程空闲的时候执行消息，执行时机不可预测，Choreographer 会接收显示系统的 VSync 信号，在下一个 frame 渲染时执行这些操作，更适合于 UI 渲染与动画显示。</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span>mChoreographer</span> = Choreographer.getInstance();
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">使用方法和 Handler 很类似：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span style="color:rgb(180, 142, 173);">mChoreographer</span><span style="color:rgb(191, 97, 106);">.postCallback</span>(<span style="color:rgb(180, 142, 173);">Choreographer</span><span style="color:rgb(191, 97, 106);">.CALLBACK_TRAVERSAL</span>, <span style="color:rgb(180, 142, 173);">mTraversalRunnable</span>, <span style="color:rgb(180, 142, 173);">null</span>);
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">上述代码中会在下次 VSync 信号到来的时候执行 Runnable mTraversalRunnable.</p>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">介绍完主要的参数之后，开始看 ViewRootImpl 的 setView 方法，节选了主要代码：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">setView</span><span style="color:rgb(208, 135, 112);">(View view, WindowManager.LayoutParams attrs, View panelParentView)</span> </span>{
+    <span style="color:rgb(180, 142, 173);">synchronized</span> (<span style="color:rgb(180, 142, 173);">this</span>) {
+        <span style="color:rgb(180, 142, 173);">if</span> (mView == <span style="color:rgb(180, 142, 173);">null</span>) {
+            mView = view;
+            mWindowAttributes.copyFrom(attrs);
+            attrs = mWindowAttributes;
+
+            <span style="color:rgb(180, 142, 173);">int</span> res; <span style="color:rgb(101, 115, 126);">/* = WindowManagerImpl.ADD_OKAY; */</span>
+
+            <span style="color:rgb(101, 115, 126);">// Schedule the first layout -before- adding to the window</span>
+            <span style="color:rgb(101, 115, 126);">// manager, to make sure we do the relayout before receiving</span>
+            <span style="color:rgb(101, 115, 126);">// any other events from the system.</span>
+            requestLayout();
+            <span style="color:rgb(180, 142, 173);">if</span> ((mWindowAttributes.inputFeatures
+            &amp; WindowManager.LayoutParams.INPUT_FEATURE_NO_INPUT_CHANNEL) == <span style="color:rgb(208, 135, 112);">0</span>) {
+                mInputChannel = <span style="color:rgb(180, 142, 173);">new</span> InputChannel();
+            }
+            <span style="color:rgb(180, 142, 173);">try</span> {
+                mOrigWindowType = mWindowAttributes.type;
+                mAttachInfo.mRecomputeGlobalAttributes = <span style="color:rgb(180, 142, 173);">true</span>;
+                collectViewAttributes();
+                res = mWindowSession.addToDisplay(mWindow, mSeq, mWindowAttributes,
+                        getHostVisibility(), mDisplay.getDisplayId(),
+                        mAttachInfo.mContentInsets, mAttachInfo.mStableInsets,
+                        mAttachInfo.mOutsets, mInputChannel);
+            } <span style="color:rgb(180, 142, 173);">catch</span> (RemoteException e) {
+                mAdded = <span style="color:rgb(180, 142, 173);">false</span>;
+                mView = <span style="color:rgb(180, 142, 173);">null</span>;
+                mAttachInfo.mRootView = <span style="color:rgb(180, 142, 173);">null</span>;
+                mInputChannel = <span style="color:rgb(180, 142, 173);">null</span>;
+                mFallbackEventHandler.setView(<span style="color:rgb(180, 142, 173);">null</span>);
+                unscheduleTraversals();
+                setAccessibilityFocus(<span style="color:rgb(180, 142, 173);">null</span>, <span style="color:rgb(180, 142, 173);">null</span>);
+                <span style="color:rgb(180, 142, 173);">throw</span> <span style="color:rgb(180, 142, 173);">new</span> RuntimeException(<span style="color:rgb(163, 190, 140);">&quot;Adding window failed&quot;</span>, e);
+            } <span style="color:rgb(180, 142, 173);">finally</span> {
+                <span style="color:rgb(180, 142, 173);">if</span> (restore) {
+                    attrs.restore();
+                }
+            }
+            <span style="color:rgb(180, 142, 173);">if</span> (res &lt; WindowManagerGlobal.ADD_OKAY) {
+                <span style="color:rgb(101, 115, 126);">// 错误处理</span>
+            }
+            <span style="color:rgb(180, 142, 173);">if</span> (mInputChannel != <span style="color:rgb(180, 142, 173);">null</span>) {
+                <span style="color:rgb(180, 142, 173);">if</span> (mInputQueueCallback != <span style="color:rgb(180, 142, 173);">null</span>) {
+                    mInputQueue = <span style="color:rgb(180, 142, 173);">new</span> InputQueue();
+                    mInputQueueCallback.onInputQueueCreated(mInputQueue);
+                }
+                mInputEventReceiver = <span style="color:rgb(180, 142, 173);">new</span> WindowInputEventReceiver(mInputChannel, Looper.myLooper());
+            }
+
+            view.assignParent(<span style="color:rgb(180, 142, 173);">this</span>);
+        }
+    }
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">上面的代码主要做了以下几件事：</p>
+<ol style="margin:0px 0px 15px;padding-left:30px;margin-top:15px;">
+<li>将 view 保存成全局变量，保存 LayoutParams 到 mWindowAttributes</li>
+<li>再安排第一次遍历：requestLayout()，在一次遍历中会进行测量、布局、向 WMS 申请绘图表面（Surface）进行绘制。</li>
+<li>添加窗口 addToDisplay，此时 mInputChannel 可以接受输入事件了，但是 Surface 还不能进行绘制。</li>
+<li>创建 WindowInputEventReceiver 用于接收输入事件</li>
+</ol>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">在上面的步骤中有两个要点，一个绘制部分，一个是监听输入事件部分。正是这两部分实现了 Android 系统丰富多彩的 UI。</p>
+<h2 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;font-weight:400;color:rgb(68, 68, 68);text-transform:none;font-size:24px;line-height:30px;margin-top:25px;">控件绘制：</h2>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">requestLayout</span>(<span style="color:rgb(208, 135, 112);"></span>) </span>{
+    <span style="color:rgb(180, 142, 173);">if</span> (!mHandlingLayoutInLayoutRequest) {
+        checkThread();
+        mLayoutRequested = <span style="color:rgb(208, 135, 112);">true</span>;
+        scheduleTraversals();
+    }
+}
+
+<span><span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">scheduleTraversals</span>(<span style="color:rgb(208, 135, 112);"></span>) </span>{
+    <span style="color:rgb(180, 142, 173);">if</span> (!mTraversalScheduled) {
+        mTraversalScheduled = <span style="color:rgb(208, 135, 112);">true</span>;
+        mTraversalBarrier = mHandler.getLooper().getQueue().postSyncBarrier();
+        mChoreographer.postCallback(Choreographer.CALLBACK_TRAVERSAL, mTraversalRunnable, <span style="color:rgb(208, 135, 112);">null</span>);
+        <span style="color:rgb(180, 142, 173);">if</span> (!mUnbufferedInputDispatch) {
+            scheduleConsumeBatchedInput();
+        }
+        notifyRendererOfFramePending();
+        pokeDrawLockIfNeeded();
+    }
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">requestLayout 实际上调用的是 scheduleTraversals 方法，scheduleTraversals 方法中先在 mHandler 中插入了一个消息屏障，插入消息屏障之后，mHandler 便会暂停处理同步消息，在调用 performTraversals 之前会移除屏障，这样做可以防止在绘制开始之前接受事件回调。对消息屏障有疑问的可以看之前的文章<a href="https://pqpo.me/2017/05/03/learn-messagequeue/" rel="noopener noreferrer" style="background:0px 0px;color:rgb(22, 133, 169);text-decoration:none;cursor:pointer;" target="_blank">《深入理解MessageQueue》</a><br/>
+接着在下次VSync信号到来的时候会执行 Runnable:mTraversalRunnable, 实际上执行的是 performTraversals()，performTraversals() 是控件系统的心跳，窗口属性变化，尺寸变化、重绘请求等都会引发 performTraversals()的调用。View类绘制的核心方法 onMeasure()、onLayout()以及onDraw()等回调都会在 performTraversals() 的执行过程中执行。</p>
+<h3 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;font-weight:400;color:rgb(68, 68, 68);text-transform:none;font-size:18px;line-height:24px;margin-top:25px;">预测量阶段</h3>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">performTraversals 方法中会调用 measureHierarchy 进行协商测量：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">private</span> <span style="color:rgb(180, 142, 173);">boolean</span> <span style="color:rgb(143, 161, 179);">measureHierarchy</span><span style="color:rgb(208, 135, 112);">(<span style="color:rgb(180, 142, 173);">final</span> View host, <span style="color:rgb(180, 142, 173);">final</span> WindowManager.LayoutParams lp,
+<span style="color:rgb(180, 142, 173);">final</span> Resources res, <span style="color:rgb(180, 142, 173);">final</span> <span style="color:rgb(180, 142, 173);">int</span> desiredWindowWidth, <span style="color:rgb(180, 142, 173);">final</span> <span style="color:rgb(180, 142, 173);">int</span> desiredWindowHeight)</span> </span>{
+    <span style="color:rgb(180, 142, 173);">int</span> childWidthMeasureSpec;
+    <span style="color:rgb(180, 142, 173);">int</span> childHeightMeasureSpec;
+    <span style="color:rgb(180, 142, 173);">boolean</span> windowSizeMayChange = <span style="color:rgb(180, 142, 173);">false</span>;
+    <span style="color:rgb(180, 142, 173);">boolean</span> goodMeasure = <span style="color:rgb(180, 142, 173);">false</span>;
+    <span style="color:rgb(180, 142, 173);">if</span> (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT) {
+        <span style="color:rgb(180, 142, 173);">final</span> DisplayMetrics packageMetrics = res.getDisplayMetrics();
+        res.getValue(com.android.internal.R.dimen.config_prefDialogWidth, mTmpValue, <span style="color:rgb(180, 142, 173);">true</span>);
+        <span style="color:rgb(180, 142, 173);">int</span> baseSize = <span style="color:rgb(208, 135, 112);">0</span>;
+        <span style="color:rgb(180, 142, 173);">if</span> (mTmpValue.type == TypedValue.TYPE_DIMENSION) {
+		<span style="color:rgb(101, 115, 126);">// 获取系统配置项中获取限制宽度</span>
+            baseSize = (<span style="color:rgb(180, 142, 173);">int</span>)mTmpValue.getDimension(packageMetrics);
+        }
+        <span style="color:rgb(180, 142, 173);">if</span> (baseSize != <span style="color:rgb(208, 135, 112);">0</span> &amp;&amp; desiredWindowWidth &gt; baseSize) {
+            childWidthMeasureSpec = getRootMeasureSpec(baseSize, lp.width);
+            childHeightMeasureSpec = getRootMeasureSpec(desiredWindowHeight, lp.height);
+		<span style="color:rgb(101, 115, 126);">// 通过默认最大宽度进行第一次测量</span>
+            performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
+		<span style="color:rgb(101, 115, 126);">// 查看是否含有标志位 MEASURED_STATE_TOO_SMALL</span>
+            <span style="color:rgb(180, 142, 173);">if</span> ((host.getMeasuredWidthAndState()&amp;View.MEASURED_STATE_TOO_SMALL) == <span style="color:rgb(208, 135, 112);">0</span>) {
+                goodMeasure = <span style="color:rgb(180, 142, 173);">true</span>;
+            } <span style="color:rgb(180, 142, 173);">else</span> {
+                <span style="color:rgb(101, 115, 126);">// 扩大限制宽度</span>
+                baseSize = (baseSize+desiredWindowWidth)/<span style="color:rgb(208, 135, 112);">2</span>;
+                childWidthMeasureSpec = getRootMeasureSpec(baseSize, lp.width);
+		<span style="color:rgb(101, 115, 126);">// 第二次测量</span>
+                performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
+                <span style="color:rgb(180, 142, 173);">if</span> ((host.getMeasuredWidthAndState()&amp;View.MEASURED_STATE_TOO_SMALL) == <span style="color:rgb(208, 135, 112);">0</span>) {
+                    goodMeasure = <span style="color:rgb(180, 142, 173);">true</span>;
+                }
+            }
+        }
+    }
+    <span style="color:rgb(180, 142, 173);">if</span> (!goodMeasure) {
+        childWidthMeasureSpec = getRootMeasureSpec(desiredWindowWidth, lp.width);
+        childHeightMeasureSpec = getRootMeasureSpec(desiredWindowHeight, lp.height);
+	<span style="color:rgb(101, 115, 126);">// 如果还是太小，放弃限制使用最大宽度进行第三次测量，此次测量不管是否满意</span>
+        performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
+        <span style="color:rgb(180, 142, 173);">if</span> (mWidth != host.getMeasuredWidth() || mHeight != host.getMeasuredHeight()) {
+            windowSizeMayChange = <span style="color:rgb(180, 142, 173);">true</span>;
+        }
+    }
+    <span style="color:rgb(180, 142, 173);">return</span> windowSizeMayChange;
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">在上述方法中最多会测量三次，最少测量一次。多次测量的情况主要出现在控件树中有某个控件测量结果高2位带上了标志位 MEASURED_STATE_TOO_SMALL，应尽量避免带上该标志位。<br/>
+实际测量的方法位于performMeasure：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">private</span> <span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">performMeasure</span>(<span style="color:rgb(208, 135, 112);"><span style="color:rgb(180, 142, 173);">int</span> childWidthMeasureSpec, <span style="color:rgb(180, 142, 173);">int</span> childHeightMeasureSpec</span>) </span>{
+    Trace.traceBegin(Trace.TRACE_TAG_VIEW, <span style="color:rgb(163, 190, 140);">&quot;measure&quot;</span>);
+    <span style="color:rgb(180, 142, 173);">try</span> {
+        mView.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+    } <span style="color:rgb(180, 142, 173);">finally</span> {
+        Trace.traceEnd(Trace.TRACE_TAG_VIEW);
+    }
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">最终调用了我们熟悉的View.measure方法，也就是这里控件树根节点的 messure 方法，开始遍历控件树的测量。<br/>
+不出意外的话下面应该是布局了。</p>
+<h3 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;font-weight:400;color:rgb(68, 68, 68);text-transform:none;font-size:18px;line-height:24px;margin-top:25px;">最终测量与布局阶段</h3>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">在 performTraversals() 方法中会调用如下代码通知 WMS 开始为布局与绘制做准备：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span>relayoutResult</span> = relayoutWindow(params, viewVisibility, insetsPending);
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">上述方法中会调用：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span style="color:rgb(180, 142, 173);">int</span> relayoutResult = mWindowSession.relayout(
+                mWindow, mSeq, <span style="color:rgb(180, 142, 173);">params</span>,
+                (<span style="color:rgb(180, 142, 173);">int</span>) (mView.getMeasuredWidth() * appScale + <span style="color:rgb(208, 135, 112);">0.5</span>f),
+                (<span style="color:rgb(180, 142, 173);">int</span>) (mView.getMeasuredHeight() * appScale + <span style="color:rgb(208, 135, 112);">0.5</span>f),
+                viewVisibility, insetsPending ? WindowManagerGlobal.RELAYOUT_INSETS_PENDING : <span style="color:rgb(208, 135, 112);">0</span>,
+                mWinFrame, mPendingOverscanInsets, mPendingContentInsets, mPendingVisibleInsets,
+                mPendingStableInsets, mPendingOutsets, mPendingConfiguration, mSurface);
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">这个时候会通过 mWindowSession 将尺寸、位置等信息传给 WMS 完成窗口布局，并申请绘图表面，执行完了之后 mSurface 便是一个有效的 Surface 了。<br/>
+然后会再次调用 performMeasure() 进行最终测量。<br/>
+之后调用下面的代码开始控件布局：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+performLayout(lp, desiredWindowWidth, desiredWindowHeight);
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">在 performLayout 方法中会调用我们熟悉的 View.layout 方法：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span style="color:rgb(180, 142, 173);">host</span><span style="color:rgb(191, 97, 106);">.layout</span>(0, 0, <span style="color:rgb(180, 142, 173);">host</span><span style="color:rgb(191, 97, 106);">.getMeasuredWidth</span>(), <span style="color:rgb(180, 142, 173);">host</span><span style="color:rgb(191, 97, 106);">.getMeasuredHeight</span>());
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">这样完成了控件树的布局调用。</p>
+<h3 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;font-weight:400;color:rgb(68, 68, 68);text-transform:none;font-size:18px;line-height:24px;margin-top:25px;">绘制阶段</h3>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">绘制阶段主要是 performTraversals() 方法中调用 performDraw(), 然后调用 draw(), 对于软件绘制最终会调用 drawSoftware：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">private</span> <span style="color:rgb(180, 142, 173);">boolean</span> <span style="color:rgb(143, 161, 179);">drawSoftware</span><span style="color:rgb(208, 135, 112);">(Surface surface, AttachInfo attachInfo, <span style="color:rgb(180, 142, 173);">int</span> xoff, <span style="color:rgb(180, 142, 173);">int</span> yoff, <span style="color:rgb(180, 142, 173);">boolean</span> scalingRequired, Rect dirty)</span> </span>{
+    <span style="color:rgb(180, 142, 173);">final</span> Canvas canvas;
+    <span style="color:rgb(180, 142, 173);">try</span> {
+        <span style="color:rgb(180, 142, 173);">final</span> <span style="color:rgb(180, 142, 173);">int</span> left = dirty.left;
+        <span style="color:rgb(180, 142, 173);">final</span> <span style="color:rgb(180, 142, 173);">int</span> top = dirty.top;
+        <span style="color:rgb(180, 142, 173);">final</span> <span style="color:rgb(180, 142, 173);">int</span> right = dirty.right;
+        <span style="color:rgb(180, 142, 173);">final</span> <span style="color:rgb(180, 142, 173);">int</span> bottom = dirty.bottom;
+        <span style="color:rgb(101, 115, 126);">//获取画布</span>
+        canvas = mSurface.lockCanvas(dirty);
+        <span style="color:rgb(180, 142, 173);">if</span> (left != dirty.left || top != dirty.top || right != dirty.right
+                || bottom != dirty.bottom) {
+            attachInfo.mIgnoreDirtyState = <span style="color:rgb(180, 142, 173);">true</span>;
+        }
+        canvas.setDensity(mDensity);
+    } <span style="color:rgb(180, 142, 173);">catch</span> (Surface.OutOfResourcesException e) {
+        handleOutOfResourcesException(e);
+        <span style="color:rgb(180, 142, 173);">return</span> <span style="color:rgb(180, 142, 173);">false</span>;
+    } <span style="color:rgb(180, 142, 173);">catch</span> (IllegalArgumentException e) {
+        mLayoutRequested = <span style="color:rgb(180, 142, 173);">true</span>;    <span style="color:rgb(101, 115, 126);">// ask wm for a new surface next time.</span>
+        <span style="color:rgb(180, 142, 173);">return</span> <span style="color:rgb(180, 142, 173);">false</span>;
+    }
+    <span style="color:rgb(180, 142, 173);">try</span> {
+        <span style="color:rgb(180, 142, 173);">if</span> (!canvas.isOpaque() || yoff != <span style="color:rgb(208, 135, 112);">0</span> || xoff != <span style="color:rgb(208, 135, 112);">0</span>) {
+            canvas.drawColor(<span style="color:rgb(208, 135, 112);">0</span>, PorterDuff.Mode.CLEAR);
+        }
+
+        dirty.setEmpty();
+        mIsAnimating = <span style="color:rgb(180, 142, 173);">false</span>;
+        mView.mPrivateFlags |= View.PFLAG_DRAWN;
+
+        <span style="color:rgb(180, 142, 173);">try</span> {
+            canvas.translate(-xoff, -yoff);
+            <span style="color:rgb(180, 142, 173);">if</span> (mTranslator != <span style="color:rgb(180, 142, 173);">null</span>) {
+                mTranslator.translateCanvas(canvas);
+            }
+            canvas.setScreenDensity(scalingRequired ? mNoncompatDensity : <span style="color:rgb(208, 135, 112);">0</span>);
+            attachInfo.mSetIgnoreDirtyState = <span style="color:rgb(180, 142, 173);">false</span>;
+            <span style="color:rgb(101, 115, 126);">//绘制</span>
+            mView.draw(canvas);
+            drawAccessibilityFocusedDrawableIfNeeded(canvas);
+        } <span style="color:rgb(180, 142, 173);">finally</span> {
+            <span style="color:rgb(180, 142, 173);">if</span> (!attachInfo.mSetIgnoreDirtyState) {
+                <span style="color:rgb(101, 115, 126);">// Only clear the flag if it was not set during the mView.draw() call</span>
+                attachInfo.mIgnoreDirtyState = <span style="color:rgb(180, 142, 173);">false</span>;
+            }
+        }
+    } <span style="color:rgb(180, 142, 173);">finally</span> {
+        <span style="color:rgb(180, 142, 173);">try</span> {
+            <span style="color:rgb(101, 115, 126);">//提交画布</span>
+            surface.unlockCanvasAndPost(canvas);
+        } <span style="color:rgb(180, 142, 173);">catch</span> (IllegalArgumentException e) {
+            mLayoutRequested = <span style="color:rgb(180, 142, 173);">true</span>;    <span style="color:rgb(101, 115, 126);">// ask wm for a new surface next time.</span>
+            <span style="color:rgb(180, 142, 173);">return</span> <span style="color:rgb(180, 142, 173);">false</span>;
+        }
+    }
+    <span style="color:rgb(180, 142, 173);">return</span> <span style="color:rgb(180, 142, 173);">true</span>;
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">首先会通过 Surface 拿到 Canvas：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span>canvas</span> = mSurface.lockCanvas(dirty);
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">然后就可以通知控件树进行绘制了：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span style="color:rgb(180, 142, 173);">mView</span><span style="color:rgb(191, 97, 106);">.draw</span>(<span style="color:rgb(180, 142, 173);">canvas</span>);
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">最后提交画布，通知 WMS 进行软件绘制</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span style="color:rgb(180, 142, 173);">surface</span><span style="color:rgb(191, 97, 106);">.unlockCanvasAndPost</span>(<span style="color:rgb(180, 142, 173);">canvas</span>);
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">以上就是控件绘制的所有内容，还有很多内容或者细节没有涉及，包括初次遍历的特殊处理，硬件绘制，动画渲染等。下面开始讲输入部分。</p>
+<h2 style="margin:0px 0px 15px;font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, &quot;Hiragino Sans GB&quot;, STHeitiSC-Light, &quot;Microsoft YaHei&quot;, Arial, sans-serif;font-weight:400;color:rgb(68, 68, 68);text-transform:none;font-size:24px;line-height:30px;margin-top:25px;">控件输入事件</h2>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">Android 常见的输入包括触摸屏和键盘，当然也支持手柄，鼠标等。设备可用时 Linux 内核会在 /dev/input/ 目录下创建相应的设备节点，并且会将原始输入事件写入到对应的设备节点中，系统进程会实时读取设备节点中的信息，并将其包装成 KeyEvent、MotionEvent 派发给特定的窗口，对于 MotionEvent 最终回调 View 的 onTouchEvent 方法。这个过程由 InputManagerService、WindowManagerService 等多个系统服务组件共同完成。</p>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">先从 InputManagerService 入手，看其构造方法：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">public</span> <span style="color:rgb(143, 161, 179);">InputManagerService</span>(<span style="color:rgb(208, 135, 112);">Context context</span>) </span>{
+        <span style="color:rgb(180, 142, 173);">this</span>.mContext = context;
+        <span style="color:rgb(180, 142, 173);">this</span>.mHandler = <span style="color:rgb(180, 142, 173);">new</span> InputManagerHandler(DisplayThread.<span style="color:rgb(180, 142, 173);">get</span>().getLooper());
+        mUseDevInputEventForAudioJack = context.getResources().getBoolean(R.<span style="color:rgb(180, 142, 173);">bool</span>.config_useDevInputEventForAudioJack);
+        mPtr = nativeInit(<span style="color:rgb(180, 142, 173);">this</span>, mContext, mHandler.getLooper().getQueue());
+        LocalServices.addService(InputManagerInternal.class, <span style="color:rgb(180, 142, 173);">new</span> LocalService());
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">需要与硬件打交道，主要逻辑肯定在 native 层，查看 nativeInit 方法实现，位于com_android_server_input_InputManagerService.cpp：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">static</span> jlong <span style="color:rgb(143, 161, 179);">nativeInit</span><span style="color:rgb(208, 135, 112);">(JNIEnv* env, jclass clazz,
+        jobject serviceObj, jobject contextObj, jobject messageQueueObj)</span> </span>{
+    sp<span> messageQueue = android_os_MessageQueue_getMessageQueue(env, messageQueueObj);
+    <span style="color:rgb(180, 142, 173);">if</span> (messageQueue == <span style="color:rgb(208, 135, 112);">NULL</span>) {
+        jniThrowRuntimeException(env, <span style="color:rgb(163, 190, 140);">&quot;MessageQueue is not initialized.&quot;</span>);
+        <span style="color:rgb(180, 142, 173);">return</span> <span style="color:rgb(208, 135, 112);">0</span>;
+    }
+    NativeInputManager* im = <span style="color:rgb(180, 142, 173);">new</span> NativeInputManager(contextObj, serviceObj,
+            messageQueue-&gt;getLooper());
+    im-&gt;incStrong(<span style="color:rgb(208, 135, 112);">0</span>);
+    <span style="color:rgb(180, 142, 173);">return</span> <span style="color:rgb(180, 142, 173);">reinterpret_cast</span><span>(im);
+}
+</span></span></code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">创建了 native 层的 MessageQueue 与 NativeInputManager，继续查看 NativeInputManager 类的构造方法：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+NativeInputManager::NativeInputManager(jobject contextObj,
+        jobject serviceObj, <span style="color:rgb(180, 142, 173);">const</span> sp<span>&amp; looper) :
+        mLooper(looper), mInteractive(<span style="color:rgb(180, 142, 173);">true</span>) {
+    JNIEnv* env = jniEnv();
+    mContextObj = env-&gt;NewGlobalRef(contextObj);
+    mServiceObj = env-&gt;NewGlobalRef(serviceObj);
+    {
+        AutoMutex _l(mLock);
+        mLocked.systemUiVisibility = ASYSTEM_UI_VISIBILITY_STATUS_BAR_VISIBLE;
+        mLocked.pointerSpeed = <span style="color:rgb(208, 135, 112);">0</span>;
+        mLocked.pointerGesturesEnabled = <span style="color:rgb(180, 142, 173);">true</span>;
+        mLocked.showTouches = <span style="color:rgb(180, 142, 173);">false</span>;
+    }
+    sp<span> eventHub = <span style="color:rgb(180, 142, 173);">new</span> EventHub();
+    mInputManager = <span style="color:rgb(180, 142, 173);">new</span> InputManager(eventHub, this, this);
+}
+</span></span></code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">这里出现了一个重要的对象 EventHub，EventHub 内部使用 inotify 与 epoll 机制管理着 /dev/input/ 目录下的所有节点信息，可以通过 EventHub.getEvents() 获取原始输入事件。<br/>
+继续看 InputManager 的构造方法：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+InputManager::InputManager(
+        <span style="color:rgb(180, 142, 173);">const</span> sp<span>&amp; eventHub,
+        <span style="color:rgb(180, 142, 173);">const</span> sp<span>&amp; readerPolicy,
+        <span style="color:rgb(180, 142, 173);">const</span> sp<span>&amp; dispatcherPolicy) {
+    mDispatcher = <span style="color:rgb(180, 142, 173);">new</span> InputDispatcher(dispatcherPolicy);
+    mReader = <span style="color:rgb(180, 142, 173);">new</span> InputReader(eventHub, readerPolicy, mDispatcher);
+    initialize();
+}
+
+<span style="color:rgb(180, 142, 173);">void</span> InputManager::initialize() {
+    mReaderThread = <span style="color:rgb(180, 142, 173);">new</span> InputReaderThread(mReader);
+    mDispatcherThread = <span style="color:rgb(180, 142, 173);">new</span> InputDispatcherThread(mDispatcher);
+}
+</span></span></span></code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">这里创建了四个重要的对象，InputDispatcher，InputReader，InputReaderThread，InputDispatcherThread，其中有两个线程，InputReaderThread 线程会一直去 EventHub 中读取输入事件，包装之后放入到派发队列中，InputDispatcherThread 线程将派发队列中的事件分发给对应的 Window。</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span style="color:rgb(235, 203, 139);">res</span> = mWindowSession.addToDisplay(mWindow, mSeq, mWindowAttributes,
+                        getHostVisibility(), mDisplay.getDisplayId(),
+                        mAttachInfo.mContentInsets, mAttachInfo.mStableInsets,
+                        mAttachInfo.mOutsets, mInputChannel);
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">绘图阶段会调用上述的方法，其中会传一个 InputChannel 对象，InputChannel 本质是一对 SocketPair，用于实现本机进程间通信。<br/>
+addToDisplay 方法实际上调用的是 WindowManagerService 的 addWindow 方法，addWindow 方法中有这么一段代码：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span style="color:rgb(180, 142, 173);">if</span> (outInputChannel != <span style="color:rgb(208, 135, 112);">null</span> &amp;&amp; (attrs.inputFeatures &amp; WindowManager.LayoutParams.INPUT_FEATURE_NO_INPUT_CHANNEL) == <span style="color:rgb(208, 135, 112);">0</span>) {
+    <span style="color:rgb(208, 135, 112);">String</span> name = win.makeInputChannelName();
+    InputChannel[] inputChannels = InputChannel.openInputChannelPair(name);
+    win.setInputChannel(inputChannels[<span style="color:rgb(208, 135, 112);">0</span>]);
+    inputChannels[<span style="color:rgb(208, 135, 112);">1</span>].transferTo(outInputChannel);
+    mInputManager.registerInputChannel(win.mInputChannel, win.mInputWindowHandle);
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">openInputChannelPair 函数在 native 层打开了一对 InputChannel 返回，其中一个 InputChannel 设置给了 WindowState，另一个交给了 outInputChannel 作为输出。并且将 WindowState 保存的 InputChannel 向 WMS 注册了。那么这样 InputDispatcher 就能将输入事件派发给注册进 WMS 的 win.mInputChannel， 然后客户端通过读取 InputChannel 就能拿到输入事件了，读取 InputChannel 的类是 WindowInputEventReceiver，在 ViewRootImpl 的 setView 中会将 mInputChannel 传进 WindowInputEventReceiver：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span>mInputEventReceiver</span> = new WindowInputEventReceiver(mInputChannel,Looper.myLooper());
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">如果 InputChannel 有可读事件那么就会回调 WindowInputEventReceiver 的 onInputEvent 方法。具体看 native 层的实现, 位于 android_view_InputEventReceiver.cpp 的 nativeInit 方法：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">static</span> jlong <span style="color:rgb(143, 161, 179);">nativeInit</span><span style="color:rgb(208, 135, 112);">(JNIEnv* env, jclass clazz, jobject receiverWeak,
+        jobject inputChannelObj, jobject messageQueueObj)</span> </span>{
+    sp<span> inputChannel = android_view_InputChannel_getInputChannel(env, inputChannelObj);
+    sp<span> messageQueue = android_os_MessageQueue_getMessageQueue(env, messageQueueObj);
+    sp<span> receiver = <span style="color:rgb(180, 142, 173);">new</span> NativeInputEventReceiver(env,receiverWeak, inputChannel, messageQueue);
+    <span style="color:rgb(180, 142, 173);">status_t</span> status = receiver-&gt;initialize();
+    <span style="color:rgb(180, 142, 173);">return</span> <span style="color:rgb(180, 142, 173);">reinterpret_cast</span><span>(receiver.get());
+}
+<span style="color:rgb(180, 142, 173);">status_t</span> NativeInputEventReceiver::initialize() {
+    setFdEvents(ALOOPER_EVENT_INPUT);
+    <span style="color:rgb(180, 142, 173);">return</span> OK;
+}
+<span style="color:rgb(180, 142, 173);">void</span> NativeInputEventReceiver::setFdEvents(<span style="color:rgb(180, 142, 173);">int</span> events) {
+    <span style="color:rgb(180, 142, 173);">if</span> (mFdEvents != events) {
+        mFdEvents = events;
+        <span style="color:rgb(180, 142, 173);">int</span> fd = mInputConsumer.getChannel()-&gt;getFd();
+        <span style="color:rgb(180, 142, 173);">if</span> (events) {
+            mMessageQueue-&gt;getLooper()-&gt;addFd(fd, <span style="color:rgb(208, 135, 112);">0</span>, events, <span style="color:rgb(180, 142, 173);">this</span>, <span style="color:rgb(208, 135, 112);">NULL</span>);
+        } <span style="color:rgb(180, 142, 173);">else</span> {
+            mMessageQueue-&gt;getLooper()-&gt;removeFd(fd);
+        }
+    }
+}
+</span></span></span></span></code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">在 nativeInit 方法中构建了 NativeInputEventReceiver 对象，并且调用了它的 initialize 方法， 在 initialize 方法中将 InputChannel 的输入事件注册进了 native 层的 Looper 中，当 InputChannel 可读时便会回调 handleEvent()，最终回调到 Java 层的 onInputEvent()。<br/>
+在 WindowInputEventReceiver 中 的 onInputEvent 方法会调用 enqueueInputEvent，最终调用到 deliverInputEvent：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">private</span> <span style="color:rgb(180, 142, 173);">void</span> <span style="color:rgb(143, 161, 179);">deliverInputEvent</span>(<span style="color:rgb(208, 135, 112);">QueuedInputEvent q</span>) </span>{
+    InputStage stage;
+    <span style="color:rgb(180, 142, 173);">if</span> (q.shouldSendToSynthesizer()) {
+        stage = mSyntheticInputStage;
+    } <span style="color:rgb(180, 142, 173);">else</span> {
+        stage = q.shouldSkipIme() ? mFirstPostImeInputStage : mFirstInputStage;
+    }
+    <span style="color:rgb(180, 142, 173);">if</span> (stage != <span style="color:rgb(208, 135, 112);">null</span>) {
+        stage.deliver(q);
+    } <span style="color:rgb(180, 142, 173);">else</span> {
+        finishInputEvent(q);
+    }
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">这里使用了责任链模式开始传递输入事件，其中一个责任链为 ViewPostImeInputStage，看它的处理方法：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">protected</span> <span style="color:rgb(180, 142, 173);">int</span> <span style="color:rgb(143, 161, 179);">onProcess</span><span style="color:rgb(208, 135, 112);">(QueuedInputEvent q)</span> </span>{
+    <span style="color:rgb(180, 142, 173);">if</span> (q.mEvent <span style="color:rgb(180, 142, 173);">instanceof</span> KeyEvent) {
+        <span style="color:rgb(180, 142, 173);">return</span> processKeyEvent(q);
+    } <span style="color:rgb(180, 142, 173);">else</span> {
+        <span style="color:rgb(101, 115, 126);">// If delivering a new non-key event, make sure the window is</span>
+        <span style="color:rgb(101, 115, 126);">// now allowed to start updating.</span>
+        handleDispatchWindowAnimationStopped();
+        <span style="color:rgb(180, 142, 173);">final</span> <span style="color:rgb(180, 142, 173);">int</span> source = q.mEvent.getSource();
+        <span style="color:rgb(180, 142, 173);">if</span> ((source &amp; InputDevice.SOURCE_CLASS_POINTER) != <span style="color:rgb(208, 135, 112);">0</span>) {
+            <span style="color:rgb(180, 142, 173);">return</span> processPointerEvent(q);
+        } <span style="color:rgb(180, 142, 173);">else</span> <span style="color:rgb(180, 142, 173);">if</span> ((source &amp; InputDevice.SOURCE_CLASS_TRACKBALL) != <span style="color:rgb(208, 135, 112);">0</span>) {
+            <span style="color:rgb(180, 142, 173);">return</span> processTrackballEvent(q);
+        } <span style="color:rgb(180, 142, 173);">else</span> {
+            <span style="color:rgb(180, 142, 173);">return</span> processGenericMotionEvent(q);
+        }
+    }
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">根据不同的输入类型进行分发，以 processPointerEvent 为例：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">private</span> <span style="color:rgb(180, 142, 173);">int</span> <span style="color:rgb(143, 161, 179);">processPointerEvent</span>(<span style="color:rgb(208, 135, 112);">QueuedInputEvent q</span>) </span>{
+    final MotionEvent <span style="color:rgb(180, 142, 173);">event</span> = (MotionEvent)q.mEvent;
+
+    mAttachInfo.mUnbufferedDispatchRequested = <span style="color:rgb(208, 135, 112);">false</span>;
+    boolean handled = mView.dispatchPointerEvent(<span style="color:rgb(180, 142, 173);">event</span>);
+    <span style="color:rgb(180, 142, 173);">if</span> (mAttachInfo.mUnbufferedDispatchRequested &amp;&amp; !mUnbufferedInputDispatch) {
+        mUnbufferedInputDispatch = <span style="color:rgb(208, 135, 112);">true</span>;
+        <span style="color:rgb(180, 142, 173);">if</span> (mConsumeBatchedInputScheduled) {
+            scheduleConsumeBatchedInputImmediately();
+        }
+    }
+    <span style="color:rgb(180, 142, 173);">return</span> handled ? FINISH_HANDLED : FORWARD;
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">分发给了 View 的 dispatchPointerEvent：</p>
+<pre style="font-family:Consolas, monospace, serif;margin:0px 0px 15px;border-radius:3px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:18px;border:1px solid rgb(221, 221, 221);overflow:auto;tab-size:4;margin-top:15px;color:rgb(192, 197, 206);padding:0.5em;background:rgb(43, 48, 59);display:block;overflow-x:auto;"><code>
+<span><span style="color:rgb(180, 142, 173);">public</span> final boolean <span style="color:rgb(143, 161, 179);">dispatchPointerEvent</span>(<span style="color:rgb(208, 135, 112);">MotionEvent <span style="color:rgb(180, 142, 173);">event</span></span>) </span>{
+    <span style="color:rgb(180, 142, 173);">if</span> (<span style="color:rgb(180, 142, 173);">event</span>.isTouchEvent()) {
+        <span style="color:rgb(180, 142, 173);">return</span> dispatchTouchEvent(<span style="color:rgb(180, 142, 173);">event</span>);
+    } <span style="color:rgb(180, 142, 173);">else</span> {
+        <span style="color:rgb(180, 142, 173);">return</span> dispatchGenericMotionEvent(<span style="color:rgb(180, 142, 173);">event</span>);
+    }
+}
+</code></pre>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">调到了我们熟悉的 dispatchTouchEvent 方法。<br/>
+总结一下控件的输入事件：</p>
+<ol style="margin:0px 0px 15px;padding-left:30px;margin-top:15px;">
+<li>原始事件由 Linux 内核写入到 /dev/input/ 目录对应的节点中 </li>
+<li>native 层的 EventHub 维护了所有的设备节点，使用了 INotify，epoll 机制，通过 EventHub.getEvents 可以获取输入事件</li>
+<li>native 层的 InputManager 开启了两个线程，一个从 EventHub 读取事件，一个分发事件给焦点窗口</li>
+<li>分发的时候会从焦点窗口获取对应的 InputChannel，并写入到 InputChannel 中</li>
+<li>在 NativeInputEventReceiver 会将监听 InputChannel 的输入事件，并将输入事件回调给 Java 层的 InputEventReceiver</li>
+<li>ViewRootImpl 中将 InputEventReceiver 回调过来的事件分发给 View</li>
+</ol>
+<p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">参考：《深入理解Android 卷III》</p>
+&gt;&gt; 转载请注明来源：<a href="https://pqpo.me/2017/07/01/learn-android-view/" style="background:0px 0px;color:rgb(22, 133, 169);text-decoration:none;cursor:pointer;">深入理解 Android 控件</a><p style="margin:0px 0px 15px;margin-top:15px;font-size:15px;line-height:1.8em;color:rgba(0, 0, 0, 0.8);margin-bottom:20px;letter-spacing:1px;">●非常感谢您的阅读，欢迎订阅<strong style="font-weight:700;">微信公众号</strong>（右边扫一扫）以表达对我的认可与支持，我会在第一时间同步文章到公众号上。当然也可点击下方打赏按钮为我打赏。</p>							<div style="text-align:center;padding:20px 0px;"><a href="https://pqpo.me/2017/07/01/learn-android-view/?utm_source=androidweekly.cn&amp;utm_medium=website#reward" style="text-transform:none;background:rgb(245, 245, 245);text-decoration:none;text-shadow:rgb(255, 255, 255) 0px 1px 0px;-webkit-appearance:none;margin:0px;overflow:visible;font-style:inherit;font-variant:inherit;font-weight:inherit;font-stretch:inherit;font-family:inherit;color:#FFA500;display:inline-block;box-sizing:border-box;border:1px solid rgba(0, 0, 0, 0.06);vertical-align:middle;text-align:center;min-height:30px;font-size:22px;line-height:18px;padding:15px;border-radius:100%;transition:all 0.2s ease-in;cursor:pointer;">赏</a><p style="margin:0px 0px 15px;font-size:14px;line-height:1.8em;color:gray;margin-top:15px;margin-bottom:20px;letter-spacing:1px;">免费分享，随意打赏</p></div>														<div style="margin:15px 0px 0px;margin-bottom:0px;"><span style="display:table-cell;"></span>
+								<div style="float:left;max-width:100%;margin:15px 0px 0px;"><i style="font-family:FontAwesome;display:inline-block;font-weight:400;font-style:normal;line-height:1;-webkit-font-smoothing:antialiased;text-decoration:none;color:rgba(0, 0, 0, 0.5);"><span style="font-family:FontAwesome;font-weight:400;font-style:normal;line-height:1;color:rgba(0, 0, 0, 0.5);"></span></i> <a href="https://pqpo.me/tag/view/" rel="tag" style="background:0px 0px;text-decoration:none;cursor:pointer;color:rgba(0, 0, 0, 0.5);">View</a></div>				
+								<div style="float:right;max-width:100%;"></div>					
+							<span style="display:table;clear:both;"></span></div>
+
+							
+						<span style="display:table;clear:both;"></span></div></div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

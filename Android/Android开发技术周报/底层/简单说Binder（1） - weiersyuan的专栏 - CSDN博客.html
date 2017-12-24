@@ -1,0 +1,602 @@
+<html>
+<head>
+  <title>简单说Binder（1） - weiersyuan的专栏 - CSDN博客</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.15063 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="3731"/>
+<h1>简单说Binder（1） - weiersyuan的专栏 - CSDN博客</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:40px;-webkit-tap-highlight-color:rgba(0, 0, 0, 0);"><div style="background:rgb(240, 240, 240);box-sizing:border-box;font-size:14px;line-height:1.42857;color:rgb(51, 51, 51);font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-style:inherit;font-variant:inherit;font-weight:inherit;font-stretch:inherit;background-color:rgb(255, 255, 255);"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;background:rgb(255, 255, 255);"><div style="box-sizing:border-box;"><span style="display:table;"> </span>
+            <h3 style="font-size:0.8rem;box-sizing:border-box;font-weight:500;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;margin:0px;margin-top:20px;margin-bottom:10px;line-height:1.2rem;color:rgb(51, 51, 51);padding:0.5rem 0px 0.3rem;word-break:break-all;">简单说Binder（1）</h3>
+            <p style="box-sizing:border-box;margin:0px 0px 10px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:0.5rem;color:rgb(153, 153, 153);padding-bottom:0.1rem;"><i style="box-sizing:border-box;font-style:normal;">发表于</i><em style="box-sizing:border-box;font-style:normal;">2016/2/20 1:29:12   </em><i style="box-sizing:border-box;font-style:normal;">4812</i><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;">人阅读</span></p>
+            <p style="box-sizing:border-box;margin:0px 0px 10px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:0.5rem;color:rgb(153, 153, 153);padding-bottom:0.4rem;border-bottom:0.05rem solid rgb(221, 221, 221);margin-bottom:0.3rem;">
+                    分类：
+                        <span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;">java</span>
+                        <span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;">Android</span>
+            </p>
+             
+<div style="box-sizing:border-box;font-size:0.6rem;color:rgb(51, 51, 51);word-wrap:break-word;overflow:hidden;">
+
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">Binder算是Android中比较难懂的一部分内容了，但是非常的重要，要想研究Framework层无论如何也绕不开Binder。网上也有很多讲解Binder的文章，有的很深入涉及到底层C层面，理解起来难度较大，要完全理解还需要Linux驱动的知识，看了还也是似懂非懂，我认为也不需要理解那么深入。写这篇博客主要是我从最学习理解Binder的过程的角度出发，也来谈谈Binder。</span></p>
+<h1 style="box-sizing:border-box;margin:0.67em 0px;font-size:36px;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;color:inherit;padding:0px;margin-top:20px;margin-bottom:10px;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:18px;">Binder是什么</span></h1>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">Binder是android中用于进程间通信IPC的重要机制，ActivityManagerService、WinderManagerService等系统服务的背后都是Binder。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">Binder架构包括服务器接口、Binder驱动、客户端接口三个模块。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">Binder服务端：一个Binder服务端实际上就是Binder类的对象，该对象一旦创建，内部则会启动一个隐藏线程，会接收Binder驱动发送的消息，收到消息后，会执行Binder对象中的onTransact()函数，并按照该函数的参数执行不同的服务器端代码。onTransact函数的参数是客户端调用transact函数的输入。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">Binder驱动：任意一个服务端Binder对象被创建时，同时会在Binder驱动中创建一个mRemote对象，该对象也是一个Binder类。客户端访问远程服务端都是通过该mRemote对象。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">客户端：获取远程服务在Binder驱动中对应的mRemote引用，然后调用它的transact方法即可向服务端发送消息。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;text-align:center;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;"><img src="简单说Binder（1） - weiersyuan的专栏 - CSDN博客_files/Center.png" type="image/png" data-filename="Center.png" alt="" height="477" style="box-sizing:border-box;border:0px;vertical-align:middle;outline:none;max-width:100%;max-height:100%;" width="922"/><br style="box-sizing:border-box;"/>
+</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">这幅图展现了Binder框架的大致构成，至于里面有一些内容需要看完这篇博客才能看懂。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;color:#ff0000;"><strong style="box-sizing:border-box;font-weight:bold;">需要注意的一个问题</strong>：</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">既然客户端要通过mRemote引用调用它的transact方法向服务端发送消息，那么客户端获取远程服务在Binder中的mRemote引用？</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">客户端获取远程服务在Binder中的mRemote引用有两种方式：系统服务和自定义的服务端程序不一样，对于系统服务使用Binder就可以实现服务端，</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">而我们自定义的服务必须借助Service来编写。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">》》系统服务是在系统启动的时候在SystemServer进程的init2函数中启动ServerThread线程，在这个线程中启动了各种服务，并且通过调用ServerManager.addService(String name, IBinder service)将其加入保存起来。</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">ServerManager就相当于DNS服务器，在查找某个服务时通过调用ServerManager.getService(String
+ name)函数就可以获得远程服务的Binder，至于它的具体细节可以查看Android启动相关的源代码。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">》》自定义的服务必须通过Service来实现。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">通过bind函数绑定一个远程服务</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;"></span></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public boolean bindService(Intent service, ServiceConnection conn, int flags)</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">其中第二个参数是一个回调接口，onServiceConnected的参数service即为远程服务在Binder驱动中的binder引用。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"></span></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public interface ServiceConnection {
+    public void onServiceConnected(ComponentName name, IBinder service);
+    public void onServiceDisconnected(ComponentName name);
+}</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<h1 style="box-sizing:border-box;margin:0.67em 0px;font-size:36px;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;color:inherit;padding:0px;margin-top:20px;margin-bottom:10px;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:18px;">使用Binder进行IPC通信</span></span></h1>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">实现如下效果：Activity‘中有一个按钮，点击该按钮，将abc和def三个字母拼接起来，拼接的函数在另一个进程中。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">客户端</span><br style="box-sizing:border-box;"/>
+</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public class MainActivity extends Activity {
+	private boolean isBound;
+	private Button btn_add;
+	private IBinder mRemote = null;
+	private ServiceConnection serviceConn = new ServiceConnection() {  
+		@Override  
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mRemote = service;
+		}
+        @Override  
+        public void onServiceDisconnected(ComponentName name) {
+        }
+    };
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		bind();
+        btn_add = (Button)findViewById(R.id.btn_add);
+        btn_add.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				String result = null;
+				try {
+					result = strcat(&quot;abc&quot;, &quot;def&quot;);
+				} catch (RemoteException e) {
+					Toast.makeText(MainActivity.this, &quot;error&quot;, 0).show();
+					e.printStackTrace();
+				}
+				Toast.makeText(MainActivity.this, result, 0).show();
+			}
+		});
+	}
+	
+	private void bind() {
+		Intent intent = new Intent(MainActivity.this, ComputeService.class);  
+		isBound = bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
+	}
+	
+	private void unbind() {
+		if (isBound) {
+			MainActivity.this.unbindService(serviceConn);
+			isBound = false;
+		}
+    }
+	
+	private String strcat(String x, String y) throws RemoteException {
+		android.os.Parcel _data = android.os.Parcel.obtain();
+		android.os.Parcel _reply = android.os.Parcel.obtain();
+		String _result;
+		try {
+			_data.writeString(x);
+			_data.writeString(y);
+			mRemote.transact(1, _data, _reply, 0);
+			_result = _reply.readString();
+		} finally {
+			_reply.recycle();
+			_data.recycle();
+		}
+		return _result;
+	}
+
+	@Override
+	protected void onDestroy() {
+		unbind();
+		super.onDestroy();
+	}
+}</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">远程服务端</span><br style="box-sizing:border-box;"/>
+</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public class ComputeService extends Service {
+	
+	private IBinder binder = new Binder(){
+		protected boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
+			if (code == 1) {
+				String _arg0;
+				_arg0 = data.readString();
+				String _arg1;
+				_arg1 = data.readString();
+				String _result = this.strcat(_arg0, _arg1);
+				reply.writeString(_result);
+				return true;
+			}
+			return super.onTransact(code, data, reply, flags);
+		};
+		
+		public String strcat(String x, String y){
+			return x + y;
+		}
+	};
+	
+	@Override
+	public IBinder onBind(Intent arg0) {
+		return binder;
+	}
+}</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">将该service配置在一个新的进程中</span></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">&lt;service android:name = &quot;org.qhyuan.binder.ComputeService&quot;
+    android:process=&quot;:remote&quot;/&gt;</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">点击按钮如图所示弹出提示</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;text-align:center;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;"><img src="简单说Binder（1） - weiersyuan的专栏 - CSDN博客_files/20160220011950556.png" type="image/png" data-filename="20160220011950556.png" alt="" height="662" style="box-sizing:border-box;border:0px;vertical-align:middle;outline:none;max-width:100%;max-height:100%;" width="389"/><br style="box-sizing:border-box;"/>
+</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">接下来分析上面的代码：</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">客户端通过bindService启动远程服务。最终会由系统回调传入的ServiceConnection接口，因此可以在onServiceConnected</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">函数中获得该远程服务所对应的Binder驱动中的引用，接下来想要和远程服务端通信只需调用该mRemote的transact方法即可。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public boolean transact(int code, Parcel data, Parcel reply, int flags) throws RemoteException;</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;"></span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;">code标识要执行的动作，其实就是指调用服务端的哪个函数。</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">data是对输入参数的打包</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">reply是对返回值的打包</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">writeString&lt;---&gt;readString  客户端打包一个Parcel对象，在服务端读取该Parcel对象中打包的数据，客户端的写入和服务端的读取时对应的。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;color:#ff0000;"><strong style="box-sizing:border-box;font-weight:bold;">这里存在的问题</strong>：</span>要统一客户端写入和服务端读取的顺序，当然对于一个程序员来说，保证这一点是很简单的。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">接下来调用mRemote的transact方法会陷入内核态，也就是说剩下的都是由系统完成的，binder驱动会挂起当前线程，将参数包裹发给服务端程序，在服务端的onTransact(code, data, reply, flags)函数里面读取出包装的数据进行处理(数据处理的过程也就是根据code执行指定的服务函数)，然后把执行的结果放入客户端提供的reply包裹中，然后服务端向Binder驱动发送一个notify消息，唤醒客户端线程，继续执行使得客户端线程从Binder驱动返回到客户端代码区，再次回到用户态。</span></p>
+<h1 style="box-sizing:border-box;margin:0.67em 0px;font-size:36px;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;color:inherit;padding:0px;margin-top:20px;margin-bottom:10px;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:18px;">使用AIDL</span></h1>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">我们也看到了上面使用Binder进行IPC通信的时候代码比较繁琐，尤其是客户端给服务端发送消息的打包过程中要保证顺序的一致性。当然android也给我们提供了一个比较好的方式，那就是使用android提供的aidl工具。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">AIDL(Android Interface Definition Language)，编译器通过*.aidl文件的描述信息生成符合通信协议的Java代码，我们不需要自己写这些繁杂的代码，使用非常方便。只需要建立一个xxx.aidl文件，这时在gen目录下就会生成对应的java文件</span><br style="box-sizing:border-box;"/>
+</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">package org.qhyuan.aidl;
+interface ICompute {
+	String strcat (String x,String y);
+}</pre><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">这样使用aidl来实现上面的功能就可以很简单了。</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">于是客户端代码</span>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public class MainActivity extends Activity {
+	private ICompute compute = null;
+	private boolean isBound;
+	private Button btn_add;
+	private ServiceConnection serviceConn = new ServiceConnection() {  
+		@Override  
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			compute = ICompute.Stub.asInterface(service);
+		}
+        @Override  
+        public void onServiceDisconnected(ComponentName name) {
+        }
+    };
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		bind();
+        btn_add = (Button)findViewById(R.id.btn_add);
+        btn_add.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				String result = null;
+				try {
+					result = compute.strcat(&quot;abc&quot;, &quot;def&quot;);
+				} catch (RemoteException e) {
+					Toast.makeText(MainActivity.this, &quot;error&quot;, 0).show();
+					e.printStackTrace();
+				}
+				Toast.makeText(MainActivity.this, result, 0).show();
+			}
+		});
+	}
+	
+	private void bind() {
+		Intent intent = new Intent(MainActivity.this, ComputeService.class);  
+		isBound = bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
+	}
+	
+	private void unbind() {
+		if (isBound) {
+			MainActivity.this.unbindService(serviceConn);
+			isBound = false;
+		}
+    }
+
+	@Override
+	protected void onDestroy() {
+		unbind();
+		super.onDestroy();
+	}
+}</pre><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">服务端代码</span><br style="box-sizing:border-box;"/>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public class ComputeService extends Service {
+	
+	private IBinder binder = new ICompute.Stub() {
+		@Override
+		public String strcat(String x, String y) throws RemoteException {
+			return x+y;
+		}
+	};
+	
+	@Override
+	public IBinder onBind(Intent arg0) {
+		return binder;
+	}
+}</pre><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">其他的都不需要改变，是不是简单了很多？封装了底层的细节，使得程序写起来很优美。之前手动写的transact函数和重写的onTransact函数也不见踪影了。</span>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">接下来分析上面的代码，看看aidl文件到底做了什么，能使得我们编写程序简化很多。</span><br style="box-sizing:border-box;"/>
+</p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">/*
+ * This file is auto-generated.  DO NOT MODIFY.
+ * Original file: E:\\EclipseProject\\Binder\\src\\org\\qhyuan\\aidl\\ICompute.aidl
+ */
+package org.qhyuan.aidl;
+
+public interface ICompute extends android.os.IInterface {
+	/** Local-side IPC implementation stub class. */
+	public static abstract class Stub extends android.os.Binder implements
+			org.qhyuan.aidl.ICompute {
+		private static final java.lang.String DESCRIPTOR = &quot;org.qhyuan.aidl.ICompute&quot;;
+
+		/** Construct the stub at attach it to the interface. */
+		public Stub() {
+			this.attachInterface(this, DESCRIPTOR);
+		}
+
+		/**
+		 * Cast an IBinder object into an org.qhyuan.aidl.ICompute interface,
+		 * generating a proxy if needed.
+		 */
+		public static org.qhyuan.aidl.ICompute asInterface(
+				android.os.IBinder obj) {
+			if ((obj == null)) {
+				return null;
+			}
+			android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
+			if (((iin != null) &amp;&amp; (iin instanceof org.qhyuan.aidl.ICompute))) {
+				return ((org.qhyuan.aidl.ICompute) iin);
+			}
+			return new org.qhyuan.aidl.ICompute.Stub.Proxy(obj);
+		}
+
+		@Override
+		public android.os.IBinder asBinder() {
+			return this;
+		}
+
+		@Override
+		public boolean onTransact(int code, android.os.Parcel data,
+				android.os.Parcel reply, int flags)
+				throws android.os.RemoteException {
+			switch (code) {
+			case INTERFACE_TRANSACTION: {
+				reply.writeString(DESCRIPTOR);
+				return true;
+			}
+			case TRANSACTION_strcat: {
+				data.enforceInterface(DESCRIPTOR);
+				java.lang.String _arg0;
+				_arg0 = data.readString();
+				java.lang.String _arg1;
+				_arg1 = data.readString();
+				java.lang.String _result = this.strcat(_arg0, _arg1);
+				reply.writeNoException();
+				reply.writeString(_result);
+				return true;
+			}
+			}
+			return super.onTransact(code, data, reply, flags);
+		}
+
+		private static class Proxy implements org.qhyuan.aidl.ICompute {
+			private android.os.IBinder mRemote;
+
+			Proxy(android.os.IBinder remote) {
+				mRemote = remote;
+			}
+
+			@Override
+			public android.os.IBinder asBinder() {
+				return mRemote;
+			}
+
+			public java.lang.String getInterfaceDescriptor() {
+				return DESCRIPTOR;
+			}
+
+			@Override
+			public java.lang.String strcat(java.lang.String x,
+					java.lang.String y) throws android.os.RemoteException {
+				android.os.Parcel _data = android.os.Parcel.obtain();
+				android.os.Parcel _reply = android.os.Parcel.obtain();
+				java.lang.String _result;
+				try {
+					_data.writeInterfaceToken(DESCRIPTOR);
+					_data.writeString(x);
+					_data.writeString(y);
+					mRemote.transact(Stub.TRANSACTION_strcat, _data, _reply, 0);
+					_reply.readException();
+					_result = _reply.readString();
+				} finally {
+					_reply.recycle();
+					_data.recycle();
+				}
+				return _result;
+			}
+		}
+
+		static final int TRANSACTION_strcat = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
+	}
+
+	public java.lang.String strcat(java.lang.String x, java.lang.String y)
+			throws android.os.RemoteException;
+}</pre><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">为了看起来方便，这里存在几个类及每个类中的属性和方法大致简化如下。</span>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">interface ICompute extends IInterface
+{
+	strcat();
+
+	static abstract class Stub extends Binder implements ICompute {
+		static final int TRANSACTION_strcat;
+		static final String DESCRIPTOR;
+		static asInterface();
+		asBinder();
+		onTransact();
+
+		static class Proxy implements ICompute {
+			IBinder binder;
+			asBinder();
+			getInterfaceDescriptor();
+			strcat();
+		}
+	}
+}</pre><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">首先要明白AIDL的主要设计思想。产生的这个类的思想是抽象出了一个接口，接口里面包含我们想实现的strcat方法，于是服务端的Binder来实现这个接口，其实就是这里的Stub类。然后客户端在获得了服务端在Binder驱动中的Binder引用mRemote后，通过该引用给远程服务端发送消息，这是包含在Proxy类的strcat函数中。由于有aidl工具生成的代码所以包裹中的打包数据的顺序都是一致的。</span>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">ICompute类中的strcat函数不需要实现，仅仅是提供接口而已，具体的在Stub的子类类和Proxy类中实现。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">在Stub子类中具体实现，一般是在服务端程序中的。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">在Proxy类中的strcat函数包括对参数的打包和通过Binder驱动中的mRemote调用transact函数向服务端发送包裹，再从reply包裹中读取出返回值返回。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">》》TRANSACTION_strcat：是对函数的编号，由于这里只有一个函数stract，所以只有这一个整型值。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">》》DESCRIPTOR：每个Stub类有一个描述符，与它实现的接口有关。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">》》onTransact：收到Binder驱动发来的包裹，进行解包，这里面调用了this.strcat(_arg0, _arg1);是非常重要的，实际上是在服务器端实现的类的strcat函数。</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;"></span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">》》asInterface：是最重要的一个函数，这是一个静态方法，是用在客户端将一个IBinder对象转化为它实现的接口。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">如果能根据DESCRIPTION通过queryLocalInterface查找到的值，就直接返回该值，(如果不是因为是static的，是不是返回this就可以了？)这对应的情况是client和服务端在同一个进程中，返回的就是服务端的Binder，接下来的调用就是直接用服务端的Binder调用服务端的程序，不存在IPC。否则就将该IBinder(其实是BinderProxy类型了</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">)包装成一个新的类Proxy类，接下来调用Proxy的stract方法实质上是用的Binder驱动中的远程Binder的引用mRemote来调用的，是IPC。这里，</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">Proxy顾名思义是代理的意思，本地调用就直接返回ICompute接口实际上是当前服务器端的Binder，否则就返回一个代理类，该代理类实现了ICompute，里面封装的是Binder驱动中的mRemote引用，这样保证接下来的操作是一致的。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">一句话就是说asInterface函数的存在将本地调用和进程间调用综合在一起了。</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">看到这里有没有觉得三个类组织的非常巧妙代码很优美呢。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">另，上面三个类如果写成三个类而不是写成嵌套类的形式会好理解很多。并且和最开始手工写的Binder本质上是一致的。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">代码中出现的如下几个打包的数据可以认为是增加安全性和处理一些其他的问题，没有也是可以可以的。</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">writeInterfaceToken&lt;---&gt;enforceInterface 客户端封装一个String标识，在服务端收到后对比确保该Binder驱动确实是想访问我。类似的还有</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">writeException&lt;---&gt;readException。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">再此基础上去看系统中一些XXXManager代码，就会容易很多，里面使用Binder的部分都类似于AIDL产生的那些代码，本质上就是上面讲的Binder进行IPC通信，</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">下面举例子说明源代码中使用Binder的地方。</span></p>
+<h1 style="box-sizing:border-box;margin:0.67em 0px;font-size:36px;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;color:inherit;padding:0px;margin-top:20px;margin-bottom:10px;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:18px;">系统服务中的Binder分析</span></span></h1>
+<span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">下面以ServiceManager和ActivityManagerService为例来分析。</span></span>
+<h2 style="box-sizing:border-box;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;color:inherit;font-size:30px;margin:0px;padding:0px;margin-top:20px;margin-bottom:10px;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">ServiceManager：</span></span></span></h2>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">前面已经提到过ServiceManager可以认为是DNS，用来查找系统服务。保存了已经开启的系统服务。他有两个主要的方法</span><br style="box-sizing:border-box;"/>
+</span></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public static IBinder getService(String name)
+public static void addService(String name, IBinder service)</pre><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;"></span>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">实际上ServerManager既是系统服务的管理者，同时也是一个系统服务。因此它肯定是基于Binder实现的。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">接下来的分析中，<strong style="box-sizing:border-box;font-weight:bold;">时刻记得使用aidl工具生成那三个类：IXXX、IXXX.Stub和IXXX.Stub.Proxy，并做好对应。</strong>这样看ServiceManager的相关的代码就容易多了。</span><br style="box-sizing:border-box;"/>
+<br style="box-sizing:border-box;"/>
+<span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">1.与IXXX相对应的类就是IServiceManager类，封装了远程调用的几个主要函数。</span><br style="box-sizing:border-box;"/>
+</span></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public interface IServiceManager extends IInterface
+{
+    public IBinder getService(String name) throws RemoteException;
+    public IBinder checkService(String name) throws RemoteException;
+    public void addService(String name, IBinder service, boolean allowIsolated)
+                throws RemoteException;
+    public String[] listServices() throws RemoteException;
+    public void setPermissionController(IPermissionController controller)
+            throws RemoteException;
+    static final String descriptor = &quot;android.os.IServiceManager&quot;;
+    int GET_SERVICE_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION;
+    int CHECK_SERVICE_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+1;
+    int ADD_SERVICE_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+2;
+    int LIST_SERVICES_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+3;
+    int CHECK_SERVICES_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+4;
+    int SET_PERMISSION_CONTROLLER_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+5;
+}</pre><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">2.与IXXX.Stub对应的类就是ServiceManagerNative。</span><br style="box-sizing:border-box;"/>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public abstract class ServiceManagerNative extends Binder implements IServiceManager{
+    static public IServiceManager asInterface(IBinder obj) {
+        if (obj == null) {
+            return null;
+        }
+        IServiceManager in = (IServiceManager)obj.queryLocalInterface(descriptor);
+        if (in != null) {
+            return in;
+        }
+        return new ServiceManagerProxy(obj);
+    }
+    
+    public ServiceManagerNative() {
+        attachInterface(this, descriptor);
+    }
+    
+    public boolean onTransact(int code, Parcel data, Parcel reply, int flags){
+        try {
+            switch (code) {
+            case IServiceManager.GET_SERVICE_TRANSACTION: {
+                data.enforceInterface(IServiceManager.descriptor);
+                String name = data.readString();
+                IBinder service = getService(name);
+                reply.writeStrongBinder(service);
+                return true;
+            }
+            case IServiceManager.ADD_SERVICE_TRANSACTION: {
+                data.enforceInterface(IServiceManager.descriptor);
+                String name = data.readString();
+                IBinder service = data.readStrongBinder();
+                boolean allowIsolated = data.readInt() != 0;
+                addService(name, service, allowIsolated);
+                return true;
+            }
+            // ...
+        } catch (RemoteException e) {
+        }
+        
+        return false;
+    }
+    public IBinder asBinder() {
+        return this;
+    }
+}</pre><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';">3.</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">与IXXX.Stub.Proxy对应的类ServiceManagerProxy</span><br style="box-sizing:border-box;"/>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">class ServiceManagerProxy implements IServiceManager {
+    public ServiceManagerProxy(IBinder remote) {
+        mRemote = remote;
+    }
+    
+    public IBinder asBinder() {
+        return mRemote;
+    }
+    
+    public IBinder getService(String name) throws RemoteException {
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        data.writeInterfaceToken(IServiceManager.descriptor);
+        data.writeString(name);
+        mRemote.transact(GET_SERVICE_TRANSACTION, data, reply, 0);
+        IBinder binder = reply.readStrongBinder();
+        reply.recycle();
+        data.recycle();
+        return binder;
+    }
+    public void addService(String name, IBinder service, boolean allowIsolated) throws RemoteException {
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        data.writeInterfaceToken(IServiceManager.descriptor);
+        data.writeString(name);
+        data.writeStrongBinder(service);
+        data.writeInt(allowIsolated ? 1 : 0);
+        mRemote.transact(ADD_SERVICE_TRANSACTION, data, reply, 0);
+        reply.recycle();
+        data.recycle();
+    }
+    // ....
+    private IBinder mRemote;
+}</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">观察上面的代码，实际上和使用adil生成的代码没什么两样。仅仅是类命名不一样，将三个类分开写了而已。</span></span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">不用看源代码也知道接下来该怎么做了吧？！当然就是在服务端继承ServiceManagerNative类实现里面的相关方法就能实现服务端，</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">然后在客户端将远程服务端所对应的的Binder封装成IServiceManager iSm = ServiceManagerNative.asInterface(binder)即可，正常情况下确实是这样的。</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">实际上，在源码中找不到继承自ServiceManagerNative类的远程服务端类，比如说ServiceManagerService，根本就找不到这样一个类。原因是</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">SMS在native层被实现成一个独立的进程，是在启动后解析init.rc脚本启动服务的。native层的代码没必要去研究，那么这个远程的Binder怎么获得呢？<span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">系统提供的函数BinderInternal.getContextObject()来获得对应的Binder引用。</span></span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">还是ServiceManager比较特殊嘛，毕竟对于“DNS”来说不得一开机就启动，还与其他“主机”有点差别，但是其他的系统服务就和上面我们想象的那样是一样的了。</span></span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">这里要说明一点，虽然SMS服务时在native层，获取远程服务却并不一定非要在native层实现，使用Binder构架与是用什么语言没必然关系。</span></span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">当然了，这里的ServiceManagerNative确实没什么用，如果要说有用，就是他的静态方法asInterface吧。但不知道为什么android源码中还有这个类的存在，至少这样让我们隐约感觉Binder通信的框架就是这样的，提高了一致性。</span></span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">接下来我们看ServiceManager类</span><br style="box-sizing:border-box;"/>
+</span></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public final class ServiceManager {
+    private static final String TAG = &quot;ServiceManager&quot;;
+    private static IServiceManager sServiceManager;
+    // 本地有缓存
+    private static HashMap&lt;String, IBinder&gt; sCache = new HashMap&lt;String, IBinder&gt;();
+    private static IServiceManager getIServiceManager() {
+        if (sServiceManager != null) {
+            return sServiceManager;
+        }
+        // Find the service manager
+        sServiceManager = ServiceManagerNative.asInterface(BinderInternal.getContextObject());
+        return sServiceManager;
+    }
+    public static IBinder getService(String name) {
+        try {
+            IBinder service = sCache.get(name);
+            if (service != null) {
+                return service;
+            } else {
+            	// 其实是IPC调用，具体会调用
+                return getIServiceManager().getService(name);
+            }
+        } catch (RemoteException e) {
+            Log.e(TAG, &quot;error in getService&quot;, e);
+        }
+        return null;
+    }
+    public static void addService(String name, IBinder service) {
+        try {
+            getIServiceManager().addService(name, service, false);
+        } catch (RemoteException e) {
+            Log.e(TAG, &quot;error in addService&quot;, e);
+        }
+    }
+    // ...
+}</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">ServiceManager类其实就是对远程的SMS服务的Binder的封装。使用ServiceManagerNative.asInterface(BinderInternal.getContextObject());将其转化为sServiceManager接口，接下来使用该对象即可完成IPC调用。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">举个例子比如调用ServiceManager的getService方法，实际上会ServiceManagerProxy走到ServiceManagerProxy类的getService方法里面去，</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">然后就是向服务端发消息。当然这些细节就不用考虑了，因为android的Binder机制封装的就是这么完美，你不用关注底层细节。</span></p>
+<h2 style="box-sizing:border-box;font-family:&quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;font-weight:500;line-height:1.1;color:inherit;font-size:30px;margin:0px;padding:0px;margin-top:20px;margin-bottom:10px;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">ActivityManager：</span></span></h2>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">再看看ActivityManager中的Binder。</span></span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">IActivityManager对应IXXX接口</span></span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">ActivityManagerNative对应IXXX.Stub类，继承自Binder类。</span></span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">ActivityManagerProxy对应IXXX.Stub.Proxy类。</span></span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">那么AMS的服务端是那个类呢？没错，就是ActivityManagerService类，这个类继承自ActivityManagerNative，实现了IActivityManager接口中的方法用来进行IPC。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">那么只要在客户端得到了这个远程服务端的Binder引用就可以进行IPC通信了，事实确实是这样的。举个栗子，在ActivityThread的attach方法里有下面两行代码</span><br style="box-sizing:border-box;"/>
+</span></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">IActivityManager mgr = ActivityManagerNative.getDefault();
+mgr.attachApplication(mAppThread);</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Comic Sans MS;font-size:14px;">而getDefault方法代码如下</span></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">static public IActivityManager getDefault() {
+    return gDefault.get();
+}
+private static final Singleton&lt;IActivityManager&gt; gDefault = new Singleton&lt;IActivityManager&gt;() {
+        protected IActivityManager create() {
+        	// 这里可以看到通过调用getService方法得到Binder
+            IBinder b = ServiceManager.getService(&quot;activity&quot;);
+            if (false) {
+                Log.v(&quot;ActivityManager&quot;, &quot;default service binder = &quot; + b);
+            }
+            IActivityManager am = asInterface(b);
+            if (false) {
+                Log.v(&quot;ActivityManager&quot;, &quot;default service = &quot; + am);
+            }
+            return am;
+        }
+    };</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">显然，ActivityManagerNative.getDefault()就可以得到远程的activity的服务AMS对应的Binder引用，并且调用asInterface将其转化为IActivityManager，接下来调用接口中的函数即可和远端的AMS通信。一般来说，</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">对于其他的Service一般就是通过ServiceManager来获取对应的Binder。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">当然，如果还想弄的更清楚点还需要知道这个<span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;color:#ff0000;">系统服务是在哪里启动和将Binder添加到SystemServer中的</span>。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">在SystemServerr进程的init2函数中启动ServerThread线程，这个线程中启动了很多系统服务，而每个系统服务都是一个线程。</span><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">ServerThread的run方法大概有1000行，里面启动了系统服务，不同的服务有不同的启动方法。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">比如这里的AMS是通过调用context = ActivityManagerService.main(factoryTest)实现的。main函数里面启动了AThread线程。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:Arial, &quot;Microsoft YaHei&quot;;font-size:14px;">接下来又调用了ActivityManagerService.setSystemProcess();</span></span></p>
+<pre style="color:rgb(51, 51, 51);font-family:Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace;white-space:pre-wrap;box-sizing:border-box;display:block;padding:9.5px;margin:0px 0px 10px;line-height:1.42857;font-size:13px;word-break:break-all;word-wrap:break-word;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:4px;overflow:hidden;width:100%;">public static void setSystemProcess() {
+    ActivityManagerService m = mSelf;
+    ServiceManager.addService(&quot;activity&quot;, m, true);
+    ServiceManager.addService(&quot;meminfo&quot;, new MemBinder(m));
+    ServiceManager.addService(&quot;gfxinfo&quot;, new GraphicsBinder(m));
+    ServiceManager.addService(&quot;dbinfo&quot;, new DbBinder(m));
+    // ....
+   }</pre>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;">这里的m是在AThread线程中new出来的ActivityManagerService实例。至此，就完成了服务的启动和向ServiceManager中的添加。当然里面有很多细节，这里主要是跟踪Binder通信的过程。</span></p>
+<p style="box-sizing:border-box;margin:0px 0px 10px;font-family:Arial, &quot;Microsoft YaHei&quot;;padding:0.2rem 0px 0.3rem;font-size:0.7rem;color:rgb(51, 51, 51);line-height:0.875rem;word-break:break-all;"><span style="box-sizing:border-box;margin:0px;padding:0px;font-family:'Comic Sans MS';font-size:14px;"><br style="box-sizing:border-box;"/>
+</span></p>
+ </div>
+ 
+
+          <span style="display:table;clear:both;height:0px;visibility:hidden;"> </span></div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 
