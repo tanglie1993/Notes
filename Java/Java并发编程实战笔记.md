@@ -533,8 +533,8 @@ public class BrokenPrimeProducer extends Thread {
 * 由于每个线程拥有各自的中断策略,因此除非你知道中断对该线程的含义,否则就不应该中断这个线程。
 
 * 有两种实用策略可用于处理InterruptedException：
- - 抛出异常
- - 调用interrupt恢复中断状态
+	- 抛出异常
+	- 调用interrupt恢复中断状态
 * 你不能屏蔽InterruptedException，例如在catch块中捕获到异常却不做任何处理，除非在你的代码中实现了线程的中断策略。
 
 
