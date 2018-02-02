@@ -446,11 +446,11 @@ public interface Executor {
 创建一个大小无限的线程池。此线程池支持定时以及周期性执行任务的需求。
 
 - Executor的生命周期
- - void shutDown();
- - List<Runnable> shutdownNow();
- - boolean isShutdown();
- - boolean isTerminated();
- - boolean awaitTermination(long timeout, TimeUnit unit)
+	- void shutDown();
+	- List<Runnable> shutdownNow();
+	- boolean isShutdown();
+	- boolean isTerminated();
+	- boolean awaitTermination(long timeout, TimeUnit unit)
 
 ### 找出可利用的并行性
 - Callable是一种对延迟计算的比Runnable更好的抽象：它认为主入口点将返回一个值，并可能抛出一个异常。
