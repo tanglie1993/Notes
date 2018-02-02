@@ -426,10 +426,10 @@ public class Preloader{
 
 - Barrier：类似于CountDownLatch，能阻塞一组线程直到某个事件发生。
 
-##第六章 任务执行
-###在线程中执行任务（略）
+## 第六章 任务执行
+### 在线程中执行任务（略）
 
-###Executor框架
+### Executor框架
 ```
 public interface Executor {
 	void execute(Runnable command);
