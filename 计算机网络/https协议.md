@@ -1,4 +1,4 @@
-![](img/HttpFlow.png)
+![](img/HttpsFlow.png)
 
 不使用SSL/TLS的HTTP通信主要风险有：窃听风险，篡改风险和冒充风险。
 
