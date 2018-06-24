@@ -1,4 +1,4 @@
-//: generics/Holder2.java
+package exercise.holder;//: generics/exercise.holder.Holder2.java
 
 public class Holder2 {
   private Object a;
@@ -6,8 +6,8 @@ public class Holder2 {
   public void set(Object a) { this.a = a; }
   public Object get() { return a; }
   public static void main(String[] args) {
-    Holder2 h2 = new Holder2(new Automobile());
-    Automobile a = (Automobile)h2.get();
+    Holder2 h2 = new Holder2(new Holder1.Automobile());
+    Holder1.Automobile a = (Holder1.Automobile)h2.get();
     h2.set("Not an Automobile");
     String s = (String)h2.get();
     h2.set(1); // Autoboxes to Integer

@@ -1,3 +1,6 @@
+package exercise;
+
+import exercise.holder.Holder3;
 import pets.Rat;
 import pets.Rodent;
 

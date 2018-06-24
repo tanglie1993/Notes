@@ -1,3 +1,5 @@
+package exercise;
+
 import pets.*;
 import util.FiveTuple;
 import util.FourTuple;
