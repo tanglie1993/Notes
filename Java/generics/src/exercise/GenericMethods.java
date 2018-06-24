@@ -1,7 +1,7 @@
 package exercise;//: generics/GenericMethods.java
 
 public class GenericMethods {
-  public <T,U,V> void f(T x, U y, V z) {
+  public <T,U,V> void f(T x, Object y, V z) {
     System.out.println(x.getClass().getName());
     System.out.println(y.getClass().getName());
     System.out.println(z.getClass().getName());
