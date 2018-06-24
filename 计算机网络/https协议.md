@@ -1,3 +1,5 @@
+![](img/HttpsFlow.png)
+
 不使用SSL/TLS的HTTP通信主要风险有：窃听风险，篡改风险和冒充风险。
 
 目前，应用最广泛的是TLS 1.0，接下来是SSL 3.0。而TLS 1.0通常被标示为SSL 3.1，TLS 1.1为SSL 3.2，TLS 1.2为SSL 3.3。

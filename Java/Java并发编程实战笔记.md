@@ -426,10 +426,10 @@ public class Preloader{
 
 - Barrier：类似于CountDownLatch，能阻塞一组线程直到某个事件发生。
 
-##第六章 任务执行
-###在线程中执行任务（略）
+## 第六章 任务执行
+### 在线程中执行任务（略）
 
-###Executor框架
+### Executor框架
 ```
 public interface Executor {
 	void execute(Runnable command);
@@ -446,11 +446,11 @@ public interface Executor {
 创建一个大小无限的线程池。此线程池支持定时以及周期性执行任务的需求。
 
 - Executor的生命周期
- - void shutDown();
- - List<Runnable> shutdownNow();
- - boolean isShutdown();
- - boolean isTerminated();
- - boolean awaitTermination(long timeout, TimeUnit unit)
+	- void shutDown();
+	- List<Runnable> shutdownNow();
+	- boolean isShutdown();
+	- boolean isTerminated();
+	- boolean awaitTermination(long timeout, TimeUnit unit)
 
 ### 找出可利用的并行性
 - Callable是一种对延迟计算的比Runnable更好的抽象：它认为主入口点将返回一个值，并可能抛出一个异常。
@@ -526,16 +526,16 @@ public class BrokenPrimeProducer extends Thread {
 ```
 我们在main中通过queue.take来消费产生的素数（虽然仅仅是取出扔掉），我们只消费了1000个素数，然后尝试取消产生素数的任务，很遗憾，取消不了，因为产生素数的线程产生素数的速度大于我们消费的速度，我们在消费1000后就停止消费了，那么任务将被queue的put方法阻塞。
 
-- Java的API或语言规范并没有将中断与任何取消语意关联起来。但实际上，如果在取消之外的其它操作中使用中断，都是不合适的。
+* Java的API或语言规范并没有将中断与任何取消语意关联起来。但实际上，如果在取消之外的其它操作中使用中断，都是不合适的。
 
-- 调用interrupt并不意味着立即停止目标线程正在进行的工作，而只是传递了请求中断的消息。有些方法，例如wait、sleep和join等，将严格地处理这种请求。
+* 调用interrupt并不意味着立即停止目标线程正在进行的工作，而只是传递了请求中断的消息。有些方法，例如wait、sleep和join等，将严格地处理这种请求。
 
-- 由于每个线程拥有各自的中断策略,因此除非你知道中断对该线程的含义,否则就不应该中断这个线程。
+* 由于每个线程拥有各自的中断策略,因此除非你知道中断对该线程的含义,否则就不应该中断这个线程。
 
-- 有两种实用策略可用于处理InterruptedException：
- - 抛出异常
- - 调用interrupt恢复中断状态
-- 你不能屏蔽InterruptedException，例如在catch块中捕获到异常却不做任何处理，除非在你的代码中实现了线程的中断策略。
+* 有两种实用策略可用于处理InterruptedException：
+	- 抛出异常
+	- 调用interrupt恢复中断状态
+* 你不能屏蔽InterruptedException，例如在catch块中捕获到异常却不做任何处理，除非在你的代码中实现了线程的中断策略。
 
 
 
