@@ -10,7 +10,7 @@ public class Exercise27 {
 
     public static void main(String[] args) {
         List<? extends Number> list = new ArrayList<Integer>();
-        list.add(new Integer(1));//wont compile
+//        list.add(new Integer(1));//wont compile
 
     }
 }
