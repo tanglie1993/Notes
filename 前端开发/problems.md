@@ -10,7 +10,7 @@ https://segmentfault.com/a/1190000007815822
 ## 5. 简述选择器优先级？
 https://juejin.im/post/5be3d07be51d457d4932b043
 ## 6. 什么是BFC?
-https://juejin.im/post/57.cee1b38e51d4556be5b39e1
+https://juejin.im/post/5cee1b38e51d4556be5b39e1
 ## 7. 什么是CSS层叠上下文？
 https://juejin.im/post/5b876f86518825431079ddd6
 ## 8. 常见的页面布局有哪些？
