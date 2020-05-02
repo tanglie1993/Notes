@@ -20,9 +20,9 @@ https://www.jianshu.com/p/81ef7e7094e8
 ## 9. 什么是响应式布局？
 https://juejin.im/post/5a179a1851882510b2751071
 ## 10. 什么是CSS预处理和后处理？
-https://www.cnblogs.com/cyn941105/archive/2016/06/16/5590239.html
+https://www.zhihu.com/question/266405943
 ## 11. css3有哪些新特性？
-https://www.jianshu.com/p/56b7302d7f7f
+https://www.jianshu.com/p/f988d438ee17
 ## 12. css display有哪些常用取值？
 https://www.cnblogs.com/demonswang/p/7161313.html
 ## 13. 如何用css画三角形？
@@ -41,7 +41,7 @@ sessionStorage 的数据在浏览器关闭后自动删除
 新的技术webworker, websocket, Geolocation
 
 移除的元素：
-纯表现的元素：basefont，big，center，font, s，strike，tt，u`
+纯表现的元素：basefont，big，center，font, s，strike，tt，u
 对可用性产生负面影响的元素：frame，frameset，noframes
 
 支持HTML5新标签：
@@ -95,6 +95,9 @@ title: 元素相关的建议信息
 ## 9. Canvas和SVG有什么区别？
 svg绘制出来的每一个图形的元素都是独立的DOM节点，能够方便的绑定事件或用来修改。canvas输出的是一整幅画布
 svg输出的图形是矢量图形，后期可以修改参数来自由放大缩小，不会出现失真和锯齿。而canvas输出标量画布，就像一张图片一样，放大会失真或者出现锯齿
+
+## 10. HTML页面生命周期
+https://zhuanlan.zhihu.com/p/111316766
 
 # JS
 ## 1. 谈谈你对原型链的理解？
