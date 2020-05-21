@@ -48,4 +48,10 @@ https://github.com/Advanced-Interview-Question/front-end-interview/blob/master/d
 https://juejin.im/post/5cad39b3f265da03502b1c0a#heading-5
 
 ## 什么是 render props?
+https://zhuanlan.zhihu.com/p/31267131
 
+## 什么是Fiber?
+https://juejin.im/post/5ab7b3a2f265da2378403e57
+
+## 什么是Time Slicing和suspense API?
+https://auth0.com/blog/time-slice-suspense-react16/
