@@ -1,3 +1,5 @@
+https://juejin.im/post/5cd9752f6fb9a03247157b6d
+
 ## 为什么选择使用框架而不是原生?
 - 组件化: 其中以 React 的组件化最为彻底,甚至可以到函数级别的原子组件,高度的组件化可以是我们的工程易于维护、易于组合拓展。
 - 天然分层: JQuery 时代的代码大部分情况下是面条代码,耦合严重,现代框架不管是 MVC、MVP还是MVVM 模式都能帮助我们进行分层，代码解耦更易于读写。
@@ -18,6 +20,7 @@ https://github.com/Advanced-Interview-Question/front-end-interview/blob/master/d
 
 ## React 生命周期？
 https://juejin.im/post/5df648836fb9a016526eba01
+https://www.jianshu.com/p/514fe21b9914
 
 ## React的请求应该放在哪个生命周期中?
 由于JavaScript中异步事件的性质，当您启动API调用时，浏览器会在此期间返回执行其他工作。当React渲染一个组件时，它不会等待componentWillMount它完成任何事情 - React继续前进并继续render,没有办法“暂停”渲染以等待数据到达。
@@ -55,3 +58,13 @@ https://juejin.im/post/5ab7b3a2f265da2378403e57
 
 ## 什么是Time Slicing和suspense API?
 https://auth0.com/blog/time-slice-suspense-react16/
+
+## 什么是mobx?
+https://juejin.im/post/5a7fd72c5188257a766324ae
+
+## 什么是react-saga和thunk?
+https://github.com/redux-saga/redux-saga
+https://github.com/reduxjs/redux-thunk
+
+
+
