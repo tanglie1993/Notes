@@ -16,7 +16,7 @@ https://juejin.im/post/5cd9752f6fb9a03247157b6d
 - 无法进行极致优化: 在一些性能要求极高的应用中虚拟DOM无法进行针对性的极致优化,比如VScode采用直接手动操作DOM的方式进行极端的性能优化
 
 ## 虚拟 DOM 原理?
-https://github.com/Advanced-Interview-Question/front-end-interview/blob/master/docs/guide/virtualDom.md
+https://juejin.im/post/5dfac33fe51d455802162b75
 
 ## React 生命周期？
 https://juejin.im/post/5df648836fb9a016526eba01
