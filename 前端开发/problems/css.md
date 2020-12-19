@@ -8,27 +8,7 @@
 2. IE 盒模型：
 属性width,height包含border和padding，指的是content+padding+border。
 
-### 块级盒子（Block box） 和 内联盒子（Inline box）
-一个被定义成块级的（block）盒子会表现出以下行为:
-
-- 盒子会在内联的方向上扩展并占据父容器在该方向上的所有可用空间，在绝大数情况下意味着盒子会和父容器一样宽
-- 每个盒子都会换行
-- width 和 height 属性可以发挥作用
-- 内边距（padding）, 外边距（margin） 和 边框（border） 会将其他元素从当前盒子周围“推开”
-
-除非特殊指定，诸如标题(< h1 >等)和段落(< p >)默认情况下都是块级的盒子。
-  
-如果一个盒子对外显示为 inline，那么他的行为如下:
-
-- 盒子不会产生换行。
--  width 和 height 属性将不起作用。
-- 垂直方向的内边距、外边距以及边框会被应用但是不会把其他处于 inline 状态的盒子推开。
-- 水平方向的内边距、外边距以及边框会被应用且会把其他处于 inline 状态的盒子推开。
-
-用做链接的 < a > 元素、 < span >、 < em > 以及 < strong > 都是默认处于 inline 状态的。
-
-
-## 2. 什么是flex布局？
+## 什么是flex布局？
 ### 设置在容器上的属性
 #### flex-direction
 属性决定主轴的方向（即项目的排列方向）。
@@ -86,7 +66,7 @@ align-self属性允许单个项目有与其他项目不一样的对齐方式，�
   align-self: auto | flex-start | flex-end | center | baseline | stretch;
 }
 
-## 3. css有哪些常用的单位？
+## css有哪些常用的单位？
 ### 绝对单位
 px: Pixel 像素
 pt: Points 磅
@@ -110,7 +90,7 @@ vmax: View max 可视范围的宽度或高度中较大的那个尺寸
 ### 运算
 calc: 四则运算
 
-## 4. 什么是css选择器？
+## 什么是css选择器？
 ### 基本选择器
 #### 通用选择器（Universal selector）
 选择所有元素。
@@ -173,7 +153,7 @@ calc: 四则运算
 :: 伪选择器用于表示无法用 HTML 语义表达的实体。
 例子：p::first-line 匹配所有 <p> 元素的第一行。
   
-## 5. 简述选择器优先级？
+## 简述选择器优先级？
 下面列表中，选择器类型的优先级是递增的：
 
 1. 类型选择器（例如，h1）和伪元素（例如，::before）
@@ -184,7 +164,7 @@ calc: 四则运算
 通配选择符（universal selector）（*）关系选择符（combinators）（+, >, ~, ' ', ||）和 否定伪类（negation pseudo-class）（:not()）对优先级没有影响。（但是，在 :not() 内部声明的选择器会影响优先级）。
 
 
-## 6. 什么是BFC?
+## 什么是BFC?
 BFC对浮动定位（参见 float）与清除浮动（参见 clear）都很重要。浮动定位和清除浮动时只会应用于同一个BFC内的元素。浮动不会影响其它BFC中元素的布局，而清除浮动只能清除同一BFC中在它前面的元素的浮动。外边距折叠（Margin collapsing）也只会发生在属于同一BFC的块级元素之间。
 
 下列方式会创建块格式化上下文：
@@ -203,7 +183,7 @@ BFC对浮动定位（参见 float）与清除浮动（参见 clear）都很重�
 - 多列容器（元素的 column-count 或 column-width 不为 auto，包括 column-count 为 1）
 - column-span 为 all 的元素始终会创建一个新的BFC，即使该元素没有包裹在一个多列容器中（标准变更，Chrome bug）。
   
-## 7. 什么是CSS层叠上下文？
+## 什么是CSS层叠上下文？
 在层叠上下文中，子元素同样也按照上面解释的规则进行层叠。 重要的是，其子级层叠上下文的 z-index 值只在父级中才有意义。子级层叠上下文被自动视为父级层叠上下文的一个独立单元。
 
 文档中的层叠上下文由满足以下任意一个条件的元素形成：
@@ -225,17 +205,136 @@ BFC对浮动定位（参见 float）与清除浮动（参见 clear）都很重�
 - will-change 值设定了任一属性而该属性在 non-initial 值时会创建层叠上下文的元素（参考这篇文章）；
 - contain 属性值为 layout、paint 或包含它们其中之一的合成值（比如 contain: strict、contain: content）的元素。
 
-## 8. 常见的页面布局有哪些？
-https://blog.csdn.net/VhWfR2u02Q/article/details/84076421
-https://www.jianshu.com/p/3e5a9e620757
-https://www.jianshu.com/p/81ef7e7094e8
-## 9. 什么是响应式布局？
-https://juejin.im/post/5a179a1851882510b2751071
-## 10. 什么是CSS预处理和后处理？
-https://www.zhihu.com/question/266405943
-## 11. css3有哪些新特性？
-https://www.jianshu.com/p/f988d438ee17
-## 12. css display有哪些常用取值？
-https://www.cnblogs.com/demonswang/p/7161313.html
+## 什么是CSS预处理和后处理？
+预处理器的作用是增强了 CSS 语法，让你可以在 CSS 中使用变量、循环、嵌套等功能，主要代表是 Less、Sass，它们本质上就是一种编译器。JS 中也有类似的例子，包括 CoffeeScript、TypeScript 等。
+
+后处理器其实也是一种编译器，如果说预处理器是事前编译，那么后处理器就是事后编译。
+
+## css3有哪些新特性？
+### 选择器
+CSS3中新添加了很多选择器，解决了很多之前需要用javascript才能解决的布局问题。
+    
+        element1~element2: 选择前面有element1元素的每个element2元素。
+        [attribute^=value]: 选择某元素attribute属性是以value开头的。
+        [attribute$=value]: 选择某元素attribute属性是以value结尾的。
+        [attribute*=value]: 选择某元素attribute属性包含value字符串的。
+        E:first-of-type: 选择属于其父元素的首个E元素的每个E元素。
+        E:last-of-type: 选择属于其父元素的最后E元素的每个E元素。
+        E:only-of-type: 选择属于其父元素唯一的E元素的每个E元素。
+        E:only-child: 选择属于其父元素的唯一子元素的每个E元素。
+        E:nth-child(n): 选择属于其父元素的第n个子元素的每个E元素。
+        E:nth-last-child(n): 选择属于其父元素的倒数第n个子元素的每个E元素。
+        E:nth-of-type(n): 选择属于其父元素第n个E元素的每个E元素。
+        E:nth-last-of-type(n): 选择属于其父元素倒数第n个E元素的每个E元素。
+        E:last-child: 选择属于其父元素最后一个子元素每个E元素。
+        :root: 选择文档的根元素。
+        E:empty: 选择没有子元素的每个E元素（包括文本节点)。
+        E:target: 选择当前活动的E元素。
+        E:enabled: 选择每个启用的E元素。
+        E:disabled: 选择每个禁用的E元素。
+        E:checked: 选择每个被选中的E元素。
+        E:not(selector): 选择非selector元素的每个元素。
+        E::selection: 选择被用户选取的元素部分。
+   
+### Transition
+略。
+
+### Transform
+略。
+
+### Animation
+略。
+
+### 边框
+CSS3新增了三个边框属性，分别是border-radius、box-shadow和border-image。
+
+### 背景
+CSS3新增了几个关于背景的属性，分别是background-clip、background-origin、background-size和background-break。
+
+### 渐变
+略。
+
+### box-sizing
+略。
+    
+## css display有哪些常用取值？
+
+### none 
+此元素不会被显示，并且不占据页面空间，这也是与visibility:hidden不同的地方，设置visibility:hidden的元素，不会被显示，但是还是会占据原来的页面空间。
+
+### inline 
+行内元素 元素会在一行内显示，超出屏幕宽度自动换行，不能设置宽度和高度，元素的宽度和高度只能是靠元素内的内容撑开。
+示例元素：span,b,i,a,u,sub,sup,strong,em
+
+### block 
+块级元素 会独占一行，如果不设置宽度，其宽度会自动填满父元素的宽度，可以设置宽高，即使设置了宽度，小于父元素的宽度，块级元素也会独占一行。
+示例元素：div,h1-h6,ul,ol,dl,p
+
+### inline-block 
+行内块元素 与行内元素一样可以再一行内显示，而且可以设置宽高，可以设置margin和padding。
+示例元素：input,button,img
+
+### list-item 
+列表元素
+示例元素：li
+
+### table 
+会作为块级表格来显示(类似于<table>)，表格前后带有换行符。
+  
+### inline-table 
+会作为内联表格来显示(类似于<table>)，表格前后没有换行符。
+  
+### flex 
+多栏多列布局，火狐可以直接使用，谷歌和欧朋需要在属性值前面加-webkit-前缀，比较适合移动端开发使用。
+  
 ## 13. 如何用css画三角形？
-https://juejin.im/post/5ae902cb6fb9a07aa83e86ae#heading-13
+### 字符
+直接复制粘贴一个 △ 字符
+
+### 图片
+略
+
+### css
+.triangle {
+  width: 0;
+  height: 0;
+  border-left: 50px solid transparent;
+  border-right: 50px solid transparent;
+  border-bottom: 100px solid red;
+}
+
+### SVG
+略
+
+### Clip Path
+.triangle {
+  width: 10px; height: 10px;
+  background: red;
+  clip-path: polygon(50% 0, 0 100%, 100% 100%);
+}
+
+### Canvas
+略
+
+### CSS Houdini
+<script>
+  CSS.paintWorklet.addModule('/worklet.js')
+</script>
+
+class TrianglePainter {
+  paint(ctx, geom, properties) {
+	 const offset = geom.width
+    ctx.beginPath()
+    ctx.fillStyle = 'red'
+    ctx.moveTo(offset / 2, 0)
+    ctx.lineTo(offset, offset)
+    ctx.lineTo(0, offset)
+    ctx.fill()
+  }
+}
+
+registerPaint('triangle', TrianglePainter)
+
+### WebGL
+略
+
