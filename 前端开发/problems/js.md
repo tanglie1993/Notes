@@ -1,5 +1,5 @@
 ## 1. 谈谈你对原型链的理解？
-[https://img2018.cnblogs.com/blog/1480829/201904/1480829-20190416101041496-1168291931.png]
+![pic](https://img2018.cnblogs.com/blog/1480829/201904/1480829-20190416101041496-1168291931.png)
 
 __proto__和constructor属性是对象所独有的；
 prototype属性是函数所独有的，因为函数也是一种对象，所以函数也拥有__proto__和constructor属性。
