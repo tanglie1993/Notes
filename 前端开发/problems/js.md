@@ -490,13 +490,137 @@ console.log(eq(a, b)) // true
 ```
 
 ## 11. 事件模型
-https://segmentfault.com/a/1190000006934031
+DOM 事件标准描述了事件传播的 3 个阶段：
+
+捕获阶段（Capturing phase）—— 事件（从 Window）向下走近元素。
+目标阶段（Target phase）—— 事件到达目标元素。
+冒泡阶段（Bubbling phase）—— 事件从元素上开始冒泡。
+
+### 捕获阶段
+捕获阶段很少被使用。通常我们看不到它。
+
+使用 on<event> 属性或使用 HTML 特性（attribute）或使用两个参数的 addEventListener(event, handler) 添加的处理程序，对捕获一无所知，它们仅在第二阶段和第三阶段运行。
+
+为了在捕获阶段捕获事件，我们需要将处理程序的 capture 选项设置为 true。
+
+### 冒泡阶段
+当一个事件发生在一个元素上，它会首先运行在该元素上的处理程序，然后运行其父元素上的处理程序，然后一直向上到其他祖先上的处理程序。
+
+几乎 所有事件都会冒泡。
+这句话中的关键词是“几乎”。例如，focus 事件不会冒泡。同样，我们以后还会遇到其他例子。但这仍然是例外，而不是规则，大多数事件的确都是冒泡的。
+冒泡事件从目标元素开始向上冒泡。通常，它会一直上升到 <html>，然后再到 document 对象，有些事件甚至会到达 window，它们会调用路径上所有的处理程序。
+但是任意处理程序都可以决定事件已经被完全处理，并停止冒泡。
+用于停止冒泡的方法是 event.stopPropagation()。
 
 ## 12. 事件委托（事件代理）
-https://www.cnblogs.com/liugang-vip/p/5616484.html
+假设有如下 html，我们想要在每个 li 上绑定 onClick 事件，最直观的做法当然就是给每个 li 分别添加事件，增加事件回调。这种做法当然没错，但是我们有一种更好的做法，那就是在 ul 上添加有个监听事件，由于事件的冒泡机制，事件就会冒泡到ul上，因为ul上有事件监听，所以事件就会触发。
+
+Event 对象提供了一个属性叫 target，可以返回事件的目标节点，我们成为事件源，也就是说，target 就可以表示为触发当前的事件 dom，我们可以根据 dom 进行判断到底是哪个元素触发了事件，根据不同的元素，执行不同的回调方法。
+
+这就是事件委托。
+
+<ul id="operate">
+ <li id="add">add</li>
+ <li id="edit">edit</li>
+ <li id="delete">delete</li>
+</ul>
+事件委托有以下优点。
+
+减少事件注册,节省内存，能够提升整体性能。
+简化了dom节点更新时,相应事件的更新（用过 jquery 的都知道，动态加入的元素，事件需要重新绑定）。
+
+React 并不是将 click 事件直接绑定在 dom 上面，而是采用事件冒泡的形式冒泡到 document 上面，这个思路借鉴了事件委托机制。所以，React 中所有的事件最后都是被委托到了 document这个顶级 DOM 上。
 
 ## 13. 函数柯里化与反柯里化
-https://juejin.im/post/5b561426518825195f499772
+### 柯里化
+```
+// ES6 的实现
+function currying(func, args = []) {
+    let arity = func.length;
+
+    return function (..._args) {
+        _args.unshift(...args);
+
+        if(_args.length < arity) {
+            return currying.call(null, func, _args);
+        }
+
+        return func(..._args);
+    }
+}
+```
+
+```
+function checkFun(reg, str) {
+    return reg.test(str);
+}
+
+// 转换柯里化
+let check = currying(checkFun);
+
+// 产生新的功能函数
+let checkPhone = check(/^1[34578]\d{9}$/);
+let checkEmail = check(/^(\w)+(\.\w+)*@(\w)+((\.\w+)+)$/);
+```
+
+```
+// bind 方法的模拟
+Object.prototype.bind = function (context) {
+    var self = this;
+    var args = [].slice.call(arguments, 1);
+
+    return function () {
+        return self.apply(context, args);
+    }
+}
+```
+通过上面代码可以看出，其实 bind 方法就是一个柯里化转换函数，将调用 bind 方法的函数进行转换，即通过闭包返回一个柯里化函数，执行该柯里化函数的时候，借用 apply 将调用 bind 的函数的执行上下文转换成了 context 并执行，只是这个转换函数没有那么复杂，没有进行参数拆分，而是函数在调用的时候传入了所有的参数。
+
+### 反柯里化
+反柯里化的思想与柯里化正好相反，如果说柯里化的过程是将函数拆分成功能更具体化的函数，那反柯里化的作用则在于扩大函数的适用性，使本来作为特定对象所拥有的功能函数可以被任意对象所使用。
+
+反柯里化通用式的参数为一个希望可以被其他对象调用的方法或函数，通过调用通用式返回一个函数，这个函数的第一个参数为要执行方法的对象，后面的参数为执行这个方法时需要传递的参数。
+
+```
+// ES6 的实现
+function uncurring(fn) {
+    return function (...args) {
+        return fn.call(...args);
+    }
+}
+```
+
+```
+// 构造函数 F
+function F() {}
+
+// 拼接属性值的方法
+F.prototype.concatProps = function () {
+    let args = Array.from(arguments);
+    return args.reduce((prev, next) => `${this[prev]}&${this[next]}`);
+}
+
+// 使用 concatProps 的对象
+let obj = {
+    name: "Panda",
+    age: 16
+};
+
+// 使用反柯里化进行转化
+let concatProps = uncurring(F.prototype.concatProps);
+
+concatProps(obj, "name", "age"); // Panda&16
+
+```
+
+```
+// 利用反柯里化创建检测数据类型的函数
+let checkType = uncurring(Object.prototype.toString);
+
+checkType(1); // [object Number]
+checkType("hello"); // [object String]
+checkType(true); // [object Boolean]
+```
 
 ## 15. 理解 async/await
 async 函数是 Generator 函数的语法糖。使用 关键字 async 来表示，在函数内部使用 await 来表示异步。相较于 Generator，Async 函数的改进在于下面四点：
