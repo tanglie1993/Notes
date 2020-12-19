@@ -99,7 +99,7 @@ calc: 四则运算
 #### 元素选择器（Type selector）
 按照给定的节点名称，选择所有匹配的元素。
 语法：elementname
-例子：input 匹配任何 <input> 元素。
+例子：input 匹配任何 < input > 元素。
 #### 类选择器（Class selector）
 按照给定的 class 属性的值，选择所有匹配的元素。
 语法：.classname
@@ -116,42 +116,42 @@ calc: 四则运算
 选择器列表（Selector list）
 , 是将不同的选择器组合在一起的方法，它选择所有能被列表中的任意一个选择器选中的节点。
 语法：A, B
-示例：div, span 会同时匹配 <span> 元素和 <div> 元素。
+示例：div, span 会同时匹配 < span > 元素和 < div > 元素。
   
 ### 组合器（Combinators）
 #### 后代组合器（Descendant combinator）
  （空格）组合器选择前一个元素的后代节点。
 语法：A B
-例子：div span 匹配所有位于任意 <div> 元素之内的 <span> 元素。
+例子：div span 匹配所有位于任意 < div > 元素之内的 < span > 元素。
   
 #### 直接子代组合器（Child combinator）
 > 组合器选择前一个元素的直接子代的节点。
 语法：A > B
-例子：ul > li 匹配直接嵌套在 <ul> 元素内的所有 <li> 元素。
+例子：ul > li 匹配直接嵌套在 < ul > 元素内的所有 < li > 元素。
   
 #### 一般兄弟组合器（General sibling combinator）
 ~ 组合器选择兄弟元素，也就是说，后一个节点在前一个节点后面的任意位置，并且共享同一个父节点。
 语法：A ~ B
-例子：p ~ span 匹配同一父元素下，<p> 元素后的所有 <span> 元素。
+例子：p ~ span 匹配同一父元素下，< p > 元素后的所有 < span > 元素。
   
 #### 紧邻兄弟组合器（Adjacent sibling combinator）
 + 组合器选择相邻元素，即后一个元素紧跟在前一个之后，并且共享同一个父节点。
 语法：A + B
-例子：h2 + p 会匹配所有紧邻在 <h2> 元素后的 <p> 元素。
+例子：h2 + p 会匹配所有紧邻在 < h2 > 元素后的 < p > 元素。
   
 #### 列组合器（Column combinator）
 || 组合器选择属于某个表格行的节点。
 语法： A || B
-例子： col || td 会匹配所有 <col> 作用域内的 <td> 元素。
+例子： col || td 会匹配所有 < col > 作用域内的 < td > 元素。
 ### 伪选择器（Pseudo）
   
 #### 伪类
 : 伪选择器支持按照未被包含在文档树中的状态信息来选择元素。
-例子：a:visited 匹配所有曾被访问过的 <a> 元素。
+例子：a:visited 匹配所有曾被访问过的 < a > 元素。
   
 #### 伪元素
 :: 伪选择器用于表示无法用 HTML 语义表达的实体。
-例子：p::first-line 匹配所有 <p> 元素的第一行。
+例子：p::first-line 匹配所有 < p > 元素的第一行。
   
 ## 简述选择器优先级？
 下面列表中，选择器类型的优先级是递增的：
@@ -295,6 +295,7 @@ CSS3新增了几个关于背景的属性，分别是background-clip、background
 略
 
 ### css
+```
 .triangle {
   width: 0;
   height: 0;
@@ -302,21 +303,24 @@ CSS3新增了几个关于背景的属性，分别是background-clip、background
   border-right: 50px solid transparent;
   border-bottom: 100px solid red;
 }
-
+```
 ### SVG
 略
 
 ### Clip Path
+```
 .triangle {
   width: 10px; height: 10px;
   background: red;
   clip-path: polygon(50% 0, 0 100%, 100% 100%);
 }
+```
 
 ### Canvas
 略
 
 ### CSS Houdini
+```
 <script>
   CSS.paintWorklet.addModule('/worklet.js')
 </script>
@@ -334,6 +338,7 @@ class TrianglePainter {
 }
 
 registerPaint('triangle', TrianglePainter)
+```
 
 ### WebGL
 略
