@@ -498,19 +498,73 @@ https://www.cnblogs.com/liugang-vip/p/5616484.html
 ## 13. 函数柯里化与反柯里化
 https://juejin.im/post/5b561426518825195f499772
 
-## 14. call，apply，bind 三者用法和区别
-https://qianlongo.github.io/2016/04/26/js%E4%B8%ADcall%E3%80%81apply%E3%80%81bind%E9%82%A3%E4%BA%9B%E4%BA%8B/#more
-
 ## 15. 理解 async/await
-https://juejin.im/post/596e142d5188254b532ce2da
+async 函数是 Generator 函数的语法糖。使用 关键字 async 来表示，在函数内部使用 await 来表示异步。相较于 Generator，Async 函数的改进在于下面四点：
 
-## 17. JavaScript中的立即执行函数
-https://juejin.im/post/59fc0a8c6fb9a04500026707
+- 内置执行器。Generator 函数的执行必须依靠执行器，而 Aysnc 函数自带执行器，调用方式跟普通函数的调用一样
+- 更好的语义。async 和 await 相较于 * 和 yield 更加语义化
+- 更广的适用性。co 模块约定，yield 命令后面只能是 Thunk 函数或 Promise对象。而 async 函数的 await 命令后面则可以是 Promise 或者 原始类型的值（Number，string，boolean，但这时等同于同步操作）
+- 返回值是 Promise。async 函数返回值是 Promise 对象，比 Generator 函数返回的 Iterator 对象方便，可以直接使用 then() 方法进行调用
 
-## 18. JavaScript中有哪些设计模式
-https://juejin.im/post/59df4f74f265da430f311909
+### Async 与其他异步操作的对比
+Promise 方式
+```
+function getUserByPromise() {
+    fetchUser()
+        .then((data) => {
+            console.log(data);
+        }, (error) => {
+            console.log(error);
+        })
+}
+getUserByPromise();
+```
+### Generator 方式
+```
+function* fetchUserByGenerator() {
+    const user = yield fetchUser();
+    return user;
+}
 
-## 19. BOM
+const g = fetchUserByGenerator();
+const result = g.next().value;
+result.then((v) => {
+    console.log(v);
+}, (error) => {
+    console.log(error);
+})
+```
+
+### async 方式
+```
+async function getUserByAsync(){
+     let user = await fetchUser();
+     return user;
+ }
+getUserByAsync(
+.then(v => console.log(v));
+```
+
+async 函数返回一个 Promise 对象。
+async 函数返回的 Promise 对象，必须等到内部所有的 await 命令的 Promise 对象执行完，才会发生状态改变。
+正常情况下，await 命令后面跟着的是 Promise ，如果不是的话，也会被转换成一个 立即 resolve 的 Promise。
+
+
+### 立即执行函数
+要成为立即执行函数，需要满足两个条件：
+
+声明一个匿名函数
+立马调用这个匿名函数
+比如，下面就是一个非常典型的立即执行函数：
+
+(function(){console.log('这是一个立即执行函数'))()
+
+立即执行函数的作用只有一个，那就是创建独立的作用域。 让外部无法访问作用域内部的变量，从而避免变量污染。
+
+ES6可以直接用块级作用域。
+
+
+## BOM
 BOM（浏览器对象模型）以 window 对象为依托，表示浏览器窗口以及页面可见区域。同时，window 对象还是 ECMAScript 中的 Global 对象，因而所有全局变量和函数都是它的属性，且所有原生的构造函数及其他函数也都存在于它的命名空间下。本章讨论了下列 BOM 的组成部分。
 
 - 在使用框架时，每个框架都有自己的 window 对象以及所有原生构造函数及其他函数的副本。每个框架都保存在 frames 集合中，可以通过位置或通过名称来访问。
