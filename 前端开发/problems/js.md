@@ -343,10 +343,151 @@ this 并不是在编写的时候绑定的，而是在运行时绑定的。它的
 https://juejin.im/post/5d70e25de51d453c11684cc4
 
 ## 9. 同源策略
-https://juejin.im/post/58f816198d6d81005874fd97
+非同源请求，均为跨域。
+
+名词解释：同源 —— 如果两个页面拥有相同的协议（protocol），端口（port）和主机（host），那么这两个页面就属于同一个源（origin）。
+
+通常，最常用的跨域方式有以下三种：JSONP、CORS、postMessage。
+
+### JSONP
+虽然因为同源策略的影响，不能通过XMLHttpRequest请求不同域上的数据（Cross-origin reads）。但是，在页面上引入不同域上的js脚本文件却是可以的（Cross-origin embedding）。因此在js文件载入完毕之后，触发回调，可以将需要的data作为参数传入。
+
+【JSONP的优缺点】
+优点：兼容性好（兼容低版本IE）
+缺点：1.JSONP只支持GET请求； 2.XMLHttpRequest相对于JSONP有着更好的错误处理机制
+
+### CORS
+CORS 是W3C 推荐的一种新的官方方案，能使服务器支持 XMLHttpRequest 的跨域请求。CORS 实现起来非常方便，只需要增加一些 HTTP 头，让服务器能声明允许的访问来源。
+值得注意的是，通常使用CORS时，异步请求会被分为简单请求和非简单请求，非简单请求的区别是会先发一次预检请求。
+
+### postMessage
+window.postMessage(message,targetOrigin) 方法是html5新引进的特性，可以使用它来向其它的window对象发送消息，无论这个window对象是属于同源或不同源，目前IE8+、FireFox、Chrome、Opera等浏览器都已经支持window.postMessage方法。
 
 ## 10. 如何判断两个对象相等
-https://juejin.im/post/598a701b6fb9a03c5b04bb14
+```
+var toString = Object.prototype.toString;
+
+function isFunction(obj) {
+    return toString.call(obj) === '[object Function]'
+}
+
+function eq(a, b, aStack, bStack) {
+
+    // === 结果为 true 的区别出 +0 和 -0
+    if (a === b) return a !== 0 || 1 / a === 1 / b;
+
+    // typeof null 的结果为 object ，这里做判断，是为了让有 null 的情况尽早退出函数
+    if (a == null || b == null) return false;
+
+    // 判断 NaN
+    if (a !== a) return b !== b;
+
+    // 判断参数 a 类型，如果是基本类型，在这里可以直接返回 false
+    var type = typeof a;
+    if (type !== 'function' && type !== 'object' && typeof b != 'object') return false;
+
+    // 更复杂的对象使用 deepEq 函数进行深度比较
+    return deepEq(a, b, aStack, bStack);
+};
+
+function deepEq(a, b, aStack, bStack) {
+
+    // a 和 b 的内部属性 [[class]] 相同时 返回 true
+    var className = toString.call(a);
+    if (className !== toString.call(b)) return false;
+
+    switch (className) {
+        case '[object RegExp]':
+        case '[object String]':
+            return '' + a === '' + b;
+        case '[object Number]':
+            if (+a !== +a) return +b !== +b;
+            return +a === 0 ? 1 / +a === 1 / b : +a === +b;
+        case '[object Date]':
+        case '[object Boolean]':
+            return +a === +b;
+    }
+
+    var areArrays = className === '[object Array]';
+    // 不是数组
+    if (!areArrays) {
+        // 过滤掉两个函数的情况
+        if (typeof a != 'object' || typeof b != 'object') return false;
+
+        var aCtor = a.constructor,
+            bCtor = b.constructor;
+        // aCtor 和 bCtor 必须都存在并且都不是 Object 构造函数的情况下，aCtor 不等于 bCtor， 那这两个对象就真的不相等啦
+        if (aCtor == bCtor && !(isFunction(aCtor) && aCtor instanceof aCtor && isFunction(bCtor) && bCtor instanceof bCtor) && ('constructor' in a && 'constructor' in b)) {
+            return false;
+        }
+    }
+
+
+    aStack = aStack || [];
+    bStack = bStack || [];
+    var length = aStack.length;
+
+    // 检查是否有循环引用的部分
+    while (length--) {
+        if (aStack[length] === a) {
+            return bStack[length] === b;
+        }
+    }
+
+    aStack.push(a);
+    bStack.push(b);
+
+    // 数组判断
+    if (areArrays) {
+
+        length = a.length;
+        if (length !== b.length) return false;
+
+        while (length--) {
+            if (!eq(a[length], b[length], aStack, bStack)) return false;
+        }
+    }
+    // 对象判断
+    else {
+
+        var keys = Object.keys(a),
+            key;
+        length = keys.length;
+
+        if (Object.keys(b).length !== length) return false;
+        while (length--) {
+
+            key = keys[length];
+            if (!(b.hasOwnProperty(key) && eq(a[key], b[key], aStack, bStack))) return false;
+        }
+    }
+
+    aStack.pop();
+    bStack.pop();
+    return true;
+
+}
+
+console.log(eq(0, 0)) // true
+console.log(eq(0, -0)) // false
+
+console.log(eq(NaN, NaN)); // true
+console.log(eq(Number(NaN), Number(NaN))); // true
+
+console.log(eq('Curly', new String('Curly'))); // true
+
+console.log(eq([1], [1])); // true
+console.log(eq({ value: 1 }, { value: 1 })); // true
+
+var a, b;
+
+a = { foo: { b: { foo: { c: { foo: null } } } } };
+b = { foo: { b: { foo: { c: { foo: null } } } } };
+a.foo.b.foo.c.foo = a;
+b.foo.b.foo.c.foo = b;
+
+console.log(eq(a, b)) // true
+```
 
 ## 11. 事件模型
 https://segmentfault.com/a/1190000006934031
@@ -370,13 +511,58 @@ https://juejin.im/post/59fc0a8c6fb9a04500026707
 https://juejin.im/post/59df4f74f265da430f311909
 
 ## 19. BOM
-https://juejin.im/post/583437d8128fe1006ccffde8
+BOM（浏览器对象模型）以 window 对象为依托，表示浏览器窗口以及页面可见区域。同时，window 对象还是 ECMAScript 中的 Global 对象，因而所有全局变量和函数都是它的属性，且所有原生的构造函数及其他函数也都存在于它的命名空间下。本章讨论了下列 BOM 的组成部分。
 
-## 20. 服务端渲染
-https://www.cnblogs.com/muzishijie/p/11198315.html
+- 在使用框架时，每个框架都有自己的 window 对象以及所有原生构造函数及其他函数的副本。每个框架都保存在 frames 集合中，可以通过位置或通过名称来访问。
+- 有一些窗口指针，可以用来引用其他框架，包括父框架。
+- top 对象始终指向最外围的框架，也就是整个浏览器窗口。
+- parent 对象表示包含当前框架的框架，而 self 对象则回指 window。
+- 使用 location 对象可以通过编程方式来访问浏览器的导航系统。设置相应的属性，可以逐段或整体性地修改浏览器的 URL。
+- 调用 replace() 方法可以导航到一个新 URL，同时该 URL 会替换浏览器历史记录中当前显示的页面。
+- navigator 对象提供了与浏览器有关的信息。到底提供哪些信息，很大程度上取决于用户的浏览器；不过，也有一些公共的属性（如 userAgent）存在于所有浏览器中。
 
-## 21. 垃圾回收机制
-https://juejin.im/post/5a6b3fcaf265da3e2c385375
+BOM中还有两个对象：screen 和 history，但它们的功能有限。screen 对象中保存着与客户端显示器有关的信息，这些信息一般只用于站点分析。history 对象为访问浏览器的历史记录开了一个小缝隙，开发人员可以据此判断历史记录的数量，也可以在历史记录中向后或向前导航到任意页面。
 
-## 22. EventLoop
-https://juejin.im/post/5d01adb2f265da1b667bd4ad
+## EventLoop
+浏览器的event loop至少包含两个队列，macrotask队列和microtask队列。
+1. microtask 即微任务，是由js引擎分发的任务，总是添加到当前任务队列末尾执行。另外在处理microtask期间，如果有新添加的microtasks，也会被添加到队列的末尾并执行： Promise、MutaionObserver、process.nextTick(Node.js 环境)
+2. macrotask队列 等同于我们常说的任务队列，macrotask是由宿主环境分发的异步任务，事件轮询的时候总是一个一个任务队列去查看执行的，"任务队列"是一个先进先出的数据结构，排在前面的事件，优先被主线程读取：script(整体代码)、setTimeout、setInterval、I/O、UI交互事件、setImmediate(Node.js 环境)
+3. 只要有微任务我们肯定是执行微任务的，当前进行的会执行，当前执行完的如果执行完后event loop还是检测到微任务，还是执行微任务，检测出没有微任务，我们就执行宏任务队列中的任务。
+经典面试题：
+```
+async function async1(){
+    console.log('async1 start')
+    await async2()
+    console.log('async1 end')
+}
+async function async2(){
+    console.log('async2')
+}
+console.log('script start')
+setTimeout(function(){
+    console.log('setTimeout') 
+},0)  
+async1();
+new Promise(function(resolve){
+    console.log('promise1')
+    resolve();
+}).then(function(){
+    console.log('promise2')
+})
+console.log('script end')
+/*
+解题思路：
+首先按照代码的执行顺序从上往下，js始终都是单线程的，先执行的肯定是同步任务，再根据进入任务队列的顺序先进先出，先微后宏。
+微任务是一次性将队列中存在的微任务执行完毕，宏任务是一个一个先进先出。
+Promise是一个构造函数，调用的时候会生成Promise实例。当Promise的状态改变时会调用then函数中定义的回调函数。
+我们都知道这个回调函数不会立刻执行，他是一个微任务会被添加到当前任务队列中的末尾，在下一轮任务开始执行之前执行。
+async/await成对出现，async标记的函数会返回一个Promise对象，可以使用then方法添加回调函数。await后面的语句会同步执行。但 await 下面的语句会被当成微任务添加到当前任务队列的末尾异步执行。
+*/
+
+/*
+答案： 
+node的部分版本（比如V10.10.0）中会存在: script start -> async1 start -> async2 -> promise1 -> script end -> promise2 -> async1 end -> setTimeout
+<= node8版本: script start -> async1 start -> async2 -> promise1 -> script end -> async1 end -> promise2 -> setTimeout
+这主要是node.js8版本与其他版本的差异，他们对await的执行方法不同（Node新版本（11之后）与浏览器执行结果相同，这是大趋势）
+*/
+```
