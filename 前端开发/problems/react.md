@@ -1,4 +1,3 @@
-https://juejin.im/post/5cd9752f6fb9a03247157b6d
 
 ## 为什么选择使用框架而不是原生?
 - 组件化: 其中以 React 的组件化最为彻底,甚至可以到函数级别的原子组件,高度的组件化可以是我们的工程易于维护、易于组合拓展。
@@ -19,8 +18,10 @@ https://juejin.im/post/5cd9752f6fb9a03247157b6d
 https://juejin.im/post/5dfac33fe51d455802162b75
 
 ## React 生命周期？
-https://juejin.im/post/5df648836fb9a016526eba01
-https://www.jianshu.com/p/514fe21b9914
+### 16.0前的生命周期
+![lifecycle](https://upload-images.jianshu.io/upload_images/5287253-315eac1c26082f08.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
+### 16.4+的生命周期
+![lifecycle](https://upload-images.jianshu.io/upload_images/5287253-19b835e6e7802233.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
 
 ## React的请求应该放在哪个生命周期中?
 由于JavaScript中异步事件的性质，当您启动API调用时，浏览器会在此期间返回执行其他工作。当React渲染一个组件时，它不会等待componentWillMount它完成任何事情 - React继续前进并继续render,没有办法“暂停”渲染以等待数据到达。
