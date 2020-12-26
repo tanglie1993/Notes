@@ -19,7 +19,7 @@ https://juejin.im/post/5dfac33fe51d455802162b75
 
 ## React 生命周期？
 ### 16.0前的生命周期
-![lifecycle](https://upload-images.jianshu.io/upload_images/5287253-315eac1c26082f08.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
+![lifecycle0](https://upload-images.jianshu.io/upload_images/5287253-315eac1c26082f08.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
 ### 16.4+的生命周期
 ![lifecycle](https://upload-images.jianshu.io/upload_images/5287253-19b835e6e7802233.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
 
@@ -49,10 +49,138 @@ setState 的批量更新优化也是建立在“异步”（合成事件、钩�
 https://github.com/Advanced-Interview-Question/front-end-interview/blob/master/docs/guide/abstract.md
 
 ## 什么是 mixin、HOC、Hook?
-https://juejin.im/post/5cad39b3f265da03502b1c0a#heading-5
+### Mixin
+使用 ES6 class 定义的组件已经不支持 mixin 了，因为使用 mixin 的场景都可以用组合组件这种模式来做到.
 
-## 什么是 render props?
-https://zhuanlan.zhihu.com/p/31267131
+#### Mixin的缺陷
+- 组件与Mixin之间存在隐式依赖（Mixin经常依赖组件的特定⽅法，但在定义组件时并不知道这种依赖关系）
+- 多个Mixin之间可能产⽣冲突（⽐如定义了相同的state字段）
+- Mixin倾向于增加更多状态，这降低了应⽤的可预测性（The more state in your application, the harder it is to reason about it.），导致复杂度剧增
+- 隐式依赖导致依赖关系不透明，维护成本和理解成本迅速攀升：
+- 难以快速理解组件⾏为，需要全盘了解所有依赖Mixin的扩展⾏为，及其之间的相互影响
+- 组价⾃身的⽅法和state字段不敢轻易删改，因为难以确定有没有Mixin依赖它
+- Mixin也难以维护，因为Mixin逻辑最后会被打平合并到⼀起，很难搞清楚⼀个Mixin的输⼊输出
+
+### HOC
+高阶组件就是一个函数，且该函数接受一个组件作为参数，并返回一个新的组件。
+HOC 在 React 的第三方库中很常见，例如 Redux 的 connect 和 Relay 的 createFragmentContainer。
+
+#### HOC相⽐Mixin的优势
+- HOC通过外层组件通过Props影响内层组件的状态，⽽不是直接改变其State不存在冲突和互相⼲扰,这就降低了 耦合度
+- 不同于Mixin的打平+合并,HOC具有天然的层级结构（组件树结构），这⼜降低了复杂度
+#### HOC的缺陷
+- 扩展性限制: HOC⽆法从外部访问⼦组件的State因此⽆法通过shouldComponentUpdate滤掉不必要的更新,React在⽀持ES6 Class之后提供了React.PureComponent来解决这个问题
+- Ref传递问题: Ref被隔断,后来的React.forwardRef来解决这个问题
+- Wrapper Hell:HOC可能出现多层包裹组件的情况,多层抽象同样增加了复杂度和理解成本
+- 命名冲突: 如果⾼阶组件多次嵌套,没有使⽤命名空间的话会产⽣冲突,然后覆盖⽼属性
+- 不可⻅性: HOC相当于在原有组件外层再包装⼀个组件,你压根不知道外层的包装是啥,对于你是⿊盒
+
+### Render Props
+术语 “render prop” 是指一种简单的技术，用于使用一个值为函数的 prop 在 React 组件之间的代码共享。
+```
+class Cat extends React.Component {
+  render() {
+    const mouse = this.props.mouse;
+    return (
+      <img src="/cat.jpg" style={{ position: 'absolute', left: mouse.x, top: mouse.y }} />
+    );
+  }
+}
+
+class Mouse extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleMouseMove = this.handleMouseMove.bind(this);
+    this.state = { x: 0, y: 0 };
+  }
+
+  handleMouseMove(event) {
+    this.setState({
+      x: event.clientX,
+      y: event.clientY
+    });
+  }
+
+  render() {
+    return (
+      <div style={{ height: '100%' }} onMouseMove={this.handleMouseMove}>
+
+        {/*
+          Instead of providing a static representation of what <Mouse> renders,
+          use the `render` prop to dynamically determine what to render.
+        */}
+        {this.props.render(this.state)}
+      </div>
+    );
+  }
+}
+
+class MouseTracker extends React.Component {
+  render() {
+    return (
+      <div>
+        <h1>Move the mouse around!</h1>
+        <Mouse render={mouse => (
+          <Cat mouse={mouse} />
+        )}/>
+      </div>
+    );
+  }
+}
+```
+#### Render Props优点
+- 上述HOC的缺点Render Props都可以解决
+#### Render Props缺陷:
+- 使⽤繁琐: HOC使⽤只需要借助装饰器语法通常⼀⾏代码就可以进⾏复⽤,Render Props⽆法做到如此简单
+- 嵌套过深: Render Props虽然摆脱了组件多层嵌套的问题,但是转化为了函数回调的嵌套
+
+### React Hooks
+Hook 是 React 16.8 的新增特性。它可以让你在不编写 class 的情况下使用 state 以及其他的 React 特性。
+
+#### State hook
+略
+
+#### Effect hook
+Effect Hook 可以让你在函数组件中执行副作用操作。
+
+无需清除的 effect：有时候，我们只想在 React 更新 DOM 之后运行一些额外的代码。比如发送网络请求，手动变更 DOM，记录日志，这些都是常见的无需清除的操作。因为我们在执行完这些操作之后，就可以忽略他们了。
+
+```
+useEffect(() => {
+    document.title = `You clicked ${count} times`;
+  });
+```
+
+需要清除的 effect:有一些副作用是需要清除的。例如订阅外部数据源。
+
+```
+useEffect(() => {
+    function handleStatusChange(status) {
+      setIsOnline(status.isOnline);
+    }
+    ChatAPI.subscribeToFriendStatus(props.friend.id, handleStatusChange);
+    // Specify how to clean up after this effect:
+    return function cleanup() {
+      ChatAPI.unsubscribeFromFriendStatus(props.friend.id, handleStatusChange);
+    };
+  });
+  ```
+
+#### React Hooks优点
+- 简洁: React Hooks解决了HOC和Render Props的嵌套问题,更加简洁
+- 解耦: React Hooks可以更⽅便地把 UI 和状态分离,做到更彻底的解耦
+- 组合: Hooks 中可以引⽤另外的 Hooks形成新的Hooks,组合变化万千
+- 函数友好: React Hooks为函数组件⽽⽣,从⽽解决了类组件的⼏⼤问题:
+- this指向容易错误
+- 分割在不同声明周期中的逻辑使得代码难以理解和维护
+- 代码复⽤成本⾼（⾼阶组件容易使代码量剧增）
+#### React Hooks缺陷
+- 额外的学习成本（Functional Component 与Class Component之间的困惑）
+- 写法上有限制（不能出现在条件、循环中），并且写法限制增加了重构成本
+- 破坏了PureComponent、React.memo浅⽐较的性能优化效果（为了取最新的props和state，每次render()都要重新创建事件处函数）
+- 在闭包场景可能会引⽤到旧的state、props值
+- 内部实现上不直观（依赖⼀份可变的全局状态，不再那么“纯”）
+- React.memo并不能完全替代shouldComponentUpdate（因为拿不到state change，只针对 props change）
 
 ## 什么是Fiber?
 https://juejin.im/post/5ab7b3a2f265da2378403e57
